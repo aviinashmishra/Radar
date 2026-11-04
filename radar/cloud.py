@@ -63,12 +63,48 @@ class NoSnapshot(Exception):
 
 
 # ---------------------------------------------------------------- GitHub helpers
+_last_write = [0.0]
+
+
 def _gh(method: str, path_or_url: str, **kw) -> requests.Response:
+    """GitHub API call. Writes are spaced a second apart and retried on rate limits and server errors,
+    as GitHub asks (back-to-back uploads otherwise trip its secondary rate limit)."""
     url = path_or_url if path_or_url.startswith("http") else f"{API}{path_or_url}"
     headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", **kw.pop("headers", {})}
     if TOKEN:
         headers["Authorization"] = f"Bearer {TOKEN}"
-    return requests.request(method, url, headers=headers, timeout=kw.pop("timeout", 30), **kw)
+    timeout = kw.pop("timeout", 30)
+    write = method in ("POST", "PATCH", "PUT", "DELETE")
+    for attempt in range(5):
+        if write:
+            time.sleep(max(0.0, _last_write[0] + 1.0 - time.time()))
+            _last_write[0] = time.time()
+        try:
+            r = requests.request(method, url, headers=headers, timeout=timeout, **kw)
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == 4:
+                raise
+            time.sleep(5 * 2 ** attempt)
+            continue
+        limited = r.status_code == 429 or (r.status_code == 403 and ("rate limit" in r.text.lower() or "retry-after" in r.headers))
+        if not (limited or r.status_code >= 500) or attempt == 4:
+            return r
+        wait = int(r.headers.get("retry-after") or 0) or 5 * 2 ** attempt
+        log.warning("GitHub %s on %s %s; retrying in %ss", r.status_code, method, url.split("?")[0], wait)
+        time.sleep(min(wait, 90))
+    return r
+
+
+def _ok(r: requests.Response) -> requests.Response:
+    """raise_for_status with GitHub's explanation in the message (it lands in the workflow log)."""
+    if r.status_code >= 400:
+        raise RuntimeError(f"GitHub {r.status_code} on {r.request.method} {r.url.split('?')[0]}: {r.text[:300]}")
+    return r
+
+
+def _warn(msg: str) -> None:
+    """A warning that shows on the workflow run's summary page (an annotation), not only in the log."""
+    print(f"::warning title=radar.cloud::{msg}" if os.environ.get("GITHUB_ACTIONS") else f"warning: {msg}", flush=True)
 
 
 def public_url(name: str) -> str:
@@ -82,25 +118,27 @@ def _release(create: bool = False) -> dict | None:
             return None
         r = _gh("POST", f"/repos/{REPO}/releases",
                 json={"tag_name": TAG, "name": "Radar data snapshot", "body": RELEASE_NOTE, "prerelease": True})
-    r.raise_for_status()
-    return r.json()
+    return _ok(r).json()
 
 
 def _asset_bytes(asset: dict) -> bytes:
-    r = _gh("GET", asset["url"], headers={"Accept": "application/octet-stream"}, timeout=120)
-    r.raise_for_status()
-    return r.content
+    return _ok(_gh("GET", asset["url"], headers={"Accept": "application/octet-stream"}, timeout=120)).content
 
 
 def _upload(rel: dict, name: str, data: bytes, mime: str) -> dict:
     r = _gh("POST", rel["upload_url"].split("{", 1)[0], params={"name": name}, data=data,
             headers={"Content-Type": mime}, timeout=300)
-    r.raise_for_status()
-    return r.json()
+    if r.status_code == 422 and "already_exists" in r.text:  # a retried upload that had in fact landed
+        done = next((a for a in (_release() or {}).get("assets", []) if a["name"] == name), None)
+        if done and done["size"] == len(data):
+            return done
+    return _ok(r).json()
 
 
 def _delete_asset(asset: dict) -> None:
-    _gh("DELETE", f"/repos/{REPO}/releases/assets/{asset['id']}").raise_for_status()
+    r = _gh("DELETE", f"/repos/{REPO}/releases/assets/{asset['id']}")
+    if r.status_code != 404:  # already gone is fine
+        _ok(r)
 
 
 def _replace(rel: dict, name: str, data: bytes, mime: str) -> None:
@@ -113,7 +151,7 @@ def _replace(rel: dict, name: str, data: bytes, mime: str) -> None:
     for a in rel["assets"]:
         if a["name"] == name:
             _delete_asset(a)
-    _gh("PATCH", f"/repos/{REPO}/releases/assets/{new['id']}", json={"name": name}).raise_for_status()
+    _ok(_gh("PATCH", f"/repos/{REPO}/releases/assets/{new['id']}", json={"name": name}))
 
 
 def _output(key: str, value: str) -> None:
@@ -238,15 +276,18 @@ def dispatch(tier: str) -> dict:
     return {"started": None, "message": f"GitHub did not start the sweep ({r.status_code}): {r.text[:160]}"}
 
 
-def shot(name: str) -> tuple[str, str | bytes]:
-    """('redirect', url) for a public repo, ('bytes', data) when a token is needed to read the release."""
+def shot(name: str) -> bytes:
+    """A screenshot from the `data` release. Served through the app because GitHub sends release files as
+    downloads (Content-Disposition: attachment), which would make a click save the file instead of showing it."""
     if not TOKEN:
-        return "redirect", public_url(name)
-    rel = _release() or {}
-    asset = next((a for a in rel.get("assets", []) if a["name"] == name), None)
+        r = requests.get(public_url(name), timeout=30)
+        if r.status_code == 404:
+            raise NoSnapshot(name)
+        return _ok(r).content
+    asset = next((a for a in (_release() or {}).get("assets", []) if a["name"] == name), None)
     if not asset:
         raise NoSnapshot(name)
-    return "bytes", _asset_bytes(asset)
+    return _asset_bytes(asset)
 
 
 def authorized(header: str | None) -> bool:
@@ -326,19 +367,27 @@ def push() -> None:
     have = {a["name"] for a in rel["assets"]}
     cutoff = (datetime.now(timezone.utc) - timedelta(days=SHOT_DAYS)).strftime("%Y-%m-%d")
     shots = settings.db_path.parent / "shots"
-    sent = 0
+    sent = failed = pruned = 0
+    # screenshots are best-effort: a miss shows as a warning on the run, it never fails the published database
     for p in sorted(shots.iterdir()) if shots.exists() else []:
         m = SHOT_RX.match(p.name)
         if m and m["day"] >= cutoff and p.name not in have:
-            _upload(rel, p.name, p.read_bytes(), _mime(p.name))
-            sent += 1
-    pruned = 0
+            try:
+                _upload(rel, p.name, p.read_bytes(), _mime(p.name))
+                sent += 1
+            except Exception as e:  # noqa: BLE001
+                failed += 1
+                _warn(f"screenshot {p.name} not uploaded: {e}")
     for a in rel["assets"]:
         m = SHOT_RX.match(a["name"])
         if m and m["day"] < cutoff:
-            _delete_asset(a)
-            pruned += 1
-    print(f"published {DB_ASSET} ({len(blob) / 1e6:.1f} MB) to {REPO}@{TAG}; screenshots +{sent} -{pruned}")
+            try:
+                _delete_asset(a)
+                pruned += 1
+            except Exception as e:  # noqa: BLE001
+                _warn(f"old screenshot {a['name']} not removed: {e}")
+    print(f"published {DB_ASSET} ({len(blob) / 1e6:.1f} MB) to {REPO}@{TAG}; screenshots +{sent} -{pruned}"
+          + (f", {failed} failed (see warnings)" if failed else ""))
 
 
 def main() -> None:

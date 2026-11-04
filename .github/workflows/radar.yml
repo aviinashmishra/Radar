@@ -48,8 +48,8 @@ jobs:
       ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD || '6' }}
       GITHUB_TOKEN: ${{ github.token }}   # radar.cloud uses it to read and write the `data` release
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip

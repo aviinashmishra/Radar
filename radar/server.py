@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 import requests
 from fastapi import FastAPI, Query, HTTPException, Request
-from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileResponse
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig
@@ -309,11 +309,11 @@ def shot(name: str):
     mime = cloud._mime(name)
     if cloud.HOSTED:  # screenshots live on the `data` release next to the database snapshot
         try:
-            how, what = cloud.shot(name)
+            data = cloud.shot(name)
         except Exception:  # noqa: BLE001
             raise HTTPException(404)
-        cache = {"Cache-Control": "public, max-age=86400"}  # names carry the date, so a file never changes
-        return RedirectResponse(what, 302, headers=cache) if how == "redirect" else Response(what, media_type=mime, headers=cache)
+        # names carry the date, so a file never changes: browsers and Vercel's CDN can keep it
+        return Response(data, media_type=mime, headers={"Cache-Control": "public, max-age=86400, s-maxage=2592000, immutable"})
     # serve from where the collector recorded it (older captures may predate SHOTS moving next to the DB)
     row = db.q1("SELECT path FROM screenshots WHERE path LIKE ? ORDER BY id DESC LIMIT 1", (f"%{name}",))
     p = Path(row["path"]) if row and Path(row["path"]).name == name else SHOTS / name
