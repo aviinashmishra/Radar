@@ -1,0 +1,519 @@
+"""FastAPI app: live dashboard (SSE), JSON API, Ask-the-Radar chat, and the embedded scheduler.
+
+    python -m radar.server            -> http://127.0.0.1:8080  (scheduler runs inside, nothing else to start)
+    RADAR_NO_SCHEDULER=1              -> API only (use when GitHub Actions / cron runs the collectors)
+    on Vercel (app.py)                -> cloud mode: serves the snapshot GitHub Actions publishes (see cloud.py)
+    RADAR_PASSWORD=...                -> browser asks for a password (any user name) before showing anything
+"""
+from __future__ import annotations
+import asyncio
+import hmac
+import json
+import logging
+import os
+import threading
+import time
+from contextlib import asynccontextmanager
+from pathlib import Path
+import requests
+from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileResponse, RedirectResponse
+from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
+from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig
+from .config import settings, ROOT
+
+log = logging.getLogger("radar.server")
+STATIC = Path(__file__).parent / "static"
+SHOTS = settings.db_path.parent / "shots"  # next to the DB, so Docker's /data volume keeps them
+_stop = threading.Event()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Start the scheduler (and the Telegram bot when configured) with the server; stop them with it."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    db.connect()
+    # in cloud mode GitHub Actions runs the collectors and Telegram calls /api/telegram/webhook instead
+    if os.environ.get("RADAR_NO_SCHEDULER") != "1" and not cloud.HOSTED:
+        threading.Thread(target=runner.loop, args=(_stop,), daemon=True, name="radar-scheduler").start()
+        log.info("embedded scheduler started")
+    if settings.telegram_token and not cloud.HOSTED:
+        threading.Thread(target=bot.loop, args=(_stop,), daemon=True, name="radar-telegram").start()
+    yield
+    _stop.set()
+
+
+app = FastAPI(title="Pebble Competitor Radar", version="1.2", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def gate(request: Request, call_next):
+    """Password check (when RADAR_PASSWORD is set), and in cloud mode the latest snapshot before answering."""
+    path = request.url.path
+    if cloud.needs_password(path) and not cloud.authorized(request.headers.get("authorization")):
+        return Response("Password required", status_code=401,
+                        headers={"WWW-Authenticate": 'Basic realm="Pebble Radar", charset="UTF-8"'})
+    if cloud.HOSTED and path != "/favicon.ico":
+        await run_in_threadpool(cloud.refresh)
+    return await call_next(request)
+
+
+def _ev(r: dict) -> dict:
+    r["data"] = json.loads(r.get("data") or "{}")
+    return r
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return (STATIC / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(FAVICON, media_type="image/svg+xml")
+
+
+FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#2a78d6"/>'
+           '<g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/>'
+           '<circle cx="12" cy="12" r="3"/><path d="M12 5v7l4.5 4.5"/></g></svg>')
+
+
+@app.get("/api/stats")
+def stats():
+    me = settings.self_brand.name if settings.self_brand else ""
+    return {
+        "brands": [{"name": b.name, "self": b.self_brand, "shopify": b.shopify} for b in settings.brands],
+        "self": me, "sector": settings.sector, "currency": settings.currency,
+        "ai": settings.ai_enabled, "provider": settings.ai_provider, "model": settings.ai_model,
+        "telegram": bool(settings.telegram_token and settings.telegram_chat), "threshold": settings.alert_threshold,
+        "products": db.q1("SELECT COUNT(*) c FROM products")["c"],
+        "events_total": db.q1("SELECT COUNT(*) c FROM events")["c"],
+        "events_24h": db.q1("SELECT COUNT(*) c FROM events WHERE created_at>=datetime('now','-1 day')")["c"],
+        "signals_7d": db.q1("SELECT COUNT(*) c FROM signals WHERE created_at>=datetime('now','-7 day')")["c"],
+        "last_runs": {t: db.kv_get(f"last_run:{t}") for t in ("fast", "medium", "slow", "all")},
+        "runs": db.q("SELECT collector, brand, finished_at, ok, events, note FROM runs ORDER BY id DESC LIMIT 25"),
+        "festival": sig.nearest_festival(),
+        "hosted": cloud.info(),
+    }
+
+
+@app.get("/api/events")
+def events(brand: str = "", kind: str = "", min_importance: int = 0, q: str = "", days: int = 30, limit: int = 200, after_id: int = 0):
+    sql, p = "SELECT * FROM events WHERE created_at>=datetime('now', ?) AND kind<>'baseline'", [f"-{days} days"]
+    if brand:
+        sql += " AND brand=?"; p.append(brand)
+    if kind:
+        sql += " AND kind=?"; p.append(kind)
+    if min_importance:
+        sql += " AND importance>=?"; p.append(min_importance)
+    if q:
+        sql += " AND (title LIKE ? OR detail LIKE ? OR so_what LIKE ?)"; p += [f"%{q}%"] * 3
+    if after_id:
+        sql += " AND id>?"; p.append(after_id)
+    sql += " ORDER BY id DESC LIMIT ?"; p.append(min(limit, 1000))
+    return [_ev(r) for r in db.q(sql, p)]
+
+
+@app.get("/api/stream")
+async def stream(after_id: int = 0):
+    """Server-sent events: pushes every newly enriched event and signal as it lands."""
+    async def gen():
+        last = after_id or (db.q1("SELECT MAX(id) m FROM events") or {}).get("m") or 0
+        last_sig = (db.q1("SELECT MAX(id) m FROM signals") or {}).get("m") or 0
+        # serverless functions bill for open connections, so in cloud mode the stream ends after 25 s and the
+        # browser waits a minute before reconnecting (the dashboard itself polls /api/updates there instead)
+        end = time.monotonic() + 25 if cloud.HOSTED else None
+        if end:
+            yield "retry: 60000\n\n"
+        yield f"event: hello\ndata: {json.dumps({'after_id': last})}\n\n"
+        while end is None or time.monotonic() < end:
+            rows = db.q("SELECT * FROM events WHERE id>? AND enriched>0 AND kind<>'baseline' ORDER BY id LIMIT 50", (last,))
+            for r in rows:
+                last = max(last, r["id"])
+                yield f"event: event\ndata: {json.dumps(_ev(r), default=str)}\n\n"
+            srows = db.q("SELECT * FROM signals WHERE id>? ORDER BY id LIMIT 20", (last_sig,))
+            for s in srows:
+                last_sig = max(last_sig, s["id"])
+                yield f"event: signal\ndata: {json.dumps(s, default=str)}\n\n"
+            if not rows and not srows:
+                yield ": ping\n\n"
+            await asyncio.sleep(2)
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.get("/api/updates")
+def updates(after_id: int = 0, after_sig: int = 0):
+    """Polling twin of /api/stream for serverless hosting. after_id=0 returns the current high-water marks."""
+    top = (db.q1("SELECT MAX(id) m FROM events") or {}).get("m") or 0
+    top_sig = (db.q1("SELECT MAX(id) m FROM signals") or {}).get("m") or 0
+    if not after_id:
+        return {"after_id": top, "after_sig": top_sig, "events": [], "signals": []}
+    ev = [_ev(r) for r in db.q("SELECT * FROM events WHERE id>? AND enriched>0 AND kind<>'baseline' ORDER BY id LIMIT 50", (after_id,))]
+    sg = [dict(s, data=json.loads(s["data"] or "{}")) for s in db.q("SELECT * FROM signals WHERE id>? ORDER BY id LIMIT 20", (after_sig,))]
+    return {"after_id": ev[-1]["id"] if len(ev) == 50 else max(top, after_id),
+            "after_sig": sg[-1]["id"] if len(sg) == 20 else max(top_sig, after_sig), "events": ev, "signals": sg}
+
+
+@app.get("/api/signals")
+def signals_api(days: int = 30):
+    return [dict(s, data=json.loads(s["data"] or "{}")) for s in
+            db.q("SELECT * FROM signals WHERE created_at>=datetime('now', ?) ORDER BY id DESC LIMIT 100", (f"-{days} days",))]
+
+
+@app.get("/api/brand/{name}")
+def brand_page(name: str):
+    b = settings.brand(name)
+    prods = db.q("SELECT product_id,title,product_type,price,compare_at,available,handle,image,first_seen,last_changed "
+                 "FROM products WHERE brand=? ORDER BY last_changed DESC LIMIT 500", (name,))
+    for p in prods:
+        p["category"] = analytics.categorize(p["product_type"], p["title"])
+    return {"brand": name, "shopify": b.shopify if b else None,
+            "events": [_ev(r) for r in db.q("SELECT * FROM events WHERE brand=? AND kind<>'baseline' ORDER BY id DESC LIMIT 300", (name,))],
+            "products": prods,
+            "bestsellers": db.q("SELECT r.rank, p.title, p.price, p.available, p.handle FROM bestseller_rank r JOIN products p "
+                                "ON p.brand=r.brand AND p.product_id=r.product_id WHERE r.brand=? ORDER BY r.rank LIMIT 20", (name,)),
+            "launch": (db.kv_get("launch_scores") or {}).get(name)}
+
+
+@app.get("/api/products")
+def products(q: str = "", brand: str = "", limit: int = 100):
+    sql, p = "SELECT brand,product_id,title,product_type,price,compare_at,available,handle,image FROM products WHERE price>0", []
+    if brand:
+        sql += " AND brand=?"; p.append(brand)
+    for w in q.split()[:5]:
+        sql += " AND (title LIKE ? OR product_type LIKE ?)"; p += [f"%{w}%", f"%{w}%"]
+    sql += " ORDER BY price LIMIT ?"; p.append(min(limit, 500))
+    rows = db.q(sql, p)
+    for r in rows:
+        r["category"] = analytics.categorize(r["product_type"], r["title"])
+    return rows
+
+
+@app.get("/api/price_history")
+def price_history(brand: str, product_id: int):
+    return db.q("SELECT price,compare_at,available,seen_at FROM price_history WHERE brand=? AND product_id=? ORDER BY seen_at", (brand, product_id))
+
+
+@app.get("/api/whitespace")
+def whitespace():
+    return analytics.whitespace()
+
+
+@app.get("/api/benchmark")
+def benchmark():
+    return analytics.benchmark()
+
+
+@app.get("/api/winners")
+def winners(limit: int = 25):
+    return analytics.winners(limit)
+
+
+@app.get("/api/launch_scores")
+def launch_scores():
+    return db.kv_get("launch_scores") or {}
+
+
+@app.get("/api/pain_points")
+def pain_points():
+    return analytics.pain_points()
+
+
+@app.get("/api/briefs")
+def briefs():
+    return db.q("SELECT id,created_at,period,body FROM briefs ORDER BY id DESC LIMIT 10")
+
+
+class ChatIn(BaseModel):
+    question: str
+
+
+@app.post("/api/chat")
+def chat_api(body: ChatIn):
+    if settings.ai_enabled and (msg := cloud.public_lock()):  # keyword search is free, so it still answers
+        return {"answer": chat._fallback(body.question), "mode": "locked", "note": msg}
+    return chat.ask(body.question)
+
+
+@app.post("/api/run")
+def run_now(tier: str = Query("fast", pattern="^(fast|medium|slow|all)$")):
+    """Kick a collection tier in the background and return immediately (or say a sweep is already running)."""
+    if cloud.HOSTED:  # the collectors live on GitHub Actions in cloud mode
+        if msg := cloud.public_lock():
+            return {"started": None, "message": msg}
+        return cloud.dispatch(tier)
+    if runner.busy():
+        return {"started": None, "busy": True}
+    threading.Thread(target=runner.run_tier, args=(tier,), daemon=True).start()
+    return {"started": tier}
+
+
+@app.post("/api/brief")
+def brief_now(days: int = 7, push: bool = False):
+    if settings.ai_enabled and (msg := cloud.public_lock()):
+        return {"body": None, "message": msg}
+    body = brief.write(days=days, push=push)
+    # in cloud mode the database is a read-only copy: the brief shows now, the workflow writes the scheduled ones
+    return {"body": body, "message": "Brief written. Scheduled briefs come from GitHub Actions; this one is not kept."
+            if cloud.HOSTED else None}
+
+
+@app.get("/api/matches")
+def matches_api():
+    return {"matches": matcher.matches(), "undercuts": matcher.undercuts(days=7)}
+
+
+@app.get("/api/influencers")
+def influencers_api(limit: int = 25):
+    return analytics.influencers(limit)
+
+
+@app.get("/api/app_health")
+def app_health_api():
+    return analytics.app_health()
+
+
+@app.get("/api/search_demand")
+def search_demand_api():
+    return analytics.search_demand()
+
+
+@app.get("/api/sale_cadence")
+def sale_cadence_api():
+    return analytics.sale_cadence()
+
+
+@app.get("/api/review_pain_points")
+def review_pain_points_api():
+    return analytics.review_pain_points()
+
+
+@app.get("/api/techstack")
+def techstack_api():
+    return [dict(r, apps=json.loads(r["apps"] or "[]")) for r in db.q("SELECT brand, shop, theme, apps, seen_at FROM techstack ORDER BY brand")]
+
+
+@app.get("/api/screenshots")
+def screenshots_api():
+    rows = db.q("SELECT brand, url, path, diff_pct, taken_at FROM screenshots ORDER BY id DESC LIMIT 100")
+    for r in rows:
+        r["src"] = f"/shots/{Path(r['path']).name}"
+    return rows
+
+
+@app.get("/shots/{name}")
+def shot(name: str):
+    name = Path(name).name
+    mime = cloud._mime(name)
+    if cloud.HOSTED:  # screenshots live on the `data` release next to the database snapshot
+        try:
+            how, what = cloud.shot(name)
+        except Exception:  # noqa: BLE001
+            raise HTTPException(404)
+        cache = {"Cache-Control": "public, max-age=86400"}  # names carry the date, so a file never changes
+        return RedirectResponse(what, 302, headers=cache) if how == "redirect" else Response(what, media_type=mime, headers=cache)
+    # serve from where the collector recorded it (older captures may predate SHOTS moving next to the DB)
+    row = db.q1("SELECT path FROM screenshots WHERE path LIKE ? ORDER BY id DESC LIMIT 1", (f"%{name}",))
+    p = Path(row["path"]) if row and Path(row["path"]).name == name else SHOTS / name
+    if not p.exists():
+        raise HTTPException(404)
+    return FileResponse(p, media_type=mime)
+
+
+@app.get("/api/export/{table}.csv")
+def export_csv(table: str):
+    if table not in exports.TABLES:
+        raise HTTPException(404, f"unknown table; choose one of {', '.join(exports.TABLES)}")
+    return Response(exports.csv_bytes(table), media_type="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=radar_{table}.csv"})
+
+
+@app.get("/api/telegram/preview")
+def telegram_preview(cmd: str = "/status"):
+    """Dry-run a bot command without Telegram, so the bot can be tested from the browser."""
+    return {"cmd": cmd, "reply": bot.handle(cmd)}
+
+
+@app.post("/api/telegram/webhook", include_in_schema=False)
+async def telegram_webhook(request: Request):
+    """Cloud mode bot: Telegram calls this for every message (set it up with /api/telegram/connect)."""
+    secret = request.headers.get("x-telegram-bot-api-secret-token", "")
+    if not (settings.telegram_token and cloud.TG_SECRET and hmac.compare_digest(secret, cloud.TG_SECRET)):
+        raise HTTPException(403)
+    msg = (await request.json()).get("message") or {}
+    cid = str((msg.get("chat") or {}).get("id", ""))
+    if msg.get("text") and settings.telegram_chat and cid == str(settings.telegram_chat):  # only your chat
+        await run_in_threadpool(bot.reply, cid, msg["text"])
+    return {"ok": True}
+
+
+@app.post("/api/telegram/connect")
+def telegram_connect(request: Request, off: bool = False):
+    """Point the Telegram bot at this deployment (or back to polling with ?off=1, for the local server)."""
+    if not settings.telegram_token:
+        raise HTTPException(400, "set TELEGRAM_BOT_TOKEN first")
+    if msg := cloud.public_lock():
+        raise HTTPException(403, msg)
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    url = f"{proto}://{host}/api/telegram/webhook"
+    api = f"https://api.telegram.org/bot{settings.telegram_token}/"
+    r = requests.post(api + ("deleteWebhook" if off else "setWebhook"), timeout=15,
+                      json={} if off else {"url": url, "secret_token": cloud.TG_SECRET, "allowed_updates": ["message"]})
+    return {"webhook": None if off else url, "telegram": r.json()}
+
+
+@app.get("/api/cron/heartbeat", include_in_schema=False)
+def cron_heartbeat(request: Request):
+    """Vercel cron (daily): warns on Telegram / webhook and restarts the worker when the snapshot goes stale."""
+    secret = os.environ.get("CRON_SECRET", "")
+    trusted = bool(secret) and hmac.compare_digest(request.headers.get("authorization", ""), f"Bearer {secret}")
+    return cloud.heartbeat(act=trusted)
+
+
+
+# ---------------------------------------------------------------- views for the redesigned dashboard
+class StatusIn(BaseModel):
+    status: str
+
+
+@app.post("/api/events/{event_id}/status")
+def set_event_status(event_id: int, body: StatusIn):
+    if body.status not in ("open", "done", "snoozed"):
+        raise HTTPException(400, "status must be open, done or snoozed")
+    with db.tx() as c:
+        if not c.execute("UPDATE events SET status=? WHERE id=?", (body.status, event_id)).rowcount:
+            raise HTTPException(404, "no such event")
+    # cloud mode serves a read-only snapshot, so the browser remembers the decision (scope tells it to)
+    return {"id": event_id, "status": body.status, "scope": "browser" if cloud.HOSTED else "server"}
+
+
+@app.post("/api/signals/{signal_id}/status")
+def set_signal_status(signal_id: int, body: StatusIn):
+    if body.status not in ("open", "done", "snoozed"):
+        raise HTTPException(400, "status must be open, done or snoozed")
+    with db.tx() as c:
+        if not c.execute("UPDATE signals SET status=? WHERE id=?", (body.status, signal_id)).rowcount:
+            raise HTTPException(404, "no such signal")
+    return {"id": signal_id, "status": body.status, "scope": "browser" if cloud.HOSTED else "server"}
+
+
+@app.get("/api/today")
+def today():
+    """Everything the Today view needs in one call: actions, open signals, what changed, by brand."""
+    me = settings.self_brand.name if settings.self_brand else ""
+    actions, per = [], {}
+    for r in db.q("SELECT * FROM events WHERE enriched>0 AND importance>=6 AND COALESCE(status,'open')='open' AND kind<>'baseline' "
+                  "AND created_at>=datetime('now','-3 days') ORDER BY importance DESC, id DESC LIMIT 60"):
+        k = (r["brand"], r["kind"])
+        if per.get(k, 0) >= 2:
+            continue
+        per[k] = per.get(k, 0) + 1
+        actions.append(_ev(r))
+        if len(actions) >= 8:
+            break
+    signals_open = [dict(s, data=json.loads(s["data"] or "{}")) for s in
+                    db.q("SELECT * FROM signals WHERE COALESCE(status,'open')='open' AND created_at>=datetime('now','-7 days') ORDER BY importance DESC, id DESC LIMIT 10")]
+    by_brand = {}
+    for r in db.q("SELECT brand, kind, COUNT(*) c, MAX(importance) m FROM events WHERE created_at>=datetime('now','-1 day') "
+                  "AND kind<>'baseline' GROUP BY brand, kind"):
+        b = by_brand.setdefault(r["brand"], {"brand": r["brand"], "total": 0, "kinds": {}, "max_importance": 0, "self": r["brand"] == me})
+        b["total"] += r["c"]
+        b["kinds"][r["kind"]] = r["c"]
+        b["max_importance"] = max(b["max_importance"], r["m"] or 0)
+    done_today = db.q1("SELECT COUNT(*) c FROM events WHERE status='done' AND created_at>=datetime('now','-7 days')")["c"]
+    return {"actions": actions, "signals": signals_open,
+            "by_brand": sorted(by_brand.values(), key=lambda x: (-x["max_importance"], -x["total"])),
+            "done_7d": done_today, "festival": sig.nearest_festival(),
+            "last_sweep": db.kv_get("last_run:fast") or db.kv_get("last_run:all")}
+
+
+@app.get("/api/brands/overview")
+def brands_overview():
+    """Per brand: 14-day activity sparkline, launch score, catalogue stats, last notable move."""
+    me = settings.self_brand.name if settings.self_brand else ""
+    launch = db.kv_get("launch_scores") or {}
+    days = [r["d"] for r in db.q("SELECT date('now', '-' || value || ' days') d FROM json_each(?) ORDER BY d", (json.dumps(list(range(13, -1, -1))),))]
+    counts = {}
+    for r in db.q("SELECT brand, substr(created_at,1,10) d, COUNT(*) c, MAX(importance) m FROM events WHERE created_at>=datetime('now','-14 days') "
+                  "AND kind<>'baseline' GROUP BY brand, d"):
+        counts.setdefault(r["brand"], {})[r["d"]] = r["c"]
+    cat = {r["brand"]: r for r in db.q("SELECT brand, COUNT(*) skus, ROUND(100.0*SUM(available)/COUNT(*)) in_stock, "
+                                       "SUM(CASE WHEN compare_at>price THEN 1 ELSE 0 END) discounted FROM products WHERE price>0 GROUP BY brand")}
+    med = {}
+    for r in db.q("SELECT brand, price FROM products WHERE price>0 ORDER BY brand, price"):
+        med.setdefault(r["brand"], []).append(r["price"])
+    last = {r["brand"]: r for r in db.q("SELECT brand, title, kind, importance, created_at, id FROM events WHERE id IN "
+                                        "(SELECT MAX(id) FROM events WHERE kind<>'baseline' AND importance>=5 GROUP BY brand)")}
+    out = []
+    names = [b.name for b in settings.brands] + [n for n in counts if n not in {b.name for b in settings.brands}]
+    for name in names:
+        b = settings.brand(name)
+        series = [counts.get(name, {}).get(d, 0) for d in days]
+        prices = med.get(name, [])
+        out.append({"brand": name, "self": name == me, "shopify": b.shopify if b else None,
+                    "spark": series, "events_14d": sum(series), "launch": (launch.get(name) or {}).get("score", 0),
+                    "skus": (cat.get(name) or {}).get("skus", 0), "in_stock": (cat.get(name) or {}).get("in_stock"),
+                    "discounted": (cat.get(name) or {}).get("discounted", 0),
+                    "median_price": prices[len(prices) // 2] if prices else None,
+                    "last": last.get(name)})
+    return {"days": days, "brands": sorted(out, key=lambda x: (not x["self"], -x["launch"], -x["events_14d"]))}
+
+
+@app.get("/api/radar")
+def radar_ring():
+    """Threat radar: distance from centre = how quiet a rival is (score 0-100), angle fixed per brand."""
+    me = settings.self_brand.name if settings.self_brand else ""
+    launch = db.kv_get("launch_scores") or {}
+    ev = {r["brand"]: r for r in db.q("SELECT brand, COUNT(*) c, AVG(importance) a, MAX(importance) m FROM events "
+                                      "WHERE created_at>=datetime('now','-7 days') AND kind<>'baseline' GROUP BY brand")}
+    sigs = {r["brand"]: r["c"] for r in db.q("SELECT brand, COUNT(*) c FROM signals WHERE created_at>=datetime('now','-7 days') GROUP BY brand")}
+    out = []
+    for b in settings.brands:
+        if b.name == me:
+            continue
+        e = ev.get(b.name) or {"c": 0, "a": 0, "m": 0}
+        score = min(100, (launch.get(b.name) or {}).get("score", 0) * 1.5 + min(e["c"], 30) * 0.8 + (e["m"] or 0) * 2 + sigs.get(b.name, 0) * 6)
+        out.append({"brand": b.name, "score": round(score), "events_7d": e["c"], "max_importance": e["m"] or 0,
+                    "launch": (launch.get(b.name) or {}).get("score", 0), "signals_7d": sigs.get(b.name, 0),
+                    "why": (launch.get(b.name) or {}).get("why", [])[:3]})
+    return sorted(out, key=lambda x: -x["score"])
+
+
+
+@app.get("/api/segments")
+def segments_api():
+    return analytics.segments_list()
+
+
+@app.get("/api/segment/{key}")
+def segment_api(key: str):
+    if key not in {sg["key"] for sg in settings.segments}:
+        raise HTTPException(404, "unknown segment")
+    return analytics.segment_ladder(key)
+
+
+@app.get("/api/watchlist")
+def watchlist_api():
+    return analytics.watchlist_overview()
+
+
+@app.get("/api/health")
+def health():
+    return {"ok": True, "db": str(settings.db_path), "time": db.now(), "hosted": cloud.HOSTED}
+
+
+def main() -> None:
+    import uvicorn
+    uvicorn.run("radar.server:app", host=os.environ.get("RADAR_HOST", "127.0.0.1"),
+                port=int(os.environ.get("RADAR_PORT", "8080")), log_level="info")
+
+
+if __name__ == "__main__":
+    # also works when double-clicked or run as `python radar/server.py`
+    import sys
+    sys.path.insert(0, str(ROOT))
+    os.chdir(ROOT)
+    main()

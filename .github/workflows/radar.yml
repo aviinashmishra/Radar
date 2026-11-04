@@ -1,0 +1,103 @@
+name: Pebble Competitor Radar
+# The worker half of the cloud setup. GitHub runs the collectors on a schedule; between runs the database
+# travels as radar.db.gz on the release tagged `data` (replaced each run, never committed, so the repo does
+# not grow). The Vercel dashboard reads that same file. Locally, `python run.py` does all of this by itself.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"    # stores, prices, stock
+    - cron: "5 */1 * * *"     # news, social, feeds
+    - cron: "30 3 * * *"      # daily: pages, reviews, apps, screenshots, ads, new domains, daily brief (09:00 IST)
+    - cron: "30 3 * * 1"      # weekly brief, Monday 09:00 IST
+  push:                       # a config or code change takes effect straight away
+    branches: [main]
+    paths: ["config/**", "radar/**", "requirements*.txt", ".github/workflows/radar.yml"]
+  workflow_dispatch:          # the dashboard's Run button calls this through the GitHub API
+    inputs:
+      tier:
+        description: "Which collectors to run"
+        type: choice
+        options: [fast, medium, slow, all]
+        default: fast
+
+concurrency:
+  group: radar                # one sweep at a time; a newer queued run replaces an older queued one
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    permissions:
+      contents: write         # publish the snapshot to the `data` release
+      actions: write          # keep the schedule alive (GitHub pauses idle scheduled workflows after 60 days)
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+      META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM }}
+      SMTP_TO: ${{ secrets.SMTP_TO }}
+      RADAR_AI_PROVIDER: ${{ vars.RADAR_AI_PROVIDER || 'auto' }}
+      ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD || '6' }}
+      GITHUB_TOKEN: ${{ github.token }}   # radar.cloud uses it to read and write the `data` release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-full.txt
+
+      - name: Restore the last snapshot
+        id: pull
+        run: python -m radar.cloud pull
+
+      - name: Decide tier
+        id: tier
+        env:
+          RESTORED: ${{ steps.pull.outputs.restored }}
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_TIER: ${{ inputs.tier }}
+        run: |
+          if [ "$RESTORED" != "true" ]; then tier=all          # first run: build the whole database
+          elif [ "$EVENT" = "workflow_dispatch" ]; then tier="$INPUT_TIER"
+          elif [ "$EVENT" = "push" ] || [ "$SCHEDULE" = "*/15 * * * *" ]; then tier=fast
+          elif [ "$SCHEDULE" = "5 */1 * * *" ]; then tier=medium
+          else tier=slow; fi
+          echo "tier=$tier" >> "$GITHUB_OUTPUT"
+          echo "Running the $tier tier"
+
+      - name: Browser for homepage screenshots
+        if: steps.tier.outputs.tier == 'slow' || steps.tier.outputs.tier == 'all'
+        run: python -m playwright install --with-deps chromium
+
+      - name: Sweep
+        run: python -m radar.runner --once --tier ${{ steps.tier.outputs.tier }}
+      - name: Daily brief
+        if: github.event.schedule == '30 3 * * *'
+        run: python -m radar.runner --brief 1
+      - name: Weekly brief
+        if: github.event.schedule == '30 3 * * 1'
+        run: python -m radar.runner --brief 7
+
+      - name: Publish the snapshot
+        # also after a failed collector: every finished step is already committed to the database
+        if: ${{ !cancelled() && steps.pull.outcome == 'success' }}
+        env:
+          RADAR_TIER: ${{ steps.tier.outputs.tier }}
+        run: python -m radar.cloud push
+
+      - name: Keep the schedule alive
+        if: github.event.schedule == '30 3 * * 1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method PUT "repos/${{ github.repository }}/actions/workflows/radar.yml/enable"

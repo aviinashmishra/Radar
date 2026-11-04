@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pebble Radar</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Crect width=%2224%22 height=%2224%22 rx=%226%22 fill=%22%232a78d6%22/%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222%22 stroke-linecap=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%227%22/%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%223%22/%3E%3Cpath d=%22M12 5v7l4.5 4.5%22/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --bg:#f9f9f7; --surface:#fcfcfb; --surface-2:#f1f0ec; --line:#e1e0d9; --axis:#c3c2b7;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --accent:#2a78d6; --accent-ink:#fff;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --critical:#d03b3b; --up:#006300;
+  --seq1:#1c5cab; --seq2:#2a78d6; --seq3:#5598e7; --seq4:#86b6ef; --seq5:#cde2fb;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px -16px rgba(0,0,0,.25);
+  --r:12px; --nav:220px;
+}
+:root[data-theme="dark"], :root[data-theme="auto"][data-dark="1"]{
+  --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#232321; --line:#2c2c2a; --axis:#383835;
+  --ink:#f0efec; --ink-2:#c3c2b7; --muted:#898781;
+  --accent:#3987e5; --accent-ink:#fff;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --up:#0ca30c;
+  --seq1:#184f95; --seq2:#256abf; --seq3:#3987e5; --seq4:#6da7ec; --seq5:#9ec5f4;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.8);
+}
+/* ---------- base ---------- */
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none} a:hover{text-decoration:underline}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em} h1{font-size:22px} h2{font-size:15px} h3{font-size:13px;color:var(--ink-2)}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;transition:border-color .15s,background .15s}
+button:hover{border-color:var(--axis)} button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)} button.ghost{border-color:transparent;background:transparent;color:var(--ink-2)} button.ghost:hover{background:var(--surface-2)}
+button.sm{padding:3px 9px;font-size:12px;border-radius:6px}
+input,select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px} input:focus,select:focus{outline:2px solid color-mix(in srgb,var(--accent) 40%,transparent);border-color:var(--accent)}
+.muted{color:var(--muted)} .ink2{color:var(--ink-2)} .small{font-size:12px} .num{font-variant-numeric:tabular-nums} .right{text-align:right}
+.row{display:flex;align-items:center;gap:8px} .wrap{flex-wrap:wrap} .grow{flex:1} .gap16{gap:16px}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:var(--nav) 1fr;min-height:100%}
+nav{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:var(--surface);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+nav .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 16px;font-weight:600;font-size:15px}
+nav .brand .logo{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff}
+nav a.item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink-2)} nav a.item:hover{background:var(--surface-2);text-decoration:none}
+nav a.item.on{background:var(--surface-2);color:var(--ink);font-weight:500}
+nav .bottom{margin-top:auto;padding:10px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.live{display:inline-flex;align-items:center;gap:6px} .dot{width:7px;height:7px;border-radius:50%;background:var(--good)} .dot.off{background:var(--critical)}
+.theme{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden} .theme button{border:0;border-radius:0;padding:5px 8px;background:transparent;color:var(--muted)} .theme button.on{background:var(--surface-2);color:var(--ink)}
+main{min-width:0;padding:22px 28px 60px;max-width:1280px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.top .sub{color:var(--muted);font-size:13px}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 12px;min-width:260px;color:var(--muted);cursor:text}
+.search kbd{margin-left:auto;font:11px/1 ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:2px 5px;color:var(--muted)}
+/* ---------- cards / grid ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0} .card:has(table){overflow-x:auto}
+.card h2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px} .card h2 .hint{font-weight:400;color:var(--muted);font-size:12px;margin-left:auto}
+.grid{display:grid;gap:16px} .grid>*{min-width:0} .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:2fr 1fr 1fr} .gauto{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+@media(max-width:1500px){.g3{grid-template-columns:1fr 1fr}} @media(max-width:860px){.g2,.g3{grid-template-columns:1fr} .shell{grid-template-columns:56px 1fr} nav .brand span,nav a.item span,nav .bottom{display:none} nav a.item{justify-content:center;padding:10px} main{padding:16px}}
+.empty{color:var(--muted);font-size:13px;padding:14px 0}
+table{width:100%;border-collapse:collapse;font-size:13px} th{text-align:left;font-weight:500;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line)} td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top} tr:last-child td{border-bottom:0} td.num,th.num{text-align:right}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;line-height:18px;white-space:nowrap}
+.pill.i9{background:var(--critical);color:#fff} .pill.i7{background:var(--serious);color:#0b0b0b} .pill.i5{background:var(--warn);color:#0b0b0b} .pill.i0{background:var(--surface-2);color:var(--ink-2)}
+.chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--ink-2);background:var(--surface);margin:2px 2px 2px 0}
+/* action cards */
+.act{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);display:grid;gap:6px;transition:opacity .25s}
+.act.gone{opacity:.35}
+.act .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)} .act .meta b{color:var(--ink);font-weight:600}
+.act .t{font-weight:500;font-size:14px} .act .why{color:var(--ink-2);font-size:13px} .act .move{font-size:13px;color:var(--ink-2);padding-left:10px;border-left:2px solid var(--s3)}
+.act .btns{display:flex;gap:6px;margin-top:4px}
+/* feed */
+.fr{display:grid;grid-template-columns:58px 28px 1fr auto;gap:10px;align-items:start;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer} .fr:hover{background:var(--surface-2)} .fr .ago{color:var(--muted);font-size:12px;padding-top:2px}
+.fr>div{min-width:0;overflow-wrap:anywhere} .fr .b{font-weight:500} .fr .k{color:var(--muted);font-size:12px} .fr .x{display:none;grid-column:1/-1;padding:4px 6px 8px 96px;color:var(--ink-2);font-size:13px} .fr.open .x{display:block}
+.newpill{position:sticky;top:8px;z-index:3;display:none;margin:0 auto 8px;width:max-content;background:var(--accent);color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;box-shadow:var(--shadow)}
+/* brand card */
+.bc{display:grid;gap:8px;cursor:pointer} .bc:hover{border-color:var(--axis);text-decoration:none} .bc .n{font-weight:600;font-size:15px} .bc .stats{display:flex;gap:14px;font-size:12px;color:var(--muted)} .bc .stats b{display:block;color:var(--ink);font-size:14px;font-weight:500}
+/* heatmap */
+.heat td.c{text-align:center;border:2px solid var(--surface);border-radius:4px;color:#fff;min-width:46px;cursor:default;font-size:12px} .heat td.gap{outline:2px dashed var(--s2);outline-offset:-3px} .heat td.e{background:var(--surface-2);color:var(--muted)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px;align-items:center} .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.bar{display:grid;grid-template-columns:120px 1fr 40px;gap:8px;align-items:center;margin:5px 0;font-size:13px} .bar .tr{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden} .bar .f{height:100%;background:var(--s1);border-radius:0 4px 4px 0} .bar .v{color:var(--ink-2);text-align:right}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap} .tabs button{white-space:nowrap;border:0;border-radius:0;background:transparent;color:var(--muted);padding:8px 12px;border-bottom:2px solid transparent;margin-bottom:-1px} .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.answer{white-space:pre-wrap;font-size:13px;line-height:1.55}
+.shot{display:grid;gap:4px;text-align:center;font-size:12px;color:var(--muted)} .shot img{width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top;border-radius:8px;border:1px solid var(--line)}
+/* tooltip, palette, toast */
+.tip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--ink);z-index:50;display:none;max-width:300px;box-shadow:var(--shadow);white-space:pre-wrap}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:12vh 16px;z-index:40} .ov.on{display:flex}
+.pal{width:100%;max-width:640px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.pal input{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:14px 16px;font-size:15px;background:transparent} .pal input:focus{outline:0}
+.pal .res{max-height:50vh;overflow:auto} .pal .r{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-size:13px} .pal .r:hover,.pal .r.sel{background:var(--surface-2)} .pal .r .k{margin-left:auto;color:var(--muted);font-size:11px}
+.pal .ans{padding:14px 16px;border-top:1px solid var(--line)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:999px;font-size:13px;z-index:60;display:none}
+svg text{fill:var(--muted);font-size:10px}
+@media(max-width:600px){.fr{grid-template-columns:auto auto 1fr} .fr>span.k{display:none} .fr .x{padding-left:6px} .search{min-width:0;flex:1} main{padding:12px} .card{padding:14px}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></symbol>
+<symbol id="i-feed" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+<symbol id="i-brands" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17l9 5 9-5"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+<symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+<symbol id="i-auto" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></symbol>
+<symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v9l6 6"/></symbol>
+</defs></svg>
+
+<div class="shell">
+  <nav id="nav">
+    <div class="brand"><div class="logo"><svg class="i" style="width:15px;height:15px;stroke:#fff"><use href="#i-radar"/></svg></div><span>Pebble Radar</span></div>
+    <a class="item" href="#/today"><svg class="i"><use href="#i-home"/></svg><span>Today</span></a>
+    <a class="item" href="#/feed"><svg class="i"><use href="#i-feed"/></svg><span>Feed</span></a>
+    <a class="item" href="#/brands"><svg class="i"><use href="#i-brands"/></svg><span>Brands</span></a>
+    <a class="item" href="#/segments"><svg class="i"><use href="#i-layers"/></svg><span>Segments</span></a>
+    <a class="item" href="#/pricing"><svg class="i"><use href="#i-tag"/></svg><span>Pricing</span></a>
+    <a class="item" href="#/market"><svg class="i"><use href="#i-globe"/></svg><span>Market</span></a>
+    <a class="item" href="#/briefs"><svg class="i"><use href="#i-doc"/></svg><span>Briefs</span></a>
+    <a class="item" href="#/settings"><svg class="i"><use href="#i-cog"/></svg><span>Settings</span></a>
+    <div class="bottom">
+      <span class="live"><span class="dot" id="dot"></span><span id="livetxt">connecting</span></span>
+      <span id="sweep"></span>
+      <div class="theme" id="theme">
+        <button data-t="light" title="Light"><svg class="i" style="width:15px;height:15px"><use href="#i-sun"/></svg></button>
+        <button data-t="dark" title="Dark"><svg class="i" style="width:15px;height:15px"><use href="#i-moon"/></svg></button>
+        <button data-t="auto" title="Follow system"><svg class="i" style="width:15px;height:15px"><use href="#i-auto"/></svg></button>
+      </div>
+    </div>
+  </nav>
+  <main>
+    <div class="top">
+      <div class="grow"><h1 id="title">Today</h1><div class="sub" id="subtitle"></div></div>
+      <div class="search" id="searchbtn"><svg class="i"><use href="#i-search"/></svg><span>Search or ask the radar…</span><kbd>Ctrl K</kbd></div>
+      <button class="primary" id="runbtn" title="Sweep the stores now"><span class="row"><svg class="i" style="width:14px;height:14px"><use href="#i-play"/></svg> Run</span></button>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<div class="tip" id="tip"></div>
+<div class="ov" id="ov"><div class="pal">
+  <input id="palq" placeholder="Jump to a brand, a page, or ask a question…  (Enter to ask)">
+  <div class="res" id="palres"></div>
+  <div class="ans answer" id="palans" style="display:none"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- utilities ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>n==null?"–":Number(n).toLocaleString("en-IN",{maximumFractionDigits:0});
+const inr=n=>n==null?"–":"₹"+fmt(n);
+const ago=iso=>{if(!iso)return"";const d=(Date.now()-new Date(iso.match(/[Z+]/)?iso:iso+"Z"))/1000;if(d<60)return"just now";if(d<3600)return Math.floor(d/60)+"m ago";if(d<86400)return Math.floor(d/3600)+"h ago";return Math.floor(d/86400)+"d ago";};
+const impc=i=>i>=9?"i9":i>=7?"i7":i>=5?"i5":"i0";
+const pill=i=>`<span class="pill ${impc(i)}">${i??"–"}</span>`;
+const kind=k=>String(k||"").replace(/_/g," ");
+/* a GET that lands after the user has navigated on is dropped, so a slow view never paints over the current one */
+let NAV=0;class Stale extends Error{}addEventListener("unhandledrejection",e=>{if(e.reason instanceof Stale)e.preventDefault();});
+const api=async(p,o)=>{const n=NAV;const r=await fetch(p,o);if(!r.ok)throw new Error(p+" "+r.status);const j=await r.json();if(!o&&n!==NAV)throw new Stale();return j;};
+const post=(p,b)=>api(p,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b||{})});
+const toast=m=>{const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",Math.max(2200,m.length*45));};
+const ext=u=>u?`<a href="${esc(u)}" target="_blank" rel="noopener" class="muted" title="open"><svg class="i" style="width:13px;height:13px;vertical-align:-2px"><use href="#i-ext"/></svg></a>`:"";
+let STATS=null;
+
+/* ---------- theme ---------- */
+const mq=matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(t){document.documentElement.dataset.theme=t;document.documentElement.dataset.dark=mq.matches?"1":"0";$$("#theme button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));try{localStorage.setItem("theme",t)}catch(e){}}
+mq.addEventListener("change",()=>applyTheme(document.documentElement.dataset.theme));
+$$("#theme button").forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
+let savedTheme="auto";try{savedTheme=localStorage.getItem("theme")||"auto"}catch(e){} applyTheme(savedTheme);
+
+/* ---------- charts ---------- */
+function spark(series,w=120,h=28,color="var(--s1)"){const mx=Math.max(1,...series),n=series.length;const pts=series.map((v,i)=>`${(i/(n-1))*(w-4)+2},${h-2-(v/mx)*(h-6)}`).join(" ");return`<svg width="${w}" height="${h}" aria-label="activity, 14 days"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/><circle cx="${w-2}" cy="${h-2-(series[n-1]/mx)*(h-6)}" r="3" fill="${color}" stroke="var(--surface)" stroke-width="1.5"/></svg>`;}
+function priceLine(hist){if(hist.length<2)return'<span class="muted small">only one snapshot so far</span>';const W=460,H=110,P=10;const ps=hist.map(h=>h.price),mn=Math.min(...ps),mx=Math.max(...ps);const y=v=>H-P-((v-mn)/(mx-mn||1))*(H-2*P-10),x=i=>P+i*(W-2*P)/(hist.length-1);return`<svg width="${W}" height="${H}" role="img" aria-label="price history"><line x1="${P}" x2="${W-P}" y1="${H-P}" y2="${H-P}" stroke="var(--line)"/><polyline points="${hist.map((h,i)=>`${x(i)},${y(h.price)}`).join(" ")}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>${hist.map((h,i)=>`<circle cx="${x(i)}" cy="${y(h.price)}" r="4" fill="${h.available?"var(--s1)":"var(--s8)"}" stroke="var(--surface)" stroke-width="2"><title>${h.seen_at.slice(0,16).replace("T"," ")} ${inr(h.price)}${h.available?"":" · out of stock"}</title></circle>`).join("")}<text x="${P}" y="${H-1}">${inr(mn)}</text><text x="${W-70}" y="${H-1}">${inr(mx)}</text></svg>`;}
+function ring(rows){const W=420,H=284,cx=W/2,cy=H/2,R=112,r0=28,dOf=s=>r0+(1-Math.min(100,Math.max(0,s))/100)*(R-12-r0);
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:480px;display:block;margin:0 auto" role="img" aria-label="threat radar">`;[R,dOf(50),dOf(80)].forEach(r=>g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line)"/>`);
+  /* angle fixed per brand (alphabetical), distance from P = quietness; overlapping dots are nudged apart sideways */
+  const n=rows.length||1,P=[...rows].sort((a,b)=>a.brand.localeCompare(b.brand,undefined,{sensitivity:"base"})).map((r,k)=>({r,a:-Math.PI/2+(k+.5)*2*Math.PI/n,d:dOf(r.score),s:5+Math.min(r.events_7d,30)/7.5}));
+  for(let it=0,hit=1;it<150&&hit;it++){hit=0;for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const p=P[i],q=P[j],over=p.s+q.s+3-Math.hypot(Math.cos(q.a)*q.d-Math.cos(p.a)*p.d,Math.sin(q.a)*q.d-Math.sin(p.a)*p.d);if(over>0){hit=1;const dir=Math.sin(q.a-p.a)>=0?1:-1;p.a-=dir*(over/2+.5)/p.d;q.a+=dir*(over/2+.5)/q.d;}}}
+  /* names sit outside the ring in two columns, stacked so they never collide, joined to their dot by a leader line */
+  const lab=P.map(p=>({p,side:Math.cos(p.a)>=0?1:-1,y:cy+Math.sin(p.a)*(R+6)}));
+  [1,-1].forEach(sd=>{const s=lab.filter(l=>l.side===sd).sort((a,b)=>a.y-b.y);s.forEach((l,i)=>l.y=Math.max(l.y,i?s[i-1].y+17:10));for(let i=s.length-1;i>=0;i--)s[i].y=Math.min(s[i].y,i<s.length-1?s[i+1].y-17:H-8);});
+  lab.forEach(l=>l.x=cx+l.side*(Math.sqrt(Math.max(0,(R+14)**2-(l.y-cy)**2))+8));
+  const pt=(a,r)=>`${(cx+Math.cos(a)*r).toFixed(1)},${(cy+Math.sin(a)*r).toFixed(1)}`;
+  g+=`<g fill="none" stroke="var(--axis)" stroke-width="1">${lab.map(({p,x,y,side})=>`<polyline points="${pt(p.a,p.d+p.s+2)} ${pt(p.a,R+6)} ${(x-side*3).toFixed(1)},${y.toFixed(1)}"/>`).join("")}</g>`;
+  g+=`<circle cx="${cx}" cy="${cy}" r="12" fill="var(--accent)"/><text x="${cx}" y="${cy+4}" text-anchor="middle" style="fill:#fff;font-weight:600">P</text>`;
+  lab.forEach(({p,x,y,side})=>{const r=p.r,col=r.score>=80?"var(--s2)":r.score>=50?"var(--s4)":"var(--s1)",nm=r.brand.length>14?r.brand.slice(0,13)+"…":r.brand;
+    g+=`<g class="rb" data-brand="${esc(r.brand)}" data-tip="${esc(r.brand)} · score ${r.score}\n${r.events_7d} events, ${r.signals_7d} signals, launch ${r.launch}\n${esc(r.why.join("\n"))}" style="cursor:pointer"><circle cx="${(cx+Math.cos(p.a)*p.d).toFixed(1)}" cy="${(cy+Math.sin(p.a)*p.d).toFixed(1)}" r="${p.s.toFixed(1)}" fill="${col}" stroke="var(--surface)" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${side>0?"start":"end"}" style="fill:var(--ink-2);font-size:12px${r.score>=50?";font-weight:600":""}">${esc(nm)}</text></g>`;});
+  g+="</svg>";
+  g+=`<div style="margin-top:10px">${rows.slice(0,5).map((r,i)=>`<a class="row small" style="padding:4px 0;border-bottom:1px solid var(--line)" href="#/brand/${encodeURIComponent(r.brand)}"><span class="muted num" style="width:14px">${i+1}</span><b>${esc(r.brand)}</b><span class="grow muted">${r.events_7d} events · launch ${r.launch}${r.signals_7d?` · ${r.signals_7d} signals`:""}</span><span class="num ink2">${r.score}</span></a>`).join("")}</div>`;
+  return g;}
+/* ---------- live updates: a stream on the local server, a one-minute poll in cloud mode ---------- */
+let unseen=[],SEEN=new Set(),es,PA=0,PS=0;
+function onEvent(e){if(SEEN.has(e.id))return;SEEN.add(e.id);unseen.push(e);const p=$("#newpill");if(p){p.style.display="block";p.textContent=`${unseen.length} new · click to show`;}else if(route()==="today"){scheduleRefresh();}}
+function onSignal(){if(route()==="today")scheduleRefresh();}
+/* cloud mode: the indicator shows how old the snapshot is (GitHub Actions publishes one every ~15 min) */
+function liveState(){const h=STATS&&STATS.hosted;if(!h)return;const at=h.published_at,hrs=at?(Date.now()-new Date(at))/36e5:99;
+  $("#dot").classList.toggle("off",!at||hrs>2||!!h.error);$("#livetxt").textContent=at?`cloud · updated ${ago(at)}`:"cloud · waiting for data";
+  $("#livetxt").title=h.error||"Data from the GitHub Actions worker"+(h.tier?` (last run: ${h.tier} tier)`:"");}
+async function poll(){try{const u=await api(`/api/updates?after_id=${PA}&after_sig=${PS}`);if(PA){u.events.forEach(onEvent);if(u.signals.length)onSignal();}PA=u.after_id;PS=u.after_sig;}catch(e){}}
+function connect(){if(STATS&&STATS.hosted){liveState();poll();setInterval(poll,60000);return;}
+  es=new EventSource("/api/stream");es.onopen=()=>{$("#dot").classList.remove("off");$("#livetxt").textContent="live";};es.onerror=()=>{$("#dot").classList.add("off");$("#livetxt").textContent="reconnecting";};
+  es.addEventListener("event",m=>onEvent(JSON.parse(m.data)));
+  es.addEventListener("signal",onSignal);}
+let rt;function scheduleRefresh(){clearTimeout(rt);rt=setTimeout(()=>render(),2500);}
+/* cloud mode serves a read-only snapshot, so Done / Later is remembered in this browser (two weeks) */
+const TRI={all(){try{return JSON.parse(localStorage.getItem("triage")||"{}")}catch(e){return{}}},
+  add(k){const t=this.all(),now=Date.now();for(const x in t)if(now-t[x]>14*864e5)delete t[x];t[k]=now;try{localStorage.setItem("triage",JSON.stringify(t))}catch(e){}}};
+const isOpen=(kind,id)=>!(STATS&&STATS.hosted&&TRI.all()[kind+id]);
+
+/* ---------- router ---------- */
+const route=()=>(location.hash.replace(/^#\/?/,"")||"today").split("/")[0];
+const param=()=>decodeURIComponent((location.hash.replace(/^#\/?/,"").split("/")[1]||""));
+window.addEventListener("hashchange",render);
+async function render(){const r=route();NAV++;$$("#nav a.item").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#/"+r));const v=$("#view");v.innerHTML='<div class="empty">Loading…</div>';
+  try{STATS=STATS||await api("/api/stats");const lr=STATS.last_runs.fast||STATS.last_runs.all;$("#sweep").textContent=lr?`stores swept ${ago(lr.at)}`:"no sweep yet";
+    await ({today:vToday,feed:vFeed,brands:vBrands,brand:vBrand,segments:vSegments,segment:vSegments,pricing:vPricing,market:vMarket,briefs:vBriefs,settings:vSettings}[r]||vToday)(v);}
+  catch(e){if(e instanceof Stale)return;v.innerHTML=`<div class="card"><b>Could not load.</b><div class="muted small">${esc(e.message)}</div></div>`;}}
+function head(t,s){$("#title").textContent=t;$("#subtitle").innerHTML=s||"";}
+
+/* ---------- views ---------- */
+function actCard(e,isSignal){const id=e.id;return`<div class="act" data-id="${id}" data-kind="${isSignal?"signal":"event"}">
+  <div class="meta">${pill(e.importance)}<b>${esc(e.brand)}</b><span>${esc(kind(e.kind))}</span><span style="margin-left:auto">${ago(e.created_at)}</span></div>
+  <div class="t">${esc(e.title)} ${ext(e.url)}</div>
+  ${e.so_what&&!e.so_what.includes(e.title.slice(0,40))?`<div class="why">${esc(e.so_what)}</div>`:isSignal&&e.detail?`<div class="why">${esc(e.detail.slice(0,300))}</div>`:""}
+  ${e.counter_move&&e.counter_move!=="No action"?`<div class="move">${esc(e.counter_move)}</div>`:""}
+  <div class="btns"><button class="sm" data-st="done"><span class="row"><svg class="i" style="width:13px;height:13px"><use href="#i-check"/></svg> Done</span></button><button class="sm ghost" data-st="snoozed"><span class="row"><svg class="i" style="width:13px;height:13px"><use href="#i-clock"/></svg> Later</span></button>${e.brand&&!isSignal?`<a class="muted small" style="margin-left:auto;align-self:center" href="#/brand/${encodeURIComponent(e.brand)}">brand page →</a>`:""}</div></div>`;}
+function bindActs(root){root.querySelectorAll(".act [data-st]").forEach(b=>b.onclick=async()=>{const c=b.closest(".act");const r=await post(`/api/${c.dataset.kind}s/${c.dataset.id}/status`,{status:b.dataset.st});if(r.scope==="browser")TRI.add(c.dataset.kind+c.dataset.id);c.classList.add("gone");setTimeout(()=>c.remove(),400);toast((b.dataset.st==="done"?"Marked done":"Snoozed")+(r.scope==="browser"?" · remembered in this browser":""));});}
+
+async function vToday(v){const d=await api("/api/today");const dt=new Date();d.actions=d.actions.filter(e=>isOpen("event",e.id));d.signals=d.signals.filter(s=>isOpen("signal",s.id));head("Today",`${dt.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}${d.festival?` · ${esc(d.festival[0])} in ${d.festival[1]} days`:""}${d.last_sweep?` · stores swept ${ago(d.last_sweep.at)}`:""}`);
+  const radar=(await api("/api/radar")).slice(0,18);
+  v.innerHTML=`<div class="grid g3">
+    <div style="display:grid;gap:16px;align-content:start">
+      <div class="card"><h2>Act on <span class="hint">${d.actions.length} open · ${d.done_7d} done this week</span></h2><div id="acts" style="display:grid;gap:10px">${d.actions.map(e=>actCard(e,false)).join("")||'<div class="empty">Nothing urgent. The radar will add cards here as rivals move.</div>'}</div></div>
+      <div class="card"><h2>Signals <span class="hint">cross-event rules</span></h2><div id="sigs" style="display:grid;gap:10px">${d.signals.map(s=>actCard(s,true)).join("")||'<div class="empty">No open signals.</div>'}</div></div>
+    </div>
+    <div class="card" style="align-self:start"><h2>Threat radar <span class="hint">7 days</span></h2>${ring(radar)}<div class="legend"><span><i style="background:var(--s2)"></i>hot</span><span><i style="background:var(--s4)"></i>active</span><span><i style="background:var(--s1)"></i>quiet</span><span>· size = events · nearer P = hotter</span></div></div>
+    <div class="card" style="align-self:start"><h2>Changed in 24h</h2>${d.by_brand.length?d.by_brand.slice(0,14).map(b=>`<a class="row" style="padding:7px 0;border-bottom:1px solid var(--line)" href="#/brand/${encodeURIComponent(b.brand)}"><b style="min-width:92px">${esc(b.brand)}${b.self?' <span class="muted small">you</span>':""}</b><span class="grow small ink2">${Object.entries(b.kinds).sort((a,c)=>c[1]-a[1]).slice(0,3).map(([k,c])=>`${c} ${kind(k)}`).join(" · ")}</span>${pill(b.max_importance)}</a>`).join(""):'<div class="empty">Quiet day so far.</div>'}</div>
+  </div>`;
+  bindActs(v);v.querySelectorAll(".rb").forEach(g=>g.onclick=()=>location.hash="#/brand/"+encodeURIComponent(g.dataset.brand));}
+
+const KINDS=["new_product","hidden_product","price_drop","price_rise","discount_started","sale_started","stock_out","restock","bestseller_move","new_collection","delisted","news","social","video","search_trend","review_surge","complaint","hiring","homepage_change","page_change","visual_change","stack_change","app_update","app_rating_change","app_growth","watch_price_change","watch_status_change","watch_page_change","new_ad","new_domain","blog","discount_ended","renamed","theme_change","store_unreachable"];
+function feedRow(e){return`<div class="fr" data-id="${e.id}"><span class="ago">${ago(e.created_at)}</span>${pill(e.importance)}<div><span class="b">${esc(e.brand)}</span> <span class="k">${esc(kind(e.kind))}</span><div>${esc(e.title)} ${ext(e.url)}</div></div><span class="k">${esc(e.source)}</span><div class="x">${e.so_what&&!e.so_what.includes(e.title.slice(0,40))?`<div>${esc(e.so_what)}</div>`:""}${e.counter_move&&e.counter_move!=="No action"?`<div class="move" style="margin-top:4px;padding-left:10px;border-left:2px solid var(--s3)">${esc(e.counter_move)}</div>`:""}${e.detail?`<div class="muted small" style="margin-top:4px">${esc(e.detail.slice(0,400))}</div>`:""}<div class="row" style="margin-top:6px"><a class="small" href="#/brand/${encodeURIComponent(e.brand)}">brand page →</a></div></div></div>`;}
+async function vFeed(v){head("Feed","every detected change, newest first");const F=JSON.parse(sessionStorage.getItem("feedf")||"{}");
+  v.innerHTML=`<div class="card"><div class="row wrap" style="margin-bottom:8px"><select id="fb"><option value="">All brands</option>${STATS.brands.map(b=>`<option ${F.brand===b.name?"selected":""}>${esc(b.name)}</option>`).join("")}<option ${F.brand==="Sector"?"selected":""}>Sector</option><option ${F.brand==="NewEntrant"?"selected":""}>NewEntrant</option></select><select id="fk"><option value="">All kinds</option>${KINDS.map(k=>`<option value="${k}" ${F.kind===k?"selected":""}>${kind(k)}</option>`).join("")}</select><select id="fi"><option value="0">Any importance</option>${[5,7,9].map(i=>`<option value="${i}" ${F.imp==i?"selected":""}>${i}+</option>`).join("")}</select><input id="fq" placeholder="search…" value="${esc(F.q||"")}" style="flex:1;min-width:140px"><button id="fa" class="primary">Apply</button></div><div id="newpill" class="newpill"></div><div id="rows"></div></div>`;
+  const load=async()=>{const f={brand:$("#fb").value,kind:$("#fk").value,imp:$("#fi").value,q:$("#fq").value};sessionStorage.setItem("feedf",JSON.stringify(f));const rows=await api(`/api/events?${new URLSearchParams({brand:f.brand,kind:f.kind,min_importance:f.imp,q:f.q,limit:200})}`);SEEN=new Set(rows.map(r=>r.id));unseen=[];$("#newpill").style.display="none";$("#rows").innerHTML=rows.map(feedRow).join("")||'<div class="empty">No events match.</div>';};
+  $("#fa").onclick=load;$("#fq").onkeydown=e=>{if(e.key==="Enter")load();};$("#newpill").onclick=()=>{const r=$("#rows");unseen.reverse().forEach(e=>r.insertAdjacentHTML("afterbegin",feedRow(e)));unseen=[];$("#newpill").style.display="none";};
+  await load();}
+
+async function vBrands(v){head("Brands",`${STATS.brands.length} tracked · click a brand for its timeline, catalogue and best-sellers`);const d=await api("/api/brands/overview");
+  v.innerHTML=`<div class="grid gauto">${d.brands.map(b=>`<a class="card bc" href="#/brand/${encodeURIComponent(b.brand)}"><div class="row"><span class="n">${esc(b.brand)}</span>${b.self?'<span class="pill i0">you</span>':""}<span class="grow"></span>${spark(b.spark)}</div><div class="stats"><span><b>${b.events_14d}</b>events 14d</span><span><b>${b.launch||0}</b>launch score</span><span><b>${b.skus||"–"}</b>SKUs</span><span><b>${b.median_price?inr(b.median_price):"–"}</b>median</span></div>${b.last?`<div class="small ink2">${pill(b.last.importance)} ${esc(b.last.title.slice(0,80))}</div>`:'<div class="small muted">no notable move yet</div>'}</a>`).join("")}</div>`;}
+
+async function vBrand(v){const name=param();const d=await api("/api/brand/"+encodeURIComponent(name));head(name,`${d.products.length} SKUs · ${d.events.length} events${d.shopify?` · <a href="${esc(d.shopify)}" target="_blank" rel="noopener">${esc(d.shopify.replace(/^https?:\/\//,""))}</a>`:""}${d.launch?` · launch score ${d.launch.score}`:""}`);
+  const [apps,shots,pain]=await Promise.all([api("/api/app_health"),api("/api/screenshots"),api("/api/review_pain_points")]);const myApps=apps.filter(a=>a.brand===name),shot=shots.find(s=>s.brand===name),pp=pain.find(p=>p.brand===name);
+  v.innerHTML=`<div class="tabs"><button class="on" data-t="tl">Timeline</button><button data-t="pr">Products</button><button data-t="bs">Best-sellers</button><button data-t="in">Insights</button></div>
+   <div id="t-tl" class="card">${d.events.map(feedRow).join("")||'<div class="empty">No events yet.</div>'}</div>
+   <div id="t-pr" class="card" style="display:none"><input id="pq" placeholder="filter products…" style="width:100%;margin-bottom:10px"><div id="pl"></div></div>
+   <div id="t-bs" class="card" style="display:none"><table><tr><th>#</th><th>Product</th><th class="num">Price</th><th>Stock</th></tr>${d.bestsellers.map(b=>`<tr><td class="num">${b.rank}</td><td><a href="${esc(d.shopify)}/products/${esc(b.handle)}" target="_blank" rel="noopener">${esc(b.title)}</a></td><td class="num">${inr(b.price)}</td><td>${b.available?"in stock":`<span style="color:var(--s8)">out</span>`}</td></tr>`).join("")||'<tr><td colspan=4 class="muted">No best-seller collection found for this store.</td></tr>'}</table></div>
+   <div id="t-in" style="display:none" class="grid g2">
+     <div class="card"><h2>Launch evidence</h2>${d.launch?`<div class="small ink2">${d.launch.why.map(w=>`<div style="padding:4px 0;border-bottom:1px solid var(--line)">${esc(w)}</div>`).join("")}</div>`:'<div class="empty">Nothing in the last 14 days.</div>'}</div>
+     <div class="card"><h2>Companion app</h2>${myApps.length?`<table>${myApps.map(a=>`<tr><td><a href="https://play.google.com/store/apps/details?id=${esc(a.package)}" target="_blank" rel="noopener">${esc(a.name)}</a></td><td class="num">${a.rating} ★</td><td class="num">${fmt(a.ratings_count)} ratings</td><td class="num">${esc(a.downloads)}</td><td class="muted small">${esc(a.updated_on)}</td></tr>`).join("")}</table>`:'<div class="empty">No app configured. Add package ids under <code>apps:</code> in competitors.yaml.</div>'}</div>
+     <div class="card"><h2>Complaint themes <span class="hint">1-2★ reviews</span></h2>${pp?Object.entries(pp.themes).map(([t,c])=>`<div class="bar"><span>${esc(t)}</span><div class="tr"><div class="f" style="width:${c/Math.max(...Object.values(pp.themes))*100}%;background:var(--s4)"></div></div><span class="v">${c}</span></div>`).join("")+`<div class="small muted" style="margin-top:8px">“${esc(Object.values(pp.examples)[0]||"")}”</div>`:'<div class="empty">No low-star reviews captured yet.</div>'}</div>
+     <div class="card"><h2>Homepage today</h2>${shot?`<a class="shot" href="${esc(shot.src)}" target="_blank"><img src="${esc(shot.src)}" alt="homepage"><span>${esc(shot.taken_at.slice(0,10))}${shot.diff_pct!=null?` · ${shot.diff_pct}% changed vs previous`:""}</span></a>`:'<div class="empty">No screenshot yet (daily tier).</div>'}</div>
+   </div>`;
+  const renderP=()=>{const q=($("#pq").value||"").toLowerCase();$("#pl").innerHTML=`<table><tr><th>Product</th><th>Category</th><th class="num">Price</th><th>Stock</th><th></th></tr>${d.products.filter(p=>!q||p.title.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)).slice(0,300).map(p=>`<tr><td>${esc(p.title)}</td><td class="muted">${esc(p.category)}</td><td class="num">${inr(p.price)}${p.compare_at&&p.compare_at>p.price?` <s class="muted">${inr(p.compare_at)}</s>`:""}</td><td>${p.available?"✓":`<span style="color:var(--s8)">out</span>`}</td><td><button class="sm ghost" data-pid="${p.product_id}">history</button></td></tr>`).join("")}</table>`;
+    $("#pl").querySelectorAll("[data-pid]").forEach(b=>b.onclick=async()=>{const h=await api(`/api/price_history?brand=${encodeURIComponent(name)}&product_id=${b.dataset.pid}`);const tr=document.createElement("tr");tr.innerHTML=`<td colspan=5>${priceLine(h)}</td>`;b.closest("tr").after(tr);b.disabled=true;});};
+  renderP();$("#pq").oninput=renderP;
+  v.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{v.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");["tl","pr","bs","in"].forEach(t=>$("#t-"+t).style.display=t===b.dataset.t?"":"none");});}
+
+
+/* ---------- segments: price ladder per form factor ---------- */
+function ladderSvg(rows){const pts=rows.filter(r=>r.price);if(!pts.length)return'<div class="empty">No priced products yet.</div>';
+  const W=900,H=170,L=30,R=30,top=40;const mn=Math.min(...pts.map(r=>r.price)),mx=Math.max(...pts.map(r=>r.price));const lx=v=>Math.log10(v),x=v=>L+(lx(v)-lx(mn))/((lx(mx)-lx(mn))||1)*(W-L-R);
+  const ticks=[500,1000,2000,3000,5000,10000,20000,30000,40000].filter(t=>t>=mn&&t<=mx);
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="price ladder" style="display:block"><line x1="${L}" x2="${W-R}" y1="${H-40}" y2="${H-40}" stroke="var(--axis)"/>`;
+  ticks.forEach(t=>g+=`<line x1="${x(t)}" x2="${x(t)}" y1="${H-44}" y2="${H-36}" stroke="var(--axis)"/><text x="${x(t)}" y="${H-22}" text-anchor="middle">₹${fmt(t)}</text>`);
+  // stack dots that collide
+  const placed=[];pts.forEach(r=>{let lane=0;while(placed.some(p=>p.lane===lane&&Math.abs(p.x-x(r.price))<14))lane++;placed.push({r,x:x(r.price),lane});});
+  placed.forEach(({r,x:px,lane})=>{const cy=H-52-lane*16;const fill=r.self?"var(--accent)":r.source==="watchlist"?"var(--s2)":"var(--s1)";const hollow=/sold|upcoming|limited|pre/i.test(r.status||"");
+    g+=`<g data-tip="${esc(r.brand)} · ${esc(r.name)}\n₹${fmt(r.price)}${r.subscription&&r.subscription!=="None"?" · "+esc(r.subscription)+" subscription":""}${r.status?" · "+esc(r.status):""}${r.evidence?"\nevidence: "+esc(r.evidence):""}"><circle cx="${px}" cy="${cy}" r="${r.self?7:6}" fill="${hollow?"var(--surface)":fill}" stroke="${fill}" stroke-width="2"/></g>`;});
+  let lastX=-999,row=0;pts.filter(r=>r.self).sort((a,b)=>a.price-b.price).forEach(r=>{const px=x(r.price);row=(px-lastX<70)?(row+1)%3:0;lastX=px;g+=`<text x="${px}" y="${top-8+row*12}" text-anchor="middle" style="fill:var(--accent);font-weight:600">${esc(r.name.replace(/Pebble /,"").replace(/™/g,"").slice(0,18))}</text>`;});
+  return g+"</svg>";}
+async function vSegments(v){const segs=(await api("/api/segments")).filter(s=>s.show);const key=param()||segs[0].key;const sg=segs.find(s=>s.key===key)||segs[0];
+  head("Segments","form factors Pebble competes in · live store SKUs + the curated watchlist");
+  const d=await api("/api/segment/"+sg.key);const st=d.stats;const w=d.ladder.filter(r=>r.source==="watchlist"),store=d.ladder.filter(r=>r.source==="store"&&!r.self);
+  const subChip=r=>r.subscription==="Mandatory"?'<span class="chip" style="border-color:var(--s8);color:var(--s8)">subscription required</span>':r.subscription==="Optional"?'<span class="chip">optional subscription</span>':"";
+  const evChip=e=>!e?"":`<span class="chip" style="${/strong/.test(e)?"border-color:var(--good);color:var(--good)":/some/.test(e)?"border-color:var(--s4);color:var(--s4)":""}">${esc(e.replace("Independent - ","independent: ").toLowerCase())}</span>`;
+  v.innerHTML=`<div class="tabs">${segs.map(s=>`<button class="${s.key===sg.key?"on":""}" data-k="${s.key}">${esc(s.name)}</button>`).join("")}</div>
+   <div class="grid" style="grid-template-columns:1fr">
+    <div class="card"><h2>${esc(sg.name)} price ladder <span class="hint">log scale · blue = store SKUs · orange = watchlist · filled accent = Pebble · hollow = not buyable now</span></h2>${ladderSvg(d.ladder)}
+      <div class="row wrap" style="margin-top:8px;gap:18px;font-size:13px"><span><b>${st.pebble_skus}</b> Pebble SKUs ${st.pebble_min?`(₹${fmt(st.pebble_min)}–₹${fmt(st.pebble_max)})`:""}</span><span><b>${st.rivals}</b> rival brands</span><span>field median <b>₹${fmt(st.field_median)}</b></span><span><b>${st.global}</b> global products</span>${st.subscription_mandatory?`<span><b>${st.subscription_mandatory}</b> need a subscription</span>`:""}${st.independent_evidence?`<span><b>${st.independent_evidence}</b> with independent accuracy evidence</span>`:""}</div></div>
+    ${w.length?`<div class="card"><h2>Watchlist <span class="hint">from the Competitors sheet · live price every 30 min where a page exists</span></h2><table><tr><th>Product</th><th class="num">Live price</th><th class="num">Sheet</th><th class="num">12-mo cost</th><th>Status</th><th>Evidence</th><th>Origin</th></tr>${w.map(r=>`<tr style="${r.self?"background:color-mix(in srgb,var(--accent) 8%,transparent)":""}"><td>${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.name)}</a>`:esc(r.name)}<div class="small muted">${esc(r.brand)} ${subChip(r)}${r.note?` · ${esc(r.note)}`:""}</div></td><td class="num">${r.price?"₹"+fmt(r.price):"–"}${r.live?` <span class="small" style="color:${r.delta_pct<0?"var(--up)":r.delta_pct>0?"var(--s8)":"var(--muted)"}">${r.delta_pct?(r.delta_pct>0?"+":"")+r.delta_pct+"%":"live"}</span>`:'<div class="small muted">sheet</div>'}</td><td class="num muted">${r.sheet_price?"₹"+fmt(r.sheet_price):"–"}</td><td class="num">${r.tco12&&r.sub_monthly?"₹"+fmt(r.tco12):'<span class="muted">–</span>'}</td><td class="small">${esc(r.status||"")}</td><td>${evChip(r.evidence)}</td><td class="small muted">${esc(r.origin||"")}</td></tr>`).join("")}</table></div>`:""}
+    <div class="card"><h2>Store SKUs in this segment <span class="hint">best-seller ranked where the store exposes it</span></h2>${store.length?`<table><tr><th>Product</th><th>Brand</th><th class="num">Price</th><th>Stock</th><th class="num">Best-seller #</th></tr>${store.slice(0,60).map(r=>`<tr><td><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.name.slice(0,70))}</a></td><td>${esc(r.brand)}</td><td class="num">₹${fmt(r.price)}${r.compare_at&&r.compare_at>r.price?` <s class="muted">₹${fmt(r.compare_at)}</s>`:""}</td><td class="small">${r.status==="on sale"?"in stock":`<span style="color:var(--s8)">out</span>`}</td><td class="num muted">${r.rank||""}</td></tr>`).join("")}</table>`:'<div class="empty">No store SKUs classified here yet.</div>'}</div>
+    <div class="card"><h2>Segment pulse <span class="hint">14 days</span></h2>${d.pulse.map(feedRow).join("")||'<div class="empty">Nothing in this segment in the last 14 days.</div>'}</div>
+   </div>`;
+  v.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{location.hash="#/segment/"+b.dataset.k;});}
+
+const seqc=n=>n>=21?"var(--seq1)":n>=11?"var(--seq2)":n>=6?"var(--seq3)":n>=3?"var(--seq4)":"var(--seq5)";
+async function vPricing(v){head("Pricing","Pebble against the field: price gaps, nearest rival SKUs, white space");const [bench,m,ws]=await Promise.all([api("/api/benchmark"),api("/api/matches"),api("/api/whitespace")]);
+  v.innerHTML=`<div class="grid" style="grid-template-columns:1fr">
+   ${m.undercuts.length?`<div class="card" style="border-color:var(--s8)"><h2>Undercut this week</h2>${m.undercuts.map(u=>`<div class="act"><div class="t">${esc(u.brand)} is ${u.pct_below}% below your ${esc(u.self_title.slice(0,60))}</div><div class="why">${esc(u.rival_title.slice(0,90))} at ${inr(u.rival_price)} vs Pebble ${inr(u.self_price)}</div></div>`).join("")}</div>`:""}
+   <div class="card"><h2>Pebble vs the field <span class="hint">median price per category · red = Pebble dearer</span></h2><table><tr><th>Category</th><th class="num">Pebble median</th><th class="num">Field median</th><th class="num">Gap</th><th class="num">Pebble SKUs</th><th class="num">Field SKUs</th><th class="num">Field in stock</th><th class="num">Field avg discount</th></tr>${bench.map(r=>`<tr><td>${esc(r.category)}</td><td class="num">${r.self.median_price?inr(r.self.median_price):'<span class="muted">none</span>'}</td><td class="num">${inr(r.field.median_price)}</td><td class="num" style="color:${r.price_gap_pct==null?"var(--muted)":r.price_gap_pct>10?"var(--s8)":r.price_gap_pct<-10?"var(--up)":"inherit"}">${r.price_gap_pct==null?"–":(r.price_gap_pct>0?"+":"")+r.price_gap_pct+"%"}</td><td class="num">${r.self.skus}</td><td class="num">${r.field.skus}</td><td class="num">${r.field.in_stock_pct}%</td><td class="num">${r.field.avg_discount_pct}%</td></tr>`).join("")}</table></div>
+   <div class="card"><h2>White space <span class="hint">competitor SKUs per category × price band · dashed = Pebble has none · small = Pebble SKUs</span></h2>${ws.categories.length?`<table class="heat"><tr><th>Category</th>${ws.bands.map(b=>`<th class="num">₹${b}</th>`).join("")}</tr>${ws.categories.map(c=>`<tr><td>${esc(c)}</td>${ws.bands.map(b=>{const x=ws.cells[c+"|"+b];return x?`<td class="c ${x.gap?"gap":""}" style="background:${seqc(x.competitors)}" data-tip="${esc(c)} @ ₹${b}\n${esc(x.brands.join(", "))}\n${esc(x.examples.join("\n"))}">${x.competitors}${x.self?`<sup style="opacity:.85"> ${x.self}</sup>`:""}</td>`:'<td class="c e">·</td>';}).join("")}</tr>`).join("")}</table><div class="legend"><span><i style="background:var(--seq5)"></i>1-2</span><span><i style="background:var(--seq4)"></i>3-5</span><span><i style="background:var(--seq3)"></i>6-10</span><span><i style="background:var(--seq2)"></i>11-20</span><span><i style="background:var(--seq1)"></i>21+</span></div>`:'<div class="empty">Waiting for the first store sweep.</div>'}</div>
+   <div class="card"><h2>Price position <span class="hint">each Pebble SKU and its nearest rival SKUs</span></h2>${m.matches.length?`<table><tr><th>Pebble SKU</th><th class="num">₹</th><th>Nearest rivals</th><th class="num">Avg gap</th></tr>${m.matches.map(x=>`<tr><td><a href="${esc(x.self_url)}" target="_blank" rel="noopener">${esc(x.self_title.slice(0,44))}</a><div class="muted small">${esc(x.category)}</div></td><td class="num">${fmt(x.self_price)}</td><td>${x.matches.map(r=>`<div class="small"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.brand)}: ${esc(r.title.slice(0,40))}</a> <span class="muted">${inr(r.price)}${r.available?"":" · out"}</span></div>`).join("")}</td><td class="num" style="color:${x.avg_gap_pct==null?"var(--muted)":x.avg_gap_pct>10?"var(--s8)":x.avg_gap_pct<-10?"var(--up)":"inherit"}">${x.avg_gap_pct==null?"–":(x.avg_gap_pct>0?"+":"")+x.avg_gap_pct+"%"}</td></tr>`).join("")}</table>`:'<div class="empty">Needs a store sweep.</div>'}</div></div>`;}
+
+async function vMarket(v){head("Market","demand, creators, apps, complaints, stacks and visuals across the sector");const [dem,inf,apps,pain,stack,shots]=await Promise.all([api("/api/search_demand"),api("/api/influencers?limit=15"),api("/api/app_health"),api("/api/review_pain_points"),api("/api/techstack"),api("/api/screenshots")]);
+  const share=Object.entries(dem.brand_share).filter(([b])=>b!=="Sector").slice(0,8),mx=Math.max(1,...share.map(([,c])=>c));const seeds=Object.entries(dem.seeds).filter(([k])=>!STATS.brands.some(b=>k.toLowerCase().startsWith(b.name.toLowerCase())));const seen=new Set();
+  v.innerHTML=`<div class="grid g2">
+   <div class="card"><h2>Search demand <span class="hint">Google autocomplete</span></h2>${share.length?share.map(([b,c])=>`<div class="bar"><span>${esc(b)}</span><div class="tr"><div class="f" style="width:${c/mx*100}%"></div></div><span class="v">${c}</span></div>`).join("")+'<div class="legend">suggestions mentioning each brand</div>'+seeds.map(([k,s])=>`<div class="small" style="margin-top:8px"><b>${esc(k)}</b><div class="ink2">${s.slice(0,8).map(x=>esc(x.q)).join(" · ")}</div></div>`).join(""):'<div class="empty">Runs with the 30-minute tier.</div>'}</div>
+   <div class="card"><h2>Creators <span class="hint">YouTube, by views</span></h2>${inf.length?`<table><tr><th>Channel</th><th class="num">Videos</th><th class="num">Views</th><th>Covers</th></tr>${inf.map(r=>`<tr><td><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.channel)}</a>${r.owned_by?' <span class="pill i0">brand channel</span>':""}${r.covers_pebble?' <span class="pill i0">covers Pebble</span>':""}</td><td class="num">${r.videos}</td><td class="num">${fmt(r.views)}</td><td class="small muted">${Object.entries(r.brands).map(([b,c])=>`${esc(b)}×${c}`).join(", ")}</td></tr>`).join("")}</table>`:'<div class="empty">Runs with the 30-minute tier.</div>'}</div>
+   <div class="card"><h2>Companion apps <span class="hint">Google Play</span></h2>${apps.length?`<table><tr><th>App</th><th class="num">Rating</th><th class="num">Ratings</th><th class="num">Installs</th><th>Updated</th></tr>${apps.map(a=>`<tr><td>${esc(a.brand)} · <a href="https://play.google.com/store/apps/details?id=${esc(a.package)}" target="_blank" rel="noopener">${esc(a.name)}</a></td><td class="num">${a.rating} <span class="small" style="color:${a.rating_delta<0?"var(--s8)":a.rating_delta>0?"var(--up)":"var(--muted)"}">${a.rating_delta?(a.rating_delta>0?"+":"")+a.rating_delta:""}</span></td><td class="num">${fmt(a.ratings_count)}${a.ratings_gained?` <span class="small muted">+${fmt(a.ratings_gained)}</span>`:""}</td><td class="num">${esc(a.downloads)}</td><td class="small muted">${esc(a.updated_on)}</td></tr>`).join("")}</table>`:'<div class="empty">Runs with the daily tier.</div>'}</div>
+   <div class="card"><h2>Pain points <span class="hint">themes in rivals' 1-2★ reviews</span></h2>${pain.length?pain.slice(0,8).map(p=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row"><b>${esc(p.brand)}</b><span class="muted small">${p.low_star_reviews} low-star</span></div><div>${Object.entries(p.themes).slice(0,4).map(([t,c])=>`<span class="chip">${esc(t)} ×${c}</span>`).join("")}</div><div class="small muted">“${esc((Object.values(p.examples)[0]||"").slice(0,140))}”</div></div>`).join(""):'<div class="empty">Needs the daily review sweep.</div>'}</div>
+   <div class="card"><h2>Tech stack</h2>${stack.length?`<table><tr><th>Brand</th><th>Theme</th><th>Apps</th></tr>${stack.map(r=>`<tr><td>${esc(r.brand)}</td><td class="small muted">${esc(r.theme)}</td><td>${r.apps.map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</td></tr>`).join("")}</table>`:'<div class="empty">Runs with the daily tier.</div>'}</div>
+   <div class="card"><h2>Visual watch <span class="hint">daily homepage screenshots</span></h2><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${shots.filter(s=>!seen.has(s.brand)&&seen.add(s.brand)).map(s=>`<a class="shot" href="${esc(s.src)}" target="_blank"><img src="${esc(s.src)}" alt="${esc(s.brand)}" loading="lazy"><span>${esc(s.brand)}${s.diff_pct!=null?` · <b style="color:${s.diff_pct>=12?"var(--s2)":"inherit"}">${s.diff_pct}%</b>`:""}</span></a>`).join("")||'<div class="empty">Screenshots arrive with the daily tier.</div>'}</div></div></div>`;}
+
+async function vBriefs(v){head("Briefs","auto-written daily and weekly summaries");const rows=await api("/api/briefs");
+  v.innerHTML=`<div class="row" style="margin-bottom:14px"><button class="primary" id="wb">Write weekly brief</button><button id="db">Write daily brief</button><span class="muted small">${STATS.ai?`${STATS.provider==="gemini"?"Gemini":"Claude"} writes it`:"Heuristic digest · add GEMINI_API_KEY or ANTHROPIC_API_KEY for a written brief"}</span></div><div class="grid" style="grid-template-columns:1fr">${rows.map(b=>`<div class="card"><h2>${b.period==="7d"?"Weekly":"Daily"} <span class="hint">${esc(b.created_at.slice(0,16).replace("T"," "))}</span></h2><div class="answer">${esc(b.body)}</div></div>`).join("")||'<div class="empty">No brief yet.</div>'}</div>`;
+  const w=async d=>{toast("Writing…");const r=await post(`/api/brief?days=${d}`);if(r.message)toast(r.message);await render();if(r.body&&STATS.hosted)$("#view .grid").insertAdjacentHTML("afterbegin",`<div class="card"><h2>${d===7?"Weekly":"Daily"} <span class="hint">just written · not saved in cloud mode</span></h2><div class="answer">${esc(r.body)}</div></div>`);};$("#wb").onclick=()=>w(7);$("#db").onclick=()=>w(1);}
+
+function cloudCard(H){const a=(u,t)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`;
+  return`<div class="card"><h2>Cloud <span class="hint">Vercel dashboard · GitHub Actions worker</span></h2><table>
+   <tr><td>Data</td><td>${H.published_at?`updated ${ago(H.published_at)}${H.tier?` · ${esc(H.tier)} tier`:""}${H.run_url?` · ${a(H.run_url,"run log")}`:""}`:'<span style="color:var(--s8)">no snapshot yet</span>'}${H.error?`<div class="small" style="color:var(--s8)">${esc(H.error)}</div>`:""}</td></tr>
+   <tr><td>Worker</td><td>${H.repo?`${a(H.actions_url,H.repo+" · Actions")} · ${a(H.release_url,"snapshot files")}`:'<span style="color:var(--s8)">set RADAR_REPO (owner/name) in the Vercel project</span>'}</td></tr>
+   <tr><td>Password</td><td>${H.password?'<span class="pill i0">on</span>':'<span style="color:var(--s8)">off · anyone with the link can look; AI answers and Run stay off until RADAR_PASSWORD is set</span>'}</td></tr>
+   <tr><td>Run from here</td><td>${H.can_run?'<span class="pill i0">on</span> <span class="small muted">queues a GitHub Actions run</span>':'<span class="muted">add GITHUB_TOKEN (fine-grained, Actions: write) to the Vercel project</span>'}</td></tr>
+   ${H.telegram_webhook?'<tr><td>Telegram bot</td><td><button class="sm" id="tgc">Connect the bot to this site</button></td></tr>':""}
+  </table><div class="small muted" style="margin-top:8px">Done / Later is remembered per browser here. To change what is tracked, edit config/competitors.yaml on GitHub: the push starts a sweep.</div></div>`;}
+async function vSettings(v){head("Settings","runs, integrations, exports");const s=await api("/api/stats");STATS=s;const H=s.hosted;
+  v.innerHTML=`<div class="grid g2">${H?cloudCard(H):""}
+   <div class="card"><h2>Collectors</h2><div class="row wrap" style="margin-bottom:10px">${["fast","medium","slow","all"].map(t=>`<button data-run="${t}">Run ${t}</button>`).join("")}</div><table><tr><th>Tier</th><th>Last run</th><th class="num">Seconds</th><th>New events</th></tr>${["fast","medium","slow"].map(t=>{const r=s.last_runs[t];return`<tr><td>${t}</td><td>${r?esc(r.at.slice(0,16).replace("T"," ")):'<span class="muted">never</span>'}</td><td class="num">${r?r.seconds:"–"}</td><td class="small muted">${r?Object.entries(r.counts).map(([k,c])=>`${k} ${c}`).join(", "):""}</td></tr>`;}).join("")}</table><div class="small muted" style="margin-top:8px">${H?"On GitHub Actions: fast every 15 min (stores) · medium hourly (news, social, video, search) · slow daily at 09:00 IST (pages, reviews, apps, screenshots, ads, domains)":"fast = every 10 min (stores) · medium = 30 min (news, social, video, search) · slow = daily (pages, reviews, apps, screenshots, ads, domains)"}</div></div>
+   <div class="card"><h2>Integrations</h2><table><tr><td>AI layer</td><td>${s.ai?`<span class="pill i0">${s.provider==="gemini"?"Gemini":"Claude"} · ${esc(s.model)}</span>`:`<span class="muted">heuristic · set GEMINI_API_KEY or ANTHROPIC_API_KEY ${H?"in GitHub secrets (scoring) and the Vercel project (chat)":"in .env"}</span>`}</td></tr><tr><td>Telegram</td><td>${s.telegram?'<span class="pill i0">connected</span>':'<span class="muted">set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID</span>'}</td></tr><tr><td>Alert threshold</td><td>${s.threshold}/10</td></tr><tr><td>Database</td><td class="small muted">${s.products} SKUs · ${s.events_total} events</td></tr><tr><td>Config</td><td class="small muted">${H?"config/competitors.yaml on GitHub · the next sweep uses it":"config/competitors.yaml · restart after editing"}</td></tr></table></div>
+   <div class="card"><h2>Recent collector runs</h2><table><tr><th>Collector</th><th>Brand</th><th>Finished</th><th class="num">Events</th><th>Note</th></tr>${s.runs.slice(0,15).map(r=>`<tr><td>${esc(r.collector)}</td><td>${esc(r.brand)}</td><td class="small muted">${esc(r.finished_at.slice(11,16))}</td><td class="num">${r.events}</td><td class="small" style="color:${r.ok?"var(--muted)":"var(--s8)"}">${r.ok?"ok":esc(r.note)}</td></tr>`).join("")}</table></div>
+   <div class="card"><h2>Export CSV</h2><div class="row wrap">${["events","products","price_history","signals","matches","reviews","videos","search_suggestions","app_metrics"].map(t=>`<a class="chip" href="/api/export/${t}.csv">${t}</a>`).join("")}</div><h2 style="margin-top:16px">Theme</h2><div class="row"><button data-th="light">Light</button><button data-th="dark">Dark</button><button data-th="auto">Follow system</button></div></div></div>`;
+  v.querySelectorAll("[data-run]").forEach(b=>b.onclick=async()=>{const r=await post("/api/run?tier="+b.dataset.run);toast(r.message||(r.busy?"A sweep is already running; this one was not started":`${b.dataset.run} sweep started`));});v.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>applyTheme(b.dataset.th));
+  const tg=$("#tgc");if(tg)tg.onclick=async()=>{try{const r=await post("/api/telegram/connect");toast(r.telegram&&r.telegram.ok?"Bot connected: send it /help on Telegram":"Telegram said: "+String(r.telegram&&r.telegram.description||"no answer"));}catch(e){toast("Could not connect: "+e.message);}};}
+
+/* ---------- command palette ---------- */
+const ov=$("#ov"),palq=$("#palq"),palres=$("#palres"),palans=$("#palans");let sel=0;
+function openPal(){ov.classList.add("on");palq.value="";palans.style.display="none";palRender();setTimeout(()=>palq.focus(),0);}
+function closePal(){ov.classList.remove("on");}
+function palItems(q){const Q=q.toLowerCase().trim();const pages=[["Today","#/today"],["Feed","#/feed"],["Brands","#/brands"],["Segments","#/segments"],["Pricing","#/pricing"],["Market","#/market"],["Briefs","#/briefs"],["Settings","#/settings"]];const it=[];
+  (STATS?STATS.brands:[]).filter(b=>!Q||b.name.toLowerCase().includes(Q)).slice(0,6).forEach(b=>it.push({l:b.name,k:"brand",go:()=>{location.hash="#/brand/"+encodeURIComponent(b.name);closePal();}}));
+  pages.filter(p=>!Q||p[0].toLowerCase().includes(Q)).forEach(p=>it.push({l:p[0],k:"page",go:()=>{location.hash=p[1];closePal();}}));
+  /* one word that names a brand or page jumps there on Enter; anything question-like asks the radar first */
+  if(Q){const first=/\s/.test(Q)||!it.length;const a={l:`Ask the radar: “${q}”`,k:first?"Enter":"ask",go:()=>ask(q)};first?it.unshift(a):it.push(a);}
+  if(Q)it.push({l:`Search feed for “${q}”`,k:"feed",go:()=>{sessionStorage.setItem("feedf",JSON.stringify({q}));location.hash="#/feed";if(route()==="feed")render();closePal();}});
+  return it;}
+let items=[];function palRender(){items=palItems(palq.value);sel=Math.min(sel,items.length-1);palres.innerHTML=items.map((i,n)=>`<div class="r ${n===sel?"sel":""}" data-n="${n}">${esc(i.l)}<span class="k">${esc(i.k)}</span></div>`).join("");palres.querySelectorAll(".r").forEach(r=>r.onclick=()=>items[+r.dataset.n].go());}
+async function ask(q){palans.style.display="block";palans.textContent="Thinking…";try{const r=await post("/api/chat",{question:q});palans.textContent=r.answer+(r.mode==="keyword"?"\n\n(keyword mode: add GEMINI_API_KEY or ANTHROPIC_API_KEY for full answers)":r.mode==="locked"?"\n\n"+r.note:"");}catch(e){palans.textContent="Failed: "+e.message;}}
+palq.oninput=()=>{sel=0;palRender();};palq.onkeydown=e=>{if(e.key==="ArrowDown"){sel=Math.min(sel+1,items.length-1);palRender();e.preventDefault();}else if(e.key==="ArrowUp"){sel=Math.max(sel-1,0);palRender();e.preventDefault();}else if(e.key==="Enter"){items[sel]?.go();}else if(e.key==="Escape")closePal();};
+ov.onclick=e=>{if(e.target===ov)closePal();};$("#searchbtn").onclick=openPal;
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPal();}else if(e.key==="/"&&!/input|textarea|select/i.test(e.target.tagName)){e.preventDefault();openPal();}else if(e.key==="Escape")closePal();});
+
+/* ---------- feed rows expand on click (one delegated listener) ---------- */
+document.addEventListener("click",e=>{const r=e.target.closest(".fr");if(r&&!e.target.closest("a,button"))r.classList.toggle("open");});
+/* ---------- tooltips, run button ---------- */
+document.addEventListener("mousemove",e=>{const t=e.target.closest("[data-tip]"),tip=$("#tip");if(!t){tip.style.display="none";return;}tip.textContent=t.dataset.tip;tip.style.display="block";tip.style.left=Math.min(e.clientX+14,innerWidth-320)+"px";tip.style.top=(e.clientY+14)+"px";});
+$("#runbtn").onclick=async()=>{const r=await post("/api/run?tier=fast");toast(r.message||(r.busy?"A sweep is already running; this one was not started":"Store sweep started · results land in a couple of minutes"));};
+setInterval(async()=>{try{STATS=await api("/api/stats");const lr=STATS.last_runs.fast||STATS.last_runs.all;$("#sweep").textContent=lr?`stores swept ${ago(lr.at)}`:"";liveState();}catch(e){}},60000);
+render().then(connect);
+</script>
+</body>
+</html>

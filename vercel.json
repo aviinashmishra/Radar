@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app.py": {
+      "maxDuration": 120,
+      "includeFiles": "{config/**,radar/static/**}",
+      "excludeFiles": "{data/**,.github/**,**/__pycache__/**}"
+    }
+  },
+  "crons": [
+    { "path": "/api/cron/heartbeat", "schedule": "0 4 * * *" }
+  ]
+}

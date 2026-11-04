@@ -1,0 +1,238 @@
+# Curated rival products (imported from the "Competitors" sheet). One row per product.
+# Prices are India selling prices (not MRP) as recorded in the sheet; the radar then reads the live price
+# from `url` every 30 minutes (JSON-LD, meta tags, or the rupee amount nearest the last price; Whoop needs
+# Playwright because whoop.in blocks plain requests). Rows without a url keep the sheet price and are still
+# covered by news, YouTube and search-demand sensors through their brand.
+#
+# segment: band | ring | watch     subscription: None | Optional | Mandatory
+# evidence: accuracy evidence found for the sensor claims (None found | Self-reported only | Independent - some | Independent - strong)
+
+products:
+  # ---------------- Smart bands (screenless) ----------------
+  - name: Sekyo FLEX
+    brand: Sekyo
+    segment: band
+    price_inr: 2399
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+    url: https://sekyo.in/products/flex-smart-band-1
+  - name: Sekyo Flex Air
+    brand: Sekyo
+    segment: band
+    price_inr: 3390
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+    url: https://sekyo.in/products/flex-air
+  - name: Sekyo FLEX PRO
+    brand: Sekyo
+    segment: band
+    price_inr: 5690
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+    url: https://sekyo.in/products/flex-pro-smart-health-band
+  - name: Pebble Qore
+    brand: Pebble
+    segment: band
+    price_inr: 2999
+    subscription: None
+    status: On sale
+    evidence: Self-reported only
+    origin: Indian
+    pebble_baseline: true
+    url: https://www.pebblecart.com/products/qore-smart-band
+  - name: Crossbeats Vector
+    brand: Crossbeats
+    segment: band
+    price_inr: 2999
+    subscription: None
+    status: Upcoming
+    evidence: None found
+    origin: Indian
+    url: https://www.crossbeats.com/products/vector-performance-intelligence-band
+  - name: Urban Arc series (Go / Pro / Note)
+    brand: Urban
+    segment: band
+    price_inr: 2999
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+    note: Arc Go 2,999 / Arc Pro 3,999 / Arc Note 6,999 at launch; official store page not found yet
+  - name: Pebble Qore 2
+    brand: Pebble
+    segment: band
+    price_inr: 3499
+    subscription: None
+    status: On sale
+    evidence: Self-reported only
+    origin: Indian
+    pebble_baseline: true
+    url: https://www.pebblecart.com/products/qore-2
+  - name: Pebble Qore Ultra
+    brand: Pebble
+    segment: band
+    price_inr: 5999
+    subscription: None
+    status: On sale
+    evidence: Self-reported only
+    origin: Indian
+    pebble_baseline: true
+    url: https://www.pebblecart.com/products/qore-ultra
+  - name: Amazfit Helio Strap
+    brand: Amazfit
+    segment: band
+    price_inr: 8999
+    subscription: None
+    status: Limited / sold out
+    evidence: Independent - some
+    origin: Global
+    url: https://in.amazfit.com/products/helio-strap
+  - name: Noise REP Band
+    brand: Noise
+    segment: band
+    price_inr: 9499
+    subscription: None
+    status: On sale
+    evidence: Self-reported only
+    origin: Indian
+    url: https://www.gonoise.com/products/rep-fitness-tracker
+  - name: Luna Band
+    brand: Luna
+    segment: band
+    price_inr: 13999
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+  - name: Google Fitbit Air
+    brand: Google Fitbit
+    segment: band
+    price_inr: 13999
+    subscription: Optional
+    subscription_inr_per_month: 99
+    status: On sale
+    evidence: Independent - some
+    origin: Global
+    note: Google Health Premium 99/month or 999/year; Google Store page is rendered client-side, price kept from sheet
+  - name: Polar Loop
+    brand: Polar
+    segment: band
+    price_inr: 19999
+    subscription: None
+    status: On sale
+    evidence: Independent - some
+    origin: Global
+    url: https://www.polar.com/in-en/loop
+  - name: Whoop 5.0
+    brand: Whoop
+    segment: band
+    price_inr: 21990
+    subscription: Mandatory
+    status: On sale
+    evidence: Independent - strong
+    origin: Global
+    note: price is a 12-month membership bundle including the device
+    url: https://www.whoop.in/
+  - name: Garmin Cirqa
+    brand: Garmin
+    segment: band
+    price_inr: 25990
+    subscription: Optional
+    status: Limited / sold out
+    evidence: Independent - strong
+    origin: Global
+  - name: White-label screenless cluster (Maxelon, QORFIT, others)
+    brand: Various (OEM)
+    segment: band
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Global
+
+  # ---------------- Smart rings ----------------
+  - name: boAt Smart Ring Active
+    brand: boAt
+    segment: ring
+    price_inr: 2999
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+  - name: boAt Valour Ring 1
+    brand: boAt
+    segment: ring
+    price_inr: 12999
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+  - name: Gabit Smart Ring
+    brand: Gabit
+    segment: ring
+    price_inr: 13883
+    subscription: None
+    status: On sale
+    evidence: Self-reported only
+    origin: Indian
+    url: https://www.gabit.com/ring
+  - name: FITTR HART X2
+    brand: FITTR
+    segment: ring
+    price_inr: 19499
+    subscription: None
+    status: On sale
+    evidence: None found
+    origin: Indian
+    url: https://shop.fittr.care/products/fittr-hart-ring
+  - name: Noise Luna Ring Gen 2
+    brand: Noise
+    segment: ring
+    price_inr: 19999
+    subscription: None
+    status: On sale
+    evidence: Self-reported only
+    origin: Indian
+    url: https://www.gonoise.com/products/luna-smart-ring-noise-hdfc-cc-exclusive
+  - name: Amazfit Helio Ring
+    brand: Amazfit
+    segment: ring
+    price_inr: 21999
+    subscription: None
+    status: On sale
+    evidence: Independent - some
+    origin: Global
+    url: https://in.amazfit.com/products/amazfit-helio-ring
+  - name: Ultrahuman Ring Air
+    brand: Ultrahuman
+    segment: ring
+    price_inr: 28499
+    subscription: Optional
+    status: On sale
+    evidence: Independent - some
+    origin: Indian
+    url: https://www.ultrahuman.com/ring/buy/in/
+  - name: Oura Ring 4
+    brand: Oura
+    segment: ring
+    price_inr: 28900
+    subscription: Mandatory
+    subscription_inr_per_month: 599
+    status: On sale
+    evidence: Independent - strong
+    origin: Global
+    note: sold in India through Amazon and Croma only; no official India page to watch
+  - name: Samsung Galaxy Ring
+    brand: Samsung
+    segment: ring
+    price_inr: 38999
+    subscription: None
+    status: On sale
+    evidence: Independent - some
+    origin: Global
+    url: https://www.samsung.com/in/rings/galaxy-ring/buy/

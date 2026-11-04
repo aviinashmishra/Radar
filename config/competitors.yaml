@@ -1,0 +1,222 @@
+# Pebble Competitor Radar - who and what we watch.
+# Every entry is a brand. `self: true` marks Pebble itself so the same pipeline benchmarks you vs them.
+# `shopify` is the storefront root (the public /products.json, /collections.json and sitemap are polled).
+# `watch_pages` are any public pages whose text we snapshot and diff (careers, press, offers, landing pages).
+# `news_terms` are extra Google News search phrases on top of the brand name.
+# `segments` tags the brand's product segments (keys from `segments:` below); `origin` Indian | Global;
+# `tier` core | adjacent (global premium brands watched for pricing and launches, not SKU by SKU).
+# Curated products with sheet data live in watchlist.yaml.
+
+sector: "Indian consumer electronics D2C: screenless smart bands, smart rings, smartwatches, TWS earbuds, speakers, chargers"
+currency: "INR"
+
+# Cloud mode: the GitHub repo whose Actions run the collectors and whose `data` release holds the database
+# snapshot the Vercel dashboard reads. RADAR_REPO in the environment overrides it (e.g. for a fork).
+cloud_repo: "aviinashmishra/Radar"
+
+# Product segments. `keywords` is a regex matched against product type + title to place Shopify SKUs.
+segments:
+  - { key: band,       name: "Smart bands (screenless)", show: true,  keywords: "screenless|smart band|health band|fitness band|fitness tracker|\\bband\\b|qore|\\bflex\\b|\\barc\\b|\\bloop\\b|cirqa|whoop|helio strap|\\brep\\b|fitbit air" }
+  - { key: ring,       name: "Smart rings",              show: true,  keywords: "smart ring|\\bring\\b" }
+  - { key: watch,      name: "Smartwatches",             show: true,  keywords: "smart ?watch|\\bwatch\\b" }
+  - { key: earbuds,    name: "TWS earbuds",              show: true,  keywords: "\\btws\\b|earbud|\\bbuds?\\b|dockets|airdopes|true wireless|earpods" }
+  - { key: neckband,   name: "Neckbands",                show: false, keywords: "neckband|bassheads" }
+  - { key: headphones, name: "Headphones",               show: false, keywords: "headphone|on-?ear|over-?ear" }
+  - { key: speaker,    name: "Speakers",                 show: true,  keywords: "speaker|soundbar|\\bstone\\b|party" }
+  - { key: powerbank,  name: "Power banks",              show: false, keywords: "power ?bank" }
+  - { key: charger,    name: "Chargers & cables",        show: false, keywords: "charger|cable|adapter|\\bgan\\b" }
+
+# Indian sale calendar. The signal engine uses it to label sale-start behaviour and warn early.
+festivals:
+  - { name: "Republic Day sales", month: 1, day: 20 }
+  - { name: "Valentine's Day", month: 2, day: 7 }
+  - { name: "Holi sales", month: 3, day: 10 }
+  - { name: "Independence Day sales", month: 8, day: 10 }
+  - { name: "Navratri / Big Billion & Great Indian Festival", month: 9, day: 20 }
+  - { name: "Dussehra", month: 10, day: 1 }
+  - { name: "Diwali / Dhanteras", month: 10, day: 15 }
+  - { name: "Black Friday / Cyber Monday", month: 11, day: 24 }
+  - { name: "Christmas / New Year", month: 12, day: 20 }
+
+brands:
+  - name: Pebble
+    self: true
+    shopify: https://www.pebblecart.com
+    segments: [band, ring, watch, earbuds, speaker, charger]
+    news_terms: ["Pebble smartwatch India", "Pebblecart", "Pebble Qore"]
+    watch_pages:
+      - https://www.pebblecart.com/pages/about-us
+    apps: ["com.mensa.pebble"]          # companion app on Google Play (check this is the right one)
+
+  # ---------------- Indian mass-market rivals (full catalogue tracking) ----------------
+  - name: boAt
+    shopify: https://www.boat-lifestyle.com
+    segments: [watch, ring, earbuds, neckband, headphones, speaker]
+    news_terms: ["boAt Lifestyle", "Imagine Marketing boAt", "boAt smart ring"]
+    watch_pages:
+      - https://www.boat-lifestyle.com/pages/careers
+    apps: ["com.coveiot.android.boat", "com.boAt.wristgear"]
+  - name: Noise
+    shopify: https://www.gonoise.com
+    segments: [watch, band, ring, earbuds, neckband]
+    news_terms: ["Noise smartwatch", "Nexxbase Noise", "Noise REP band", "Noise Luna ring"]
+    watch_pages:
+      - https://www.gonoise.com/pages/careers
+    apps: ["com.noisefit"]
+  - name: Fire-Boltt
+    shopify: https://www.fireboltt.com
+    segments: [watch, earbuds]
+    news_terms: ["Fire-Boltt smartwatch"]
+    apps: ["com.crrepa.band.fireboltt", "com.wiiteer.fireboltt"]
+  - name: Boult
+    shopify: https://www.boultaudio.com
+    segments: [earbuds, watch, neckband, speaker]
+    news_terms: ["Boult Audio", "GoBoult"]
+    apps: ["com.crrepa.band.boultfit", "com.HeylinkAudio.boult"]
+  - name: Crossbeats
+    shopify: https://www.crossbeats.com
+    segments: [watch, band, earbuds]
+    news_terms: ["Crossbeats", "Crossbeats Vector band"]
+  - name: Sekyo
+    shopify: https://sekyo.in
+    segments: [band, watch]
+    news_terms: ["Sekyo Flex band", "Sekyo smartwatch"]
+  - name: Hammer
+    shopify: https://www.hammeronline.in
+    segments: [watch, band, earbuds]
+    news_terms: ["Hammer smartwatch India"]
+  - name: Gizmore
+    shopify: https://www.gizmore.in
+    segments: [watch, band, speaker]
+    news_terms: ["Gizmore"]
+  - name: Just Corseca
+    shopify: https://www.justcorseca.in
+    segments: [watch, earbuds, speaker]
+    news_terms: ["Just Corseca"]
+  - name: pTron
+    shopify: https://www.ptron.in
+    segments: [earbuds, watch, speaker]
+    news_terms: ["pTron"]
+  - name: Zebronics
+    shopify: https://zebronics.com
+    segments: [watch, earbuds, speaker]
+    news_terms: ["Zebronics"]
+  - name: Portronics
+    shopify: https://www.portronics.com
+    segments: [earbuds, speaker, charger]
+    news_terms: ["Portronics"]
+  - name: Ambrane
+    shopify: https://www.ambraneindia.com
+    segments: [earbuds, watch, powerbank, charger]
+    news_terms: ["Ambrane"]
+  - name: Blaupunkt
+    shopify: https://www.blaupunktaudio.in
+    segments: [earbuds, headphones, speaker]
+    news_terms: ["Blaupunkt audio India"]
+  - name: Fastrack
+    segments: [watch]
+    news_terms: ["Fastrack smartwatch", "Titan smartwatch"]
+    watch_pages:
+      - https://www.fastrack.in/smart-watches
+  - name: Mivi
+    segments: [earbuds, speaker]
+    news_terms: ["Mivi earbuds"]
+  - name: CultSport
+    segments: [watch]
+    news_terms: ["cultsport smartwatch"]
+  - name: beatXP
+    segments: [watch]
+    news_terms: ["beatXP"]
+
+  # ---------------- Screenless band and smart ring specialists (from the Competitors sheet) ----------------
+  - name: Urban
+    segments: [band, watch]
+    news_terms: ["URBAN Arc band", "Urban wearables India"]
+  - name: Luna
+    segments: [band, ring]
+    news_terms: ["Luna ring Noise", "Luna band"]
+  - name: Gabit
+    segments: [ring]
+    news_terms: ["Gabit smart ring"]
+    watch_pages:
+      - https://www.gabit.com/ring
+  - name: Ultrahuman
+    segments: [ring]
+    news_terms: ["Ultrahuman ring", "Ultrahuman India"]
+  - name: FITTR
+    shopify: https://shop.fittr.care
+    segments: [ring]
+    news_terms: ["FITTR HART ring"]
+  - name: Amazfit
+    shopify: https://in.amazfit.com
+    origin: Global
+    tier: adjacent
+    segments: [band, ring, watch]
+    news_terms: ["Amazfit India", "Amazfit Helio"]
+  - name: Google Fitbit
+    origin: Global
+    tier: adjacent
+    segments: [band, watch]
+    news_terms: ["Fitbit Air India", "Fitbit India"]
+  - name: Polar
+    origin: Global
+    tier: adjacent
+    segments: [band, watch]
+    news_terms: ["Polar Loop band", "Polar India"]
+  - name: Whoop
+    origin: Global
+    tier: adjacent
+    segments: [band]
+    news_terms: ["Whoop India", "Whoop 5.0"]
+  - name: Garmin
+    origin: Global
+    tier: adjacent
+    segments: [band, watch]
+    news_terms: ["Garmin Cirqa", "Garmin India launch"]
+  - name: Oura
+    origin: Global
+    tier: adjacent
+    segments: [ring]
+    news_terms: ["Oura Ring India"]
+  - name: Samsung
+    origin: Global
+    tier: adjacent
+    segments: [ring, watch, earbuds]
+    news_terms: ["Samsung Galaxy Ring India", "Galaxy Watch India launch"]
+
+# Sector-wide searches (not tied to a brand). Catch new entrants, category trends and launches.
+sector_news_terms:
+  - "screenless fitness band India"
+  - "smart ring India launch"
+  - "smartwatch launch India"
+  - "TWS earbuds launch India"
+  - "wearables India IDC"
+  - "D2C electronics India funding"
+  - "Bluetooth speaker launch India"
+
+# Reddit communities and search phrases that surface buzz, complaints and unmet needs.
+reddit:
+  subreddits: ["IndianGaming", "india", "gadgets", "smartwatch", "Earbuds", "whoop", "ouraring"]
+  searches: ["boAt", "Noise smartwatch", "Fire-Boltt", "Pebble smartwatch", "Boult", "screenless band", "smart ring India"]
+
+# Product categories and price bands for the white-space map (INR).
+price_bands: [0, 1000, 2000, 3000, 5000, 8000, 15000, 1000000]
+
+# YouTube search sensor: each brand is searched with these suffixes, newest uploads first.
+youtube_queries: ["new launch", "unboxing review"]
+
+# Search-demand radar: Google autocomplete seeds. {brand} expands to every brand name.
+search_seeds:
+  - "{brand} "
+  - "{brand} new"
+  - "best smartwatch under"
+  - "best earbuds under"
+  - "best smart ring"
+  - "screenless fitness band"
+  - "smartwatch with"
+  - "earbuds with"
+  - "smart ring"
+  - "whoop alternative"
+
+# Daily homepage screenshots + visual diff (needs: pip install playwright && python -m playwright install chromium)
+screenshots: true
