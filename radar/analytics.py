@@ -254,11 +254,14 @@ def segments_list() -> list[dict]:
     return [dict(sg, category=SEGMENT_CATEGORY.get(sg["key"], sg["name"])) for sg in settings.segments]
 
 
-def _watchlist_rows(segment: str) -> list[dict]:
+def _watchlist_rows(segment: str | None = None, brand: str | None = None) -> list[dict]:
+    """Curated watchlist products (watchlist.yaml) with their latest live price. Filter by segment and/or brand."""
     from .collectors.watchlist import load as load_watchlist
     out = []
     for item in load_watchlist():
-        if item.get("segment") != segment:
+        if segment and item.get("segment") != segment:
+            continue
+        if brand and item.get("brand", "").lower() != brand.lower():
             continue
         latest = db.q1("SELECT price, status, source, seen_at FROM watch_prices WHERE name=? ORDER BY id DESC LIMIT 1", (item["name"],))
         price = (latest or {}).get("price") or item.get("price_inr")
@@ -269,8 +272,18 @@ def _watchlist_rows(segment: str) -> list[dict]:
                     "tco12": (price + 12 * sub) if price and sub else price, "origin": item.get("origin"), "evidence": item.get("evidence"),
                     "url": item.get("url"), "note": item.get("note"), "self": bool(item.get("pebble_baseline")),
                     "delta_pct": round(100 * (price - item["price_inr"]) / item["price_inr"]) if price and item.get("price_inr") else None,
-                    "seen_at": (latest or {}).get("seen_at"), "source": "watchlist"})
+                    "seen_at": (latest or {}).get("seen_at"), "source": "watchlist", "segment": item.get("segment")})
     return out
+
+
+def brand_meta(name: str) -> dict:
+    """Static facts about a brand from competitors.yaml, with segment display names."""
+    b = settings.brand(name)
+    names = {sg["key"]: sg["name"] for sg in settings.segments}
+    if not b:
+        return {"segments": [], "segment_names": [], "origin": None, "tier": None, "watch_pages": [], "apps": [], "shopify": None}
+    return {"segments": b.segments, "segment_names": [names.get(k, k) for k in b.segments], "origin": b.origin, "tier": b.tier,
+            "watch_pages": b.watch_pages, "apps": b.apps, "shopify": b.shopify}
 
 
 def segment_ladder(segment: str, per_brand: int = 6) -> dict:

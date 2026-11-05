@@ -169,7 +169,10 @@ def brand_page(name: str):
                  "FROM products WHERE brand=? ORDER BY last_changed DESC LIMIT 500", (name,))
     for p in prods:
         p["category"] = analytics.categorize(p["product_type"], p["title"])
-    return {"brand": name, "shopify": b.shopify if b else None,
+    watch = analytics._watchlist_rows(brand=name)
+    for w in watch:   # price trail for the sparkline / history line
+        w["history"] = db.q("SELECT price, status, seen_at FROM watch_prices WHERE name=? AND price>0 ORDER BY id", (w["name"],))
+    return {"brand": name, "shopify": b.shopify if b else None, "meta": analytics.brand_meta(name), "watchlist": watch,
             "events": [_ev(r) for r in db.q("SELECT * FROM events WHERE brand=? AND kind<>'baseline' ORDER BY id DESC LIMIT 300", (name,))],
             "products": prods,
             "bestsellers": db.q("SELECT r.rank, p.title, p.price, p.available, p.handle FROM bestseller_rank r JOIN products p "
@@ -447,17 +450,23 @@ def brands_overview():
         med.setdefault(r["brand"], []).append(r["price"])
     last = {r["brand"]: r for r in db.q("SELECT brand, title, kind, importance, created_at, id FROM events WHERE id IN "
                                         "(SELECT MAX(id) FROM events WHERE kind<>'baseline' AND importance>=5 GROUP BY brand)")}
+    watch = {}
+    for w in analytics._watchlist_rows():
+        watch.setdefault(w["brand"], []).append(w)
     out = []
-    names = [b.name for b in settings.brands] + [n for n in counts if n not in {b.name for b in settings.brands}]
-    for name in names:
-        b = settings.brand(name)
+    for b in settings.brands:   # configured brands only; "Sector" (sector-wide news) lives in the feed, not here
+        name = b.name
         series = [counts.get(name, {}).get(d, 0) for d in days]
         prices = med.get(name, [])
-        out.append({"brand": name, "self": name == me, "shopify": b.shopify if b else None,
+        wl = watch.get(name, [])
+        wprices = sorted(x["price"] for x in wl if x["price"])
+        out.append({"brand": name, "self": name == me, "shopify": b.shopify, "meta": analytics.brand_meta(name),
                     "spark": series, "events_14d": sum(series), "launch": (launch.get(name) or {}).get("score", 0),
                     "skus": (cat.get(name) or {}).get("skus", 0), "in_stock": (cat.get(name) or {}).get("in_stock"),
                     "discounted": (cat.get(name) or {}).get("discounted", 0),
-                    "median_price": prices[len(prices) // 2] if prices else None,
+                    "median_price": prices[len(prices) // 2] if prices else (wprices[len(wprices) // 2] if wprices else None),
+                    "watchlist": len(wl), "watch_live": sum(1 for x in wl if x["live"]),
+                    "coverage": "store" if b.shopify else ("watchlist" if wl else "news"),
                     "last": last.get(name)})
     return {"days": days, "brands": sorted(out, key=lambda x: (not x["self"], -x["launch"], -x["events_14d"]))}
 
