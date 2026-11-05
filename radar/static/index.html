@@ -281,16 +281,29 @@ async function vBrand(v){const name=param();const d=await api("/api/brand/"+enco
 
 /* ---------- segments: price ladder per form factor ---------- */
 function ladderSvg(rows){const pts=rows.filter(r=>r.price);if(!pts.length)return'<div class="empty">No priced products yet.</div>';
-  const W=900,H=170,L=30,R=30,top=40;const mn=Math.min(...pts.map(r=>r.price)),mx=Math.max(...pts.map(r=>r.price));const lx=v=>Math.log10(v),x=v=>L+(lx(v)-lx(mn))/((lx(mx)-lx(mn))||1)*(W-L-R);
+  const W=900,L=30,R=30,STEP=13,RAD=5;const mn=Math.min(...pts.map(r=>r.price)),mx=Math.max(...pts.map(r=>r.price));const lx=v=>Math.log10(v),x=v=>L+(lx(v)-lx(mn))/((lx(mx)-lx(mn))||1)*(W-L-R);
   const ticks=[500,1000,2000,3000,5000,10000,20000,30000,40000].filter(t=>t>=mn&&t<=mx);
-  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="price ladder" style="display:block"><line x1="${L}" x2="${W-R}" y1="${H-40}" y2="${H-40}" stroke="var(--axis)"/>`;
-  ticks.forEach(t=>g+=`<line x1="${x(t)}" x2="${x(t)}" y1="${H-44}" y2="${H-36}" stroke="var(--axis)"/><text x="${x(t)}" y="${H-22}" text-anchor="middle">₹${fmt(t)}</text>`);
-  // stack dots that collide
-  const placed=[];pts.forEach(r=>{let lane=0;while(placed.some(p=>p.lane===lane&&Math.abs(p.x-x(r.price))<14))lane++;placed.push({r,x:x(r.price),lane});});
-  placed.forEach(({r,x:px,lane})=>{const cy=H-52-lane*16;const fill=r.self?"var(--accent)":r.source==="watchlist"?"var(--s2)":"var(--s1)";const hollow=/sold|upcoming|limited|pre/i.test(r.status||"");
-    g+=`<g data-tip="${esc(r.brand)} · ${esc(r.name)}\n₹${fmt(r.price)}${r.subscription&&r.subscription!=="None"?" · "+esc(r.subscription)+" subscription":""}${r.status?" · "+esc(r.status):""}${r.evidence?"\nevidence: "+esc(r.evidence):""}"><circle cx="${px}" cy="${cy}" r="${r.self?7:6}" fill="${hollow?"var(--surface)":fill}" stroke="${fill}" stroke-width="2"/></g>`;});
-  let lastX=-999,row=0;pts.filter(r=>r.self).sort((a,b)=>a.price-b.price).forEach(r=>{const px=x(r.price);row=(px-lastX<70)?(row+1)%3:0;lastX=px;g+=`<text x="${px}" y="${top-8+row*12}" text-anchor="middle" style="fill:var(--accent);font-weight:600">${esc(r.name.replace(/Pebble /,"").replace(/™/g,"").slice(0,18))}</text>`;});
-  return g+"</svg>";}
+  // stack dots that collide; chart height follows the tallest stack so dots never run into the label band
+  const placed=[];pts.forEach(r=>{const px=x(r.price);let lane=0;while(placed.some(p=>p.lane===lane&&Math.abs(p.x-px)<STEP))lane++;placed.push({r,x:px,lane});});
+  const lanes=Math.max(...placed.map(p=>p.lane))+1;
+  // Pebble labels: greedy, non-overlapping, in up to 3 rows above the stacks. Anything that does not fit goes to the strip below.
+  const clean=n=>n.replace(/^Pebble /,"").replace(/™|®/g,"").replace(/\s*[|(-].*$/,"").trim();
+  const mine=pts.filter(r=>r.self).sort((a,b)=>a.price-b.price);const labels=[],rowsUsed=[[],[],[]],seen=new Set();
+  mine.forEach(r=>{const name=clean(r.name).slice(0,16);const k=name.toLowerCase()+"|"+Math.round(r.price/100);if(!name||seen.has(k))return;
+    const px=x(r.price),w=name.length*6.2+10,x0=Math.max(L,Math.min(W-R-w,px-w/2)),x1=x0+w;
+    const row=rowsUsed.findIndex(rw=>rw.every(([a,b])=>x1<a-4||x0>b+4));if(row<0)return;
+    rowsUsed[row].push([x0,x1]);seen.add(k);labels.push({name,px,cx:x0+w/2,row});});
+  const nRows=labels.length?Math.max(...labels.map(l=>l.row))+1:0;const top=10+nRows*14;const axisY=top+lanes*STEP+18;const H=axisY+28;
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="price ladder" style="display:block"><line x1="${L}" x2="${W-R}" y1="${axisY}" y2="${axisY}" stroke="var(--axis)"/>`;
+  ticks.forEach(t=>g+=`<line x1="${x(t)}" x2="${x(t)}" y1="${axisY-4}" y2="${axisY+4}" stroke="var(--axis)"/><text x="${x(t)}" y="${axisY+18}" text-anchor="middle">₹${fmt(t)}</text>`);
+  placed.forEach(({r,x:px,lane})=>{const cy=axisY-10-lane*STEP;const fill=r.self?"var(--accent)":r.source==="watchlist"?"var(--s2)":"var(--s1)";const hollow=/sold|upcoming|limited|pre/i.test(r.status||"");
+    g+=`<g data-tip="${esc(r.brand)} · ${esc(r.name)}\n₹${fmt(r.price)}${r.subscription&&r.subscription!=="None"?" · "+esc(r.subscription)+" subscription":""}${r.status?" · "+esc(r.status):""}${r.evidence?"\nevidence: "+esc(r.evidence):""}"><circle cx="${px}" cy="${cy}" r="${r.self?RAD+1:RAD}" fill="${hollow?"var(--surface)":fill}" stroke="${fill}" stroke-width="2"/></g>`;});
+  const stackTop=px=>{const l=placed.filter(p=>Math.abs(p.x-px)<STEP).reduce((m,p)=>Math.max(m,p.lane),0);return axisY-10-l*STEP-RAD-2;};
+  labels.forEach(l=>{const ly=top-4-(nRows-1-l.row)*14;g+=`<line x1="${l.px}" x2="${l.px}" y1="${ly+3}" y2="${stackTop(l.px)}" stroke="var(--accent)" stroke-opacity=".35"/><text x="${l.cx}" y="${ly}" text-anchor="middle" style="fill:var(--accent);font-weight:600">${esc(l.name)}</text>`;});
+  g+="</svg>";
+  // Pebble strip: every own SKU in price order, so nothing is lost when the chart cannot label it
+  const strip=mine.map(r=>`<span class="chip" style="border-color:var(--accent);color:var(--accent)" title="${esc(r.name)}">${esc(clean(r.name).slice(0,22))} ₹${fmt(r.price)}</span>`).join("");
+  return g+(strip?`<div class="hint" style="margin-top:8px">Pebble on this ladder</div><div>${strip}</div>`:"");}
 async function vSegments(v){const segs=(await api("/api/segments")).filter(s=>s.show);const key=param()||segs[0].key;const sg=segs.find(s=>s.key===key)||segs[0];
   head("Segments","form factors Pebble competes in · live store SKUs + the curated watchlist");
   const d=await api("/api/segment/"+sg.key);const st=d.stats;const w=d.ladder.filter(r=>r.source==="watchlist"),store=d.ladder.filter(r=>r.source==="store"&&!r.self);
