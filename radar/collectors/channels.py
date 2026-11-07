@@ -117,8 +117,12 @@ def read_amazon(query: str) -> list[dict]:
             headers={"User-Agent": CHROME_UA, "Accept": "text/html,application/xhtml+xml", "Accept-Language": "en-IN,en;q=0.9"})
     if r.status_code != 200 or "captcha" in r.text[:5000].lower() or "api-services-support" in r.text[:3000]:
         raise Blocked(f"amazon {r.status_code}")
+    blocks = re.split(r'(?=<div[^>]*data-component-type="s-search-result")', r.text)[1:]
+    if not blocks and len(r.text) < 20000 and "no results" not in r.text.lower():
+        # soft block: HTTP 200 with a ~2 KB blank page (no results grid, no "No results for" copy)
+        raise Blocked(f"amazon soft block ({len(r.text)} bytes)")
     out = []
-    for pos, it in enumerate(re.split(r'(?=<div[^>]*data-component-type="s-search-result")', r.text)[1:], 1):
+    for pos, it in enumerate(blocks, 1):
         asin = re.search(r'data-asin="([A-Z0-9]{10})"', it)
         title = _amazon_title(it)
         if not asin or not title:
