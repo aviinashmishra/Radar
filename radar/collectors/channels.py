@@ -22,6 +22,7 @@ their presence from news / press / social mentions instead (`scan_mentions`, run
 from __future__ import annotations
 import json
 import re
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import yaml
@@ -81,22 +82,55 @@ def queries_for(brand, *, quick: bool = False) -> list[str]:
 
 
 # ---------------------------------------------------------------- readers
+class Blocked(RuntimeError):
+    """The marketplace answered with a throttle page (503 / captcha): nothing was read, so nothing must be marked as read."""
+
+
+def _clean_title(t: str) -> str:
+    import html as _html
+    return _html.unescape(re.sub(r"<[^>]+>", "", t)).strip()[:200]
+
+
+def _amazon_brand(block: str) -> str:
+    """The brand line Amazon shows above the title (its own short <h2 class="a-size-mini">): empty when absent."""
+    for m in re.findall(r"<h2[^>]*a-size-mini[^>]*>(.*?)</h2>", block, re.S):
+        t = _clean_title(m)
+        if 1 <= len(t.split()) <= 3 and len(t) <= 30:
+            return t
+    return ""
+
+
+def _amazon_title(block: str) -> str:
+    """The product title of one search-result block. Amazon's 2026 layout puts the brand in its own <h2> and the full
+    title in the aria-label of the title <h2> (prefixed "Sponsored Ad - " for ads); older layouts keep it in the span.
+    Take the longest candidate across h2 aria-labels, h2 spans and the image alt."""
+    cands = re.findall(r'<h2[^>]*aria-label="([^"]+)"', block)
+    cands += [re.sub(r"<[^>]+>", " ", m) for m in re.findall(r"<h2[^>]*>(.*?)</h2>", block, re.S)]
+    cands += re.findall(r'<img[^>]*alt="([^"]{20,})"', block)
+    best = max((_clean_title(c) for c in cands), key=len, default="")
+    best = re.sub(r"^\s*Sponsored Ad\s*-\s*", "", best).strip()
+    return best if len(best) > 3 else ""
+
+
 def read_amazon(query: str) -> list[dict]:
-    r = get("https://www.amazon.in/s", params={"k": query}, timeout=30, min_gap=2.5,
-            headers={"User-Agent": CHROME_UA, "Accept": "text/html,application/xhtml+xml"})
-    if r.status_code != 200 or "captcha" in r.text[:5000].lower():
-        return []
+    r = get("https://www.amazon.in/s", params={"k": query}, timeout=30, min_gap=5.0,
+            headers={"User-Agent": CHROME_UA, "Accept": "text/html,application/xhtml+xml", "Accept-Language": "en-IN,en;q=0.9"})
+    if r.status_code != 200 or "captcha" in r.text[:5000].lower() or "api-services-support" in r.text[:3000]:
+        raise Blocked(f"amazon {r.status_code}")
     out = []
     for pos, it in enumerate(re.split(r'(?=<div[^>]*data-component-type="s-search-result")', r.text)[1:], 1):
         asin = re.search(r'data-asin="([A-Z0-9]{10})"', it)
-        title = re.search(r"<h2[^>]*>.*?<span[^>]*>(.*?)</span>", it, re.S)
+        title = _amazon_title(it)
         if not asin or not title:
             continue
+        brand_hint = _amazon_brand(it)
+        if brand_hint and brand_hint.lower() not in title.lower():
+            title = f"{brand_hint} {title}"[:200]  # the 2026 layout keeps the brand out of the title text
         price = re.search(r'<span class="a-price-whole">([\d,]+)', it)
         mrp = re.search(r'<span class="a-price a-text-price"[^>]*>.*?<span class="a-offscreen">₹([\d,]+)', it, re.S)
         rating = re.search(r'<span class="a-icon-alt">([\d.]+) out of 5', it)
         cnt = re.search(r'aria-label="([\d,]+) ratings?"', it) or re.search(r'<span class="a-size-base s-underline-text">\(?([\d,]+)', it)
-        out.append({"item_key": asin.group(1), "title": re.sub(r"<[^>]+>", "", title.group(1)).strip()[:200],
+        out.append({"item_key": asin.group(1), "title": title, "brand_hint": brand_hint,
                     "price": float(price.group(1).replace(",", "")) if price else None,
                     "mrp": float(mrp.group(1).replace(",", "")) if mrp else None,
                     "available": 1 if price else 0, "rating": float(rating.group(1)) if rating else None,
@@ -119,6 +153,8 @@ def _walk(o, pred):
 def read_flipkart(query: str) -> list[dict]:
     r = get("https://www.flipkart.com/search", params={"q": query}, timeout=30, min_gap=2.5,
             headers={"User-Agent": CHROME_UA, "Accept": "text/html,application/xhtml+xml"})
+    if r.status_code in (403, 429, 503):
+        raise Blocked(f"flipkart {r.status_code}")
     if r.status_code != 200:
         return []
     m = re.search(r"window\.__INITIAL_STATE__\s*=\s*(\{.*?\});\s*</script>", r.text, re.S)
@@ -352,12 +388,17 @@ def scan_mentions(days: int = 60) -> int:
 
 
 # ---------------------------------------------------------------- runs
-def _due(brand_name: str) -> bool:
+def _due(brand_name: str, channel_key: str = "") -> bool:
     hrs = float(_cfg("marketplace_refresh_hours", 6))
-    last = db.kv_get(f"channel_last:{brand_name}")
+    last = db.kv_get(f"channel_last:{brand_name}|{channel_key}" if channel_key else f"channel_last:{brand_name}")
     if not last:
         return True
     return datetime.fromisoformat(last) < datetime.now(timezone.utc) - timedelta(hours=hrs)
+
+
+def _blocked_until(channel_key: str) -> datetime | None:
+    v = db.kv_get(f"channel_block_until:{channel_key}")
+    return datetime.fromisoformat(v) if v else None
 
 
 @tracked("channels")
@@ -365,22 +406,44 @@ def run() -> int:
     """Marketplaces (Amazon.in, Flipkart) for every brand whose listings are older than marketplace_refresh_hours."""
     schema_ext.ensure()
     n = 0
-    live = [c for c in channels() if c.get("reader") in READERS]
+    now = datetime.now(timezone.utc)
+    live = [c for c in channels() if c.get("reader") in READERS and not ((bu := _blocked_until(c["key"])) and bu > now)]
+    skipped = {c["key"] for c in channels() if c.get("reader") in READERS} - {c["key"] for c in live}
+    if skipped:
+        log.info("channels: %s still in throttle back-off, skipped this run", ", ".join(sorted(skipped)))
+    blocked: dict[str, int] = {}
     for b in settings.brands:
-        if not _due(b.name):
-            continue
-        for q in queries_for(b):
-            for ch in live:
-                try:
-                    listings = READERS[ch["reader"]](q)
-                except Exception as e:  # noqa: BLE001
-                    log.info("%s %r failed: %s", ch["key"], q, e)
-                    continue
+        for ch in live:
+            if ch["key"] in blocked or not _due(b.name, ch["key"]):
+                continue
+            ok = True
+            for q in queries_for(b):
+                listings = None
+                for attempt in (1, 2):
+                    try:
+                        listings = READERS[ch["reader"]](q)
+                        break
+                    except Blocked as e:
+                        log.info("%s %r blocked (%s), attempt %d", ch["key"], q, e, attempt)
+                        time.sleep(8 * attempt)
+                    except Exception as e:  # noqa: BLE001
+                        log.info("%s %r failed: %s", ch["key"], q, e)
+                        break
+                if listings is None:
+                    ok = False
+                    blocked[ch["key"]] = blocked.get(ch["key"], 0) + 1
+                    if blocked[ch["key"]] >= 2:  # two consecutive throttles: give the marketplace 45 minutes and read the rest next run
+                        db.kv_set(f"channel_block_until:{ch['key']}", (now + timedelta(minutes=45)).isoformat(timespec="seconds"))
+                        log.info("%s: throttled twice, backing off 45 min", ch["key"])
+                    break
                 if listings:
                     n += ingest(ch, "", q, listings, searched=b)
-        db.kv_set(f"channel_last:{b.name}", db.now())
+            if ok:  # only a successfully read (brand, channel) pair counts as refreshed
+                db.kv_set(f"channel_last:{b.name}|{ch['key']}", db.now())
+                blocked.pop(ch["key"], None)
     for ch in live:
-        n += delist_stale(ch["key"])
+        if ch["key"] not in blocked:
+            n += delist_stale(ch["key"])
     return n
 
 

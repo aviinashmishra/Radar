@@ -102,6 +102,32 @@ table{width:100%;border-collapse:collapse;font-size:13px} th{text-align:left;fon
 h3{margin-bottom:6px}
 svg text{fill:var(--muted);font-size:10px}
 @media(max-width:600px){.fr{grid-template-columns:auto auto 1fr} .fr>span.k{display:none} .fr .x{padding-left:6px} .search{min-width:0;flex:1} main{padding:12px} .card{padding:14px}}
+/* ---------- UX layer (see static/ux.js): navigation groups, folding, sorting, collapsing, loading, motion ---------- */
+nav{overflow-y:auto;scrollbar-width:thin} nav .grp{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 10px 4px;user-select:none}
+nav a.item{position:relative;transition:background .12s} nav a.item.on::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--accent)}
+@media(max-width:860px){nav .grp{height:1px;padding:0;margin:6px 8px;background:var(--line);overflow:hidden;font-size:0}}
+#view .xkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+#view .xk{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:0} #view .xk .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em} #view .xk .v{font-size:22px;font-weight:600;line-height:1.3;margin-top:2px} #view .xk .s{font-size:12px;color:var(--muted)}
+.card h2{font-size:14px} .card h2 .hint{font-size:11.5px}
+th.ux-sort{cursor:pointer;user-select:none;transition:color .12s} th.ux-sort:hover{color:var(--ink)} th.ux-asc::after{content:" ↑";color:var(--accent)} th.ux-desc::after{content:" ↓";color:var(--accent)}
+tr[data-fb]:hover td,tr[data-vb]:hover td,tr[data-go]:hover td,tr[style*="cursor:pointer"]:hover td,tr[style*="cursor: pointer"]:hover td{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.card>h2 .ux-cv{margin-left:6px;opacity:0;transition:opacity .15s,transform .15s;cursor:pointer;color:var(--muted);font-size:12px;line-height:1} .card:hover>h2 .ux-cv{opacity:1} .card.ux-collapsed>h2 .ux-cv{transform:rotate(-90deg);opacity:1}
+.card.ux-collapsed>*:not(h2){display:none!important} .card.ux-collapsed>h2{margin-bottom:0}
+.ux-hide{display:none!important} .ux-more{display:block;width:100%;margin-top:8px;text-align:center;color:var(--ink-2);background:var(--surface-2);border-color:transparent} .ux-more:hover{background:var(--line)}
+.ux-count{display:inline-block;margin-left:6px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);font-size:10.5px;padding:0 6px;font-weight:600;vertical-align:1px}
+#view.ux-in{animation:uxfade .22s ease-out} @keyframes uxfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.skel{display:grid;gap:12px} .skel .ks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px} .sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sksh 1.1s linear infinite;border-radius:10px;border:1px solid var(--line)} @keyframes sksh{to{background-position:-200% 0}} .sk.k{height:66px} .sk.c{height:240px} .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tabs{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:4px}
+#view .empty{border:1px dashed var(--line);border-radius:10px;padding:16px;text-align:center}
+.ux-top{position:fixed;right:22px;bottom:22px;z-index:30;width:38px;height:38px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:none;place-items:center;border:1px solid var(--line);font-size:16px;padding:0} .ux-top.on{display:grid}
+.ux-helpbtn{width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-weight:600} .ux-helpcard{width:100%;max-width:560px} .ux-helpcard kbd{font:11px/1 ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:2px 5px;background:var(--surface-2)}
+.ux-back{color:var(--accent)}
+.ux-clamp{max-height:480px;overflow:hidden;position:relative} .ux-clamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to bottom,transparent,var(--surface))}
+.ux-count{cursor:pointer} .ux-count.on{background:var(--accent);color:#fff}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;border:2px solid var(--bg)} ::-webkit-scrollbar-thumb:hover{background:var(--axis)}
+@media(prefers-reduced-motion:reduce){#view.ux-in,.sk{animation:none}}
+@media print{nav,.top .search,#runbtn,.ux-top,.ux-helpbtn,.btns,.ux-more,.theme{display:none!important} .shell{grid-template-columns:1fr} main{max-width:none;padding:0} .card{break-inside:avoid;border-color:#ccc;box-shadow:none}}
 </style>
 </head>
 <body>
@@ -135,21 +161,25 @@ svg text{fill:var(--muted);font-size:10px}
 <div class="shell">
   <nav id="nav">
     <div class="brand"><div class="logo"><svg class="i" style="width:15px;height:15px;stroke:#fff"><use href="#i-radar"/></svg></div><span>Pebble Radar</span></div>
+    <div class="grp">Daily</div>
     <a class="item" href="#/today"><svg class="i"><use href="#i-home"/></svg><span>Today</span></a>
     <a class="item" href="#/feed"><svg class="i"><use href="#i-feed"/></svg><span>Feed</span></a>
+    <div class="grp">Intelligence</div>
     <a class="item" href="#/news"><svg class="i"><use href="#i-news"/></svg><span>News</span></a>
+    <a class="item" href="#/voice"><svg class="i"><use href="#i-chat"/></svg><span>Reviews</span></a>
     <a class="item" href="#/financials"><svg class="i"><use href="#i-money"/></svg><span>Financials</span></a>
+    <a class="item" href="#/market"><svg class="i"><use href="#i-globe"/></svg><span>Market</span></a>
+    <div class="grp">Competition</div>
     <a class="item" href="#/brands"><svg class="i"><use href="#i-brands"/></svg><span>Brands</span></a>
     <a class="item" href="#/segments"><svg class="i"><use href="#i-layers"/></svg><span>Segments</span></a>
     <a class="item" href="#/pricing"><svg class="i"><use href="#i-tag"/></svg><span>Pricing</span></a>
-    <a class="item" href="#/market"><svg class="i"><use href="#i-globe"/></svg><span>Market</span></a>
     <a class="item" href="#/channels"><svg class="i"><use href="#i-cart"/></svg><span>Channels</span></a>
-    <a class="item" href="#/voice"><svg class="i"><use href="#i-chat"/></svg><span>Reviews</span></a>
     <a class="item" href="#/regions"><svg class="i"><use href="#i-pin"/></svg><span>Regions</span></a>
+    <div class="grp">Output</div>
+    <a class="item" href="#/briefs"><svg class="i"><use href="#i-doc"/></svg><span>Briefs</span></a>
     <a class="item" href="#/reports"><svg class="i"><use href="#i-chart"/></svg><span>Reports</span></a>
     <a class="item" href="#/strategy"><svg class="i"><use href="#i-target"/></svg><span>Strategy</span></a>
-    <a class="item" href="#/briefs"><svg class="i"><use href="#i-doc"/></svg><span>Briefs</span></a>
-    <a class="item" href="#/settings"><svg class="i"><use href="#i-cog"/></svg><span>Settings</span></a>
+    <a class="item" href="#/settings" style="margin-top:8px"><svg class="i"><use href="#i-cog"/></svg><span>Settings</span></a>
     <div class="bottom">
       <span class="live"><span class="dot" id="dot"></span><span id="livetxt">connecting</span></span>
       <span id="sweep"></span>
@@ -246,7 +276,7 @@ const isOpen=(kind,id)=>!(STATS&&STATS.hosted&&TRI.all()[kind+id]);
 const route=()=>(location.hash.replace(/^#\/?/,"")||"today").split("/")[0];
 const param=()=>decodeURIComponent((location.hash.replace(/^#\/?/,"").split("/")[1]||""));
 window.addEventListener("hashchange",render);
-async function render(){const r=route();NAV++;$$("#nav a.item").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#/"+r));const v=$("#view");v.innerHTML='<div class="empty">Loading…</div>';
+async function render(){const r=route();NAV++;$$("#nav a.item").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#/"+r));const v=$("#view");v.innerHTML='<div class="skel"><div class="ks"><div class="sk k"></div><div class="sk k"></div><div class="sk k"></div><div class="sk k"></div></div><div class="sk c"></div><div class="sk c" style="height:140px"></div><span class="sr">Loading…</span></div>';
   try{STATS=STATS||await api("/api/stats");const lr=STATS.last_runs.fast||STATS.last_runs.all;$("#sweep").textContent=lr?`stores swept ${ago(lr.at)}`:"no sweep yet";
     await ({today:vToday,feed:vFeed,news:vNews,financials:vFinancials,brands:vBrands,brand:vBrand,segments:vSegments,segment:vSegments,pricing:vPricing,market:vMarket,briefs:vBriefs,channels:(...a)=>vChannels(...a),voice:(...a)=>vVoice(...a),regions:(...a)=>vRegions(...a),reports:(...a)=>vReports(...a),strategy:(...a)=>vStrategy(...a),settings:vSettings}[r]||vToday)(v);}
   catch(e){if(e instanceof Stale)return;const is404=/ 404$/.test(e.message);v.innerHTML=`<div class="card"><b>Could not load.</b><div class="muted small">${esc(e.message)}</div>${is404?`<div class="small" style="margin-top:8px">This route is missing on the running server, which usually means the server started before the radar was updated. ${STATS&&STATS.hosted?"In cloud mode, push the update so Vercel redeploys.":'<button class="sm" data-restart>Restart the server</button>'}</div>`:""}</div>`;}
@@ -303,7 +333,7 @@ async function vBrand(v){const name=param();const d=await api("/api/brand/"+enco
   const wlTable=wl.length?`<h2>Watchlist <span class="hint">from the Competitors sheet · live price re-read every 30 min</span></h2><table><tr><th>Product</th><th>Segment</th><th class="num">Price</th><th>Sheet</th><th>Status</th><th>Subscription</th><th>Evidence</th><th></th></tr>${wl.map(w=>`<tr><td>${esc(w.name)}${w.self?' <span class="pill i0">baseline</span>':""}</td><td class="muted">${esc(w.segment||"")}</td><td class="num">${w.price?inr(w.price):"–"}${w.live?` <span class="chip" style="border-color:var(--good);color:var(--good)">live</span>`:""}</td><td class="num muted">${w.sheet_price?inr(w.sheet_price):"–"}${w.delta_pct?` <span style="color:${w.delta_pct<0?"var(--good)":"var(--s8)"}">${w.delta_pct>0?"+":""}${w.delta_pct}%</span>`:""}</td><td>${esc(w.status||"")}</td><td>${w.subscription&&w.subscription!=="None"?esc(w.subscription)+(w.sub_monthly?` ₹${fmt(w.sub_monthly)}/mo`:""):"–"}</td><td class="muted">${esc((w.evidence||"").replace("Independent - ","indep. "))}</td><td>${w.url?`<a href="${esc(w.url)}" target="_blank" rel="noopener">page ↗</a>`:'<span class="muted">sheet only</span>'}${w.history&&w.history.length>1?` <button class="sm ghost" data-wh="${esc(w.name)}">history</button>`:""}</td></tr>`).join("")}</table>`:"";
   const noData=!wl.length&&!d.products.length?`<div class="empty">No storefront or watchlist page for ${esc(name)} yet. The radar still covers it through news, YouTube, Reddit and search-demand sensors (see Timeline). Add a <code>shopify:</code> store in competitors.yaml or a product with a <code>url:</code> in watchlist.yaml to track prices.</div>`:"";
   const [apps,shots,pain]=await Promise.all([api("/api/app_health"),api("/api/screenshots"),api("/api/review_pain_points")]);const myApps=apps.filter(a=>a.brand===name),shot=shots.find(s=>s.brand===name),pp=pain.find(p=>p.brand===name);
-  v.innerHTML=`<div class="tabs"><button class="on" data-t="tl">Timeline</button><button data-t="pr">Products</button><button data-t="bs">Best-sellers</button><button data-t="in">Insights</button><button data-t="nw">News${(d.stories||[]).length?` <span class="pill i0">${d.stories.length}</span>`:""}</button><button data-t="rv">Reviews${d.voice&&d.voice.summary?` <span class="pill i0">${d.voice.summary.items}</span>`:""}</button><button data-t="fi">Financials</button></div>
+  v.innerHTML=`<div class="tabs"><button class="on" data-t="tl">Timeline</button><button data-t="pr">Products</button><button data-t="bs">Best-sellers</button><button data-t="in">Insights</button><button data-t="nw">News${(d.stories||[]).length?` <span class="pill i0">${d.stories.length}</span>`:""}</button><button data-t="rv">Reviews${d.voice&&d.voice.summary?` <span class="pill i0">${d.voice.summary.items}</span>`:""}</button><button data-t="ch">Channels${d.shelf&&d.shelf.channels&&d.shelf.channels.length?` <span class="pill i0">${d.shelf.channels.reduce((n,c)=>n+c.listings.length,0)}</span>`:""}</button><button data-t="rg">Regions</button><button data-t="fi">Financials</button></div>
    <div id="t-tl" class="card">${d.events.map(feedRow).join("")||'<div class="empty">No events yet.</div>'}</div>
    <div id="t-pr" class="card" style="display:none">${wlTable}${noData}${d.products.length?`${wl.length?'<h2 style="margin-top:14px">Store catalogue</h2>':""}<input id="pq" placeholder="filter products…" style="width:100%;margin-bottom:10px">`:""}<div id="pl"></div></div>
    <div id="t-bs" class="card" style="display:none"><table><tr><th>#</th><th>Product</th><th class="num">Price</th><th>Stock</th></tr>${d.bestsellers.map(b=>`<tr><td class="num">${b.rank}</td><td><a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a></td><td class="num">${inr(b.price)}</td><td>${b.available?"in stock":`<span style="color:var(--s8)">out</span>`}</td></tr>`).join("")||`<tr><td colspan=4 class="muted">${d.shopify?"No best-seller collection found for this store.":"Best-seller ranks come from the brand's own store; "+esc(name)+" has none on the radar."}</td></tr>`}</table></div>
@@ -315,12 +345,14 @@ async function vBrand(v){const name=param();const d=await api("/api/brand/"+enco
    </div>
    <div id="t-nw" style="display:none">${brandNews(d)}</div>
    <div id="t-rv" style="display:none">${typeof brandReviews==="function"?brandReviews(d):""}</div>
+   <div id="t-ch" style="display:none">${typeof brandChannels==="function"?brandChannels(d):""}</div>
+   <div id="t-rg" style="display:none">${typeof brandRegions==="function"?brandRegions(d):""}</div>
    <div id="t-fi" style="display:none">${brandFinance(d)}</div>`;
   const renderP=()=>{const q=($("#pq").value||"").toLowerCase();$("#pl").innerHTML=`<table><tr><th>Product</th><th>Category</th><th class="num">Price</th><th>Stock</th><th></th></tr>${d.products.filter(p=>!q||p.title.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)).slice(0,300).map(p=>`<tr><td>${p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>`:esc(p.title)}</td><td class="muted">${esc(p.category)}</td><td class="num">${inr(p.price)}${p.compare_at&&p.compare_at>p.price?` <s class="muted">${inr(p.compare_at)}</s>`:""}</td><td>${p.available?"✓":`<span style="color:var(--s8)">out</span>`}</td><td><button class="sm ghost" data-pid="${p.product_id}">history</button></td></tr>`).join("")}</table>`;
     $("#pl").querySelectorAll("[data-pid]").forEach(b=>b.onclick=async()=>{const h=await api(`/api/price_history?brand=${encodeURIComponent(name)}&product_id=${b.dataset.pid}`);const tr=document.createElement("tr");tr.innerHTML=`<td colspan=5>${priceLine(h)}</td>`;b.closest("tr").after(tr);b.disabled=true;});};
   if(d.products.length){renderP();$("#pq").oninput=renderP;}
   v.querySelectorAll("[data-wh]").forEach(b=>b.onclick=()=>{const w=wl.find(x=>x.name===b.dataset.wh);const tr=document.createElement("tr");tr.innerHTML=`<td colspan=8>${priceLine(w.history)}</td>`;b.closest("tr").after(tr);b.disabled=true;});
-  v.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{v.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");["tl","pr","bs","in","nw","rv","fi"].forEach(t=>$("#t-"+t).style.display=t===b.dataset.t?"":"none");});}
+  v.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{v.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));b.classList.add("on");["tl","pr","bs","in","nw","rv","ch","rg","fi"].forEach(t=>$("#t-"+t).style.display=t===b.dataset.t?"":"none");});}
 
 
 /* ---------- segments: price ladder per form factor ---------- */
@@ -364,8 +396,9 @@ async function vSegments(v){const segs=(await api("/api/segments")).filter(s=>s.
   v.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{location.hash="#/segment/"+b.dataset.k;});}
 
 const seqc=n=>n>=21?"var(--seq1)":n>=11?"var(--seq2)":n>=6?"var(--seq3)":n>=3?"var(--seq4)":"var(--seq5)";
-async function vPricing(v){head("Pricing","Pebble against the field: price gaps, nearest rival SKUs, white space");const [bench,m,ws]=await Promise.all([api("/api/benchmark"),api("/api/matches"),api("/api/whitespace")]);
+async function vPricing(v){head("Pricing","Pebble against the field: price gaps, nearest rival SKUs, white space");const [bench,m,ws,par]=await Promise.all([api("/api/benchmark"),api("/api/matches"),api("/api/whitespace"),api("/api/channels/parity").catch(()=>[])]);
   v.innerHTML=`<div class="grid" style="grid-template-columns:1fr">
+   ${typeof parityCard==="function"?parityCard(par):""}
    ${m.undercuts.length?`<div class="card" style="border-color:var(--s8)"><h2>Undercut this week</h2>${m.undercuts.map(u=>`<div class="act"><div class="t">${esc(u.brand)} is ${u.pct_below}% below your ${esc(u.self_title.slice(0,60))}</div><div class="why">${esc(u.rival_title.slice(0,90))} at ${inr(u.rival_price)} vs Pebble ${inr(u.self_price)}</div></div>`).join("")}</div>`:""}
    <div class="card"><h2>Pebble vs the field <span class="hint">median price per category · red = Pebble dearer</span></h2><table><tr><th>Category</th><th class="num">Pebble median</th><th class="num">Field median</th><th class="num">Gap</th><th class="num">Pebble SKUs</th><th class="num">Field SKUs</th><th class="num">Field in stock</th><th class="num">Field avg discount</th></tr>${bench.map(r=>`<tr><td>${esc(r.category)}</td><td class="num">${r.self.median_price?inr(r.self.median_price):'<span class="muted">none</span>'}</td><td class="num">${inr(r.field.median_price)}</td><td class="num" style="color:${r.price_gap_pct==null?"var(--muted)":r.price_gap_pct>10?"var(--s8)":r.price_gap_pct<-10?"var(--up)":"inherit"}">${r.price_gap_pct==null?"–":(r.price_gap_pct>0?"+":"")+r.price_gap_pct+"%"}</td><td class="num">${r.self.skus}</td><td class="num">${r.field.skus}</td><td class="num">${r.field.in_stock_pct}%</td><td class="num">${r.field.avg_discount_pct}%</td></tr>`).join("")}</table></div>
    <div class="card"><h2>White space <span class="hint">competitor SKUs per category × price band · dashed = Pebble has none · small = Pebble SKUs</span></h2>${ws.categories.length?`<table class="heat"><tr><th>Category</th>${ws.bands.map(b=>`<th class="num">₹${b}</th>`).join("")}</tr>${ws.categories.map(c=>`<tr><td>${esc(c)}</td>${ws.bands.map(b=>{const x=ws.cells[c+"|"+b];return x?`<td class="c ${x.gap?"gap":""}" style="background:${seqc(x.competitors)}" data-tip="${esc(c)} @ ₹${b}\n${esc(x.brands.join(", "))}\n${esc(x.examples.join("\n"))}">${x.competitors}${x.self?`<sup style="opacity:.85"> ${x.self}</sup>`:""}</td>`:'<td class="c e">·</td>';}).join("")}</tr>`).join("")}</table><div class="legend"><span><i style="background:var(--seq5)"></i>1-2</span><span><i style="background:var(--seq4)"></i>3-5</span><span><i style="background:var(--seq3)"></i>6-10</span><span><i style="background:var(--seq2)"></i>11-20</span><span><i style="background:var(--seq1)"></i>21+</span></div>`:'<div class="empty">Waiting for the first store sweep.</div>'}</div>
@@ -468,7 +501,7 @@ async function collectNow(name,btn){btn.disabled=true;const label=btn.textConten
 /* ---------- Today: KPI strip, actions with ₹ impact, pressure, stories, listed movers ---------- */
 async function vToday(v){const d=await api("/api/today");const dt=new Date();d.actions=d.actions.filter(e=>isOpen("event",e.id));d.signals=d.signals.filter(s=>isOpen("signal",s.id));head("Today",`${dt.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}${d.festival?` · ${esc(d.festival[0])} in ${d.festival[1]} days`:""}${d.last_sweep?` · stores swept ${ago(d.last_sweep.at)}`:""}`);
   const radar=(await api("/api/radar")).slice(0,18);const k=d.kpis||{};
-  v.innerHTML=`<div class="kpis">${kpi("Open actions",d.actions.length,`${d.done_7d} done this week`)}${kpi("Changes 24h",fmt(k.events_24h),"every sensor")}${kpi("News 7d",fmt(k.stories_7d),"articles, two aggregators")}${kpi("At risk, 30d",cr(k.risk_30d)+"<span class='small muted'>/mo</span>",`upside ${cr(k.upside_30d)}/mo · model`,k.risk_30d>0?"var(--s8)":"")}${kpi("Money moves 7d",fmt(k.money_7d),"filings, facts, shares")}${kpi(d.festival?esc(d.festival[0].split(" / ")[0]):"Next sale",d.festival?`${d.festival[1]}<span class='small muted'> days</span>`:"–","sale calendar")}</div>
+  v.innerHTML=`<div class="kpis">${kpi("Open actions",d.actions.length,`${d.done_7d} done this week`)}${kpi("Changes 24h",fmt(k.events_24h),"every sensor")}${kpi("News 7d",fmt(k.stories_7d),"articles, two aggregators")}${kpi("At risk, 30d",cr(k.risk_30d)+"<span class='small muted'>/mo</span>",`upside ${cr(k.upside_30d)}/mo · model`,k.risk_30d>0?"var(--s8)":"")}${kpi("Money moves 7d",fmt(k.money_7d),"filings, facts, shares")}${kpi("On the shelf",fmt(k.listings_live||0),`<a href="#/channels">Pebble live in ${k.pebble_qc_cities||0} q-commerce cities</a>`)}${kpi("Buyer voice 7d",fmt(k.voice_7d||0),`<a href="#/voice">${k.voice_neg_7d||0}% negative</a>`)}${kpi(d.festival?esc(d.festival[0].split(" / ")[0]):"Next sale",d.festival?`${d.festival[1]}<span class='small muted'> days</span>`:"–","sale calendar")}</div>
   <div class="grid gwide">
     <div style="display:grid;gap:16px;align-content:start">
       <div class="card"><h2>Act on <span class="hint">${d.actions.length} open · ${d.done_7d} done this week</span></h2><div id="acts" style="display:grid;gap:10px">${d.actions.map(e=>actCard(e,false)).join("")||'<div class="empty">Nothing urgent. The radar will add cards here as rivals move.</div>'}</div></div>
@@ -588,5 +621,6 @@ function brandFinance(d){const p=d.finance||{};const q=p.quote,r=p.revenue,pr=p.
 
 render().then(connect);
 </script>
+<script src="/static/ux.js"></script>
 </body>
 </html>

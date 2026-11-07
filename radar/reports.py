@@ -118,7 +118,7 @@ def render(g: dict) -> str:
     else:
         L.append(own["note"] or "No own sales data in the window.")
         L.append("")
-    L.append("**Rivals' sales proxies** (units estimated from reviews and ratings gained in the window; index 100 = strongest)")
+    L.append("**Sales proxies, Pebble and rivals** (units estimated from reviews and ratings gained in the window; index 100 = strongest)")
     L.append(_table(["Brand", "Index", "Est. units", "Store reviews", "App ratings", "Marketplace ratings", "vs prev"],
                     [[("**" + p["brand"] + "**") if p["self"] else p["brand"], p["index"], f"{p['est_units']:,}", p["store_reviews"], p["app_ratings"], p["marketplace_ratings"], _pct(p.get("growth_pct"))]
                      for p in sr["proxies"][:12] if p["est_units"] or p["self"] or p["demand_events"]]))

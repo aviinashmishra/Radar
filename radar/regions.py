@@ -86,3 +86,14 @@ def overview(days: int = 90) -> dict:
             "sales": {"total_revenue": total_rev, "states_with_sales": len(sales_state), "top_states": sorted(sales_state.values(), key=lambda r: -(r["revenue"] or 0))[:10],
                       "top_cities": sales_city[:12]},
             "stats": {"trend_brands": len(brand_rows), "qc_cities": len([c for c in cities if c["qc_brands"]]), "mention_places": len(mentions)}}
+
+
+def brand_states(name: str, limit: int = 10) -> dict:
+    """One brand's demand map for its brand page: latest Google Trends period by state, q-commerce cities in stock, place mentions."""
+    period = _latest_period("trends")
+    states = db.q("SELECT region, value, detail FROM region_interest WHERE brand=? AND basis='trends' AND level='state' AND period=? ORDER BY value DESC LIMIT ?",
+                  (name, period, limit)) if period else []
+    qc = db.q("SELECT city, COUNT(*) n, SUM(available) a, MIN(price) p FROM channel_listings WHERE brand=? AND city<>'' AND last_seen>=date('now','-7 days') GROUP BY city ORDER BY a DESC",
+              (name,))
+    mentions = db.q("SELECT region, level, value, detail FROM region_interest WHERE brand=? AND basis='mentions' ORDER BY value DESC LIMIT 8", (name,))
+    return {"period": period, "states": states, "qc": qc, "mentions": mentions}

@@ -1,10 +1,13 @@
 """Auto-written daily / weekly brief. Claude or Gemini writes it when available; otherwise a structured digest."""
 from __future__ import annotations
 import json
+import logging
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from . import db, enrich, alerts, analytics, market
 from .config import settings
+
+log = logging.getLogger(__name__)
 
 
 def _gather(days: int) -> tuple[list[dict], list[dict]]:
@@ -48,6 +51,10 @@ def _template(days: int, ev: list[dict], sig: list[dict]) -> str:
         lines += ["", "NEWS STORIES (most covered)"] + [f"- {s['brand']} [{s['topic']}, {s['n_sources']} outlets]: {s['title'][:100]}" for s in ctx["stories"][:6]]
     if ctx["money"]:
         lines += ["", "FINANCIALS"] + [f"- {m}" for m in ctx["money"][:6]]
+    if ctx.get("shelf"):
+        lines += ["", "ON THE SHELF (marketplaces + quick commerce)"] + [f"- {s}" for s in ctx["shelf"][:6]]
+    if ctx.get("voice"):
+        lines += ["", "BUYER VOICE (reviews and comments)"] + [f"- {s}" for s in ctx["voice"][:6]]
     return "\n".join(lines)
 
 
@@ -67,7 +74,31 @@ def _context(days: int) -> dict:
                      + (f", margin {p['profit']['margin_pct']:+.0f}%" if p.get("profit") and p["profit"].get("margin_pct") is not None else "")
                      + (f", {p['scale_vs_pebble']}x Pebble" if p.get("scale_vs_pebble") else "") + f" [{r['confidence']}]")
     sizes = market.sizes()
-    return {"pressure": pressure, "stories": stories, "money": money,
+    shelf, voice_lines = [], []
+    try:
+        from . import channels as ch, voice as vz
+        me = settings.self_brand.name if settings.self_brand else ""
+        mx = ch.matrix(max(days, 7))
+        mine = next((b for b in mx["brands"] if b["brand"] == me), None)
+        if mine:
+            live = [f"{c['name']} {v.get('listings', 0)}" for c in mx["channels"] for v in [mine["cells"].get(c["key"], {})] if v.get("listings")]
+            shelf.append(f"Pebble live on: {', '.join(live) if live else 'no marketplace listing read yet'}")
+        for p in [p for p in ch.parity() if p["self"] and p["gap_pct"] <= -8][:3]:
+            shelf.append(f"{p['channel']} sells {p['title'][:50]} at INR {p['marketplace_price']:,.0f}, {abs(p['gap_pct'])}% under pebblecart")
+        for e in db.q("SELECT brand, title FROM events WHERE source='channels' AND importance>=6 AND created_at>=datetime('now', ?) ORDER BY importance DESC LIMIT 4", (f"-{max(days, 7)} days",)):
+            shelf.append(f"{e['brand']}: {e['title'][:90]}")
+        vs = vz.summary(max(days, 7))
+        me_v = next((b for b in vs["brands"] if b["self"]), None)
+        if me_v:
+            worst = sorted(me_v["themes"].items(), key=lambda t: -t[1]["neg"])[:2]
+            voice_lines.append(f"Pebble: {me_v['items']} items, {me_v['neg_pct']}% negative (field {vs['stats']['neg_pct_field']}%)"
+                               + ("; top complaints " + ", ".join(f"{t} x{v['neg']}" for t, v in worst if v["neg"]) if worst else ""))
+        for b in sorted([b for b in vs["brands"] if not b["self"] and b["items"] >= 10], key=lambda b: -b["neg_pct"])[:4]:
+            top = max(b["themes"].items(), key=lambda t: t[1]["neg"], default=None)
+            voice_lines.append(f"{b['brand']}: {b['neg_pct']}% negative of {b['items']}" + (f", mostly {top[0]}" if top and top[1]["neg"] else ""))
+    except Exception:  # noqa: BLE001
+        log.exception("brief: shelf/voice context failed")
+    return {"pressure": pressure, "stories": stories, "money": money, "shelf": shelf, "voice": voice_lines,
             "market": [{k: s[k] for k in ("key", "value_cr", "growth_pct", "pebble_share_pct", "implied_share_pct", "pebble_rank")} for s in sizes["segments"]]}
 
 

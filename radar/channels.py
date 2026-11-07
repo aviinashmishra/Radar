@@ -81,21 +81,48 @@ def brand(name: str, days: int = 30) -> dict:
             "mentions": mentions, "events": events, "parity": parity(name)}
 
 
-def parity(name: str | None = None) -> list[dict]:
-    """Marketplace price vs the brand's own store for matched products (the channel_undercut events, latest per listing)."""
-    sql, p = ("SELECT id, brand, created_at, title, url, data FROM events WHERE kind='channel_undercut' AND created_at>=?", [_since(45)])
-    if name:
-        sql += " AND brand=?"; p.append(name)
-    seen, out = set(), []
-    for e in db.q(sql + " ORDER BY id DESC", p):
-        d = json.loads(e["data"] or "{}")
-        k = (d.get("channel"), d.get("item_key"))
-        if k in seen:
-            continue
-        seen.add(k)
-        out.append({"brand": e["brand"], "channel": d.get("channel"), "title": e["title"], "marketplace_price": d.get("price"), "store_price": d.get("store_price"),
-                    "gap_pct": d.get("gap_pct"), "url": e["url"], "store_url": d.get("store_url"), "when": e["created_at"][:10]})
-    return out
+_PARITY_CACHE: dict = {"at": None, "rows": []}
+
+
+def _same_model(a: str, b: str) -> bool:
+    """Guard on the fuzzy match: model numbers must agree (Champ 3 is not Champ 2; VS104 is not VS102)."""
+    import re
+    tok = lambda s: set(re.findall(r"(?<![a-z0-9])[a-z]*[0-9]+[a-z]*(?![a-z0-9])", s.lower()))  # noqa: E731
+    na, nb = tok(a), tok(b)
+    na = {t for t in na if not re.fullmatch(r"\d{4,}|\d+mah|\d+w|\d+h|\d+m|\d+mm|\d+hz", t)}
+    nb = {t for t in nb if not re.fullmatch(r"\d{4,}|\d+mah|\d+w|\d+h|\d+m|\d+mm|\d+hz", t)}
+    if not na or not nb:
+        return True
+    return bool(na & nb)
+
+
+def parity(name: str | None = None, max_age_s: int = 600) -> list[dict]:
+    """Marketplace price vs the brand's own store for every current listing that fuzzy-matches a store SKU (live, not event-driven).
+    gap_pct < 0: the marketplace sells it cheaper than the brand's D2C store (channel conflict); > 0: the store is the cheapest place."""
+    now = datetime.now(timezone.utc)
+    if _PARITY_CACHE["at"] is None or (now - _PARITY_CACHE["at"]).total_seconds() > max_age_s:
+        from .collectors.channels import _match_own
+        rows = []
+        store_brands = [r["brand"] for r in db.q("SELECT DISTINCT brand FROM products WHERE price>0")]
+        for b in store_brands:
+            bb = settings.brand(b)
+            prods = db.q("SELECT product_id, title, price, available, handle FROM products WHERE brand=? AND price>0", (b,))
+            if not prods:
+                continue
+            for li in db.q("SELECT channel, city, item_key, title, price, mrp, available, rating, rating_count, url, last_seen FROM channel_listings "
+                           "WHERE brand=? AND price>0 AND last_seen>=? ORDER BY channel, COALESCE(rating_count,0) DESC", (b, _since(10))):
+                m = _match_own(li["title"], prods)
+                if not m or not _same_model(li["title"], m["title"]):
+                    continue
+                gap = round((li["price"] - m["price"]) / m["price"] * 100, 1)
+                rows.append({"brand": b, "self": b == _me(), "channel": li["channel"], "city": li["city"], "title": li["title"], "marketplace_price": li["price"],
+                             "mrp": li["mrp"], "store_price": m["price"], "store_title": m["title"], "gap_pct": gap, "available": li["available"],
+                             "rating": li["rating"], "rating_count": li["rating_count"], "url": li["url"],
+                             "store_url": bb.product_url(m["handle"]) if bb and m.get("handle") else None, "when": li["last_seen"][:10]})
+        rows.sort(key=lambda r: (not r["self"], r["gap_pct"]))
+        _PARITY_CACHE.update(at=now, rows=rows)
+    rows = _PARITY_CACHE["rows"]
+    return [r for r in rows if r["brand"] == name] if name else rows
 
 
 def qc_map() -> dict:

@@ -318,5 +318,18 @@ command cover the same data. `python -m radar.reports --kind monthly` writes a r
 `python -m radar.collectors.sales file.csv` imports sales on the worker.
 
 Sales proxies are a relative gauge, not a count: `proxy:` in `config/channels.yaml` holds the ratings-per-100-units
-assumptions; replace them with your own conversion rates. Listings of third-party straps, cases and "compatible with"
-accessories are ignored so a ₹186 strap for a Pebble watch never counts as a Pebble listing.
+assumptions; replace them with your own conversion rates. They use two kinds of evidence: counter deltas between
+snapshots (store review totals, app rating counts, marketplace rating counts) once two days of history exist, and the
+publish dates of the reviews and comments themselves from day one. Listings of third-party straps, cases and
+"compatible with" accessories are ignored so a ₹186 strap for a Pebble watch never counts as a Pebble listing.
+
+The same data is reflected on the older pages: **Today** carries "On the shelf" (live listings, Pebble's quick-commerce
+cities) and "Buyer voice 7d" tiles; every **brand page** has Channels (listings per marketplace and city, marketplace
+vs own-store parity, shelf changes, retail mentions) and Regions (search interest by state, Blinkit cities) tabs next
+to Reviews; **Pricing** opens with "Marketplace vs own store"; the daily / weekly **brief** gets "On the shelf" and
+"Buyer voice" sections. Price parity is computed live from the current listings matched to the brand's store catalogue
+(fuzzy title match plus a model-number guard, so Champ 3 never matches Champ 2).
+
+Amazon.in throttles bursts with a 503 page: the reader raises `Blocked`, retries once after a pause, and after two
+consecutive throttles the channel backs off for 45 minutes; a (brand, channel) pair only counts as refreshed when it
+was actually read, so nothing is silently skipped for six hours.

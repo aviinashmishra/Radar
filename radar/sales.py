@@ -43,7 +43,7 @@ def period_bounds(kind: str, period: str | None = None) -> tuple[str, str, str, 
         end = date(y + (m == 12), 1 if m == 12 else m + 1, 1)
         prev = date(y - (m == 1), 12 if m == 1 else m - 1, 1)
         return f"{y}-{m:02d}", start.isoformat(), end.isoformat(), prev.isoformat(), start.isoformat()
-    y = int(period) if period else today.year - 1
+    y = int(period) if period else today.year  # the running year (year to date); earlier years from the period picker
     return str(y), f"{y}-01-01", f"{y + 1}-01-01", f"{y - 1}-01-01", f"{y}-01-01"
 
 
@@ -103,6 +103,12 @@ def proxies(start: str, end: str) -> list[dict]:
                 mkt_delta += z["rating_count"] - a["rating_count"]
         bs_moves = db.q1("SELECT COUNT(*) c FROM events WHERE brand=? AND kind IN ('bestseller_move','review_surge','stock_out') AND created_at>=? AND created_at<?",
                          (b.name, s_iso, e_iso))["c"]
+        # dated evidence: reviews and comments carry their own publish date, so they count even before two snapshots exist
+        dated = {r["source"]: r["c"] for r in db.q("SELECT source, COUNT(*) c FROM voice WHERE brand=? AND created>=? AND created<? GROUP BY source",
+                                                    (b.name, start, end))}
+        store_delta = max(store_delta, dated.get("judgeme", 0))
+        app_delta = max(app_delta, dated.get("appstore", 0) + dated.get("play", 0))
+        mkt_delta = max(mkt_delta, dated.get("amazon", 0))
         est = store_delta * 100 / r_store + app_delta * 100 / r_app + mkt_delta * 100 / r_mkt
         out.append({"brand": b.name, "self": b.name == me, "store_reviews": store_delta, "app_ratings": app_delta, "marketplace_ratings": mkt_delta,
                     "demand_events": bs_moves, "est_units": round(est), "basis": "store reviews, app ratings and marketplace ratings gained in the window"})
@@ -154,7 +160,7 @@ def available(kind: str, n: int = 14) -> list[str]:
                 y, m = y - 1, 12
             out.append(f"{y}-{m:02d}")
     else:
-        out = [str(today.year - i) for i in range(1, 6)]
+        out = [str(today.year - i) for i in range(0, 6)]  # the running year (to date) first
     return out
 
 

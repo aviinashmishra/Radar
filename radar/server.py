@@ -70,7 +70,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 def _code_mtime() -> float:
     """Newest modification time across the radar package and its dashboard files."""
     newest = 0.0
-    for p in list((_ROOT / "radar").rglob("*.py")) + list(STATIC.glob("*")):
+    for p in (_ROOT / "radar").rglob("*.py"):  # static files are read fresh on every request; only Python needs a restart
         try:
             newest = max(newest, p.stat().st_mtime)
         except OSError:
@@ -336,7 +336,17 @@ def brand_page(name: str):
             "finance": fin,
             "pressure": [p for p in market.pressure(30)["by_brand"] if p["brand"] == name][:1],
             "attention": db.q("SELECT day, views FROM attention WHERE brand=? AND day>=date('now','-30 days') ORDER BY day", (name,)),
-            "voice": _voice_view(name)}
+            "voice": _voice_view(name),
+            "shelf": _safe(lambda: __import__("radar.channels", fromlist=["brand"]).brand(name), None),
+            "regions": _safe(lambda: __import__("radar.regions", fromlist=["brand_states"]).brand_states(name), None)}
+
+
+def _safe(fn, default):
+    try:
+        return fn()
+    except Exception:  # noqa: BLE001
+        log.exception("brand page section failed")
+        return default
 
 
 def _voice_view(name: str) -> dict | None:
@@ -610,7 +620,11 @@ def today():
             "by_brand": sorted(by_brand.values(), key=lambda x: (-x["max_importance"], -x["total"])),
             "done_7d": done_today, "festival": sig.nearest_festival(),
             "last_sweep": db.kv_get("last_run:fast") or db.kv_get("last_run:all"),
-            "kpis": {"events_24h": db.q1("SELECT COUNT(*) c FROM events WHERE created_at>=datetime('now','-1 day') AND kind<>'baseline'")["c"],
+            "kpis": {"listings_live": _safe(lambda: db.q1("SELECT COUNT(*) c FROM channel_listings WHERE last_seen>=datetime('now','-2 days')")["c"], 0),
+                     "pebble_qc_cities": _safe(lambda: db.q1("SELECT COUNT(DISTINCT city) c FROM channel_listings WHERE brand=? AND city<>'' AND available=1 AND last_seen>=datetime('now','-2 days')", (me,))["c"], 0),
+                     "voice_7d": _safe(lambda: db.q1("SELECT COUNT(*) c FROM voice WHERE created>=date('now','-7 days')")["c"], 0),
+                     "voice_neg_7d": _safe(lambda: db.q1("SELECT ROUND(100.0*SUM(sentiment<0)/MAX(COUNT(*),1)) c FROM voice WHERE created>=date('now','-7 days')")["c"] or 0, 0),
+                     "events_24h": db.q1("SELECT COUNT(*) c FROM events WHERE created_at>=datetime('now','-1 day') AND kind<>'baseline'")["c"],
                      "stories_7d": db.q1("SELECT COUNT(*) c FROM events WHERE source='news' AND created_at>=datetime('now','-7 days')")["c"],
                      "risk_30d": pressure["total_risk"], "upside_30d": pressure["total_upside"],
                      "trending": db.q1("SELECT COUNT(*) c FROM trending WHERE seen_at>=datetime('now','-1 day')")["c"],
