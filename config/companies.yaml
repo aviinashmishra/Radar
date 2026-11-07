@@ -1,0 +1,323 @@
+# Who is behind every brand on the radar, and what the radar should read about their money.
+#
+# One entry per brand name in competitors.yaml. Everything is optional.
+#   entity       legal name of the operating company          ownership   private | listed | subsidiary | brand-licence
+#   ticker       Yahoo Finance symbol for a listed parent (TITAN.NS, GRMN, 005930.KS): daily quote, 1-day / 30-day moves,
+#                52-week position; a move of 5% or more in a day becomes a `stock_move` event
+#   sec_cik      SEC EDGAR central index key for US-listed parents: revenue / profit per fiscal year straight from
+#                the XBRL filings (authoritative, no key; EDGAR wants a contact in the user agent: SEC_CONTACT in .env)
+#   wikipedia    English Wikipedia article: daily page views = public attention index (`attention_spike` events)
+#   ios          Apple App Store ids of the companion apps (rating, rating count, version, release date)
+#   investors    lead investors / strategic backers, for context on the Financials page
+#   financials   seeded figures from public reporting. Each row: metric, period, value, currency, unit, source, confidence.
+#                The financials collector adds rows it extracts from news (revenue, profit, loss, funding, valuation
+#                with ₹ crore / $ million amounts) and from EDGAR, each with its source URL, so seeded rows are only a
+#                starting point. confidence: filing | reported | estimate   (estimates are shown as such: edit or
+#                delete them once you have a better number).
+#   metrics:     revenue | net_profit | net_loss | ebitda | valuation | funding_round | funding_total | market_cap
+#   currency:    INR values are in crore (1 crore = 10 million); USD / EUR / KRW values are in million.
+
+companies:
+  - brand: Pebble
+    entity: SRK Powertech Pvt. Ltd.
+    hq: New Delhi, India
+    founded: 2012
+    ownership: private
+    notes: "Owner-operated D2C electronics brand (Pebble / Pebblecart). No public filings beyond MCA; revenue figures surface through press interviews."
+    ios: [6792776270, 6747965434, 6452240092]   # Pebble Qore, Pebble Halo, Pebble Go
+    financials: []
+
+  - brand: boAt
+    entity: Imagine Marketing Ltd.
+    hq: Mumbai, India
+    founded: 2016
+    ownership: private
+    wikipedia: "BoAt (company)"
+    investors: [Warburg Pincus, Qualcomm Ventures, Fireside Ventures, Malabar Investments, Navi Technologies]
+    notes: "India's largest audio-wearables brand. Filed for an IPO through the confidential route in 2025; a listing would make it the sector's first public D2C wearables pure play."
+    ios: [1573391983, 1542443145, 1592550875]   # boAt Crest, boAt Wearables, boAt Hearables
+    financials:
+      - { metric: revenue,    period: FY23, value: 3377, currency: INR, unit: crore, source: "MCA filing as reported in the business press", confidence: reported }
+      - { metric: net_loss,   period: FY23, value: 129,  currency: INR, unit: crore, source: "MCA filing as reported in the business press", confidence: reported }
+      - { metric: revenue,    period: FY24, value: 3122, currency: INR, unit: crore, source: "MCA filing as reported in the business press", confidence: reported }
+      - { metric: net_loss,   period: FY24, value: 80,   currency: INR, unit: crore, source: "MCA filing as reported in the business press", confidence: reported }
+      - { metric: revenue,    period: FY25, value: 3100, currency: INR, unit: crore, source: "Company statements reported in the business press (approximate)", confidence: estimate }
+      - { metric: net_profit, period: FY25, value: 60,   currency: INR, unit: crore, source: "Company statements reported in the business press (return to profit)", confidence: estimate }
+      - { metric: valuation,  period: 2022, value: 1400, currency: USD, unit: million, source: "Last primary round as reported in the press", confidence: estimate }
+
+  - brand: Noise
+    entity: Nexxbase Marketing Pvt. Ltd.
+    hq: Gurugram, India
+    founded: 2014
+    ownership: private
+    wikipedia: "Noise (company)"
+    investors: [Bose Corporation (strategic, 2023)]
+    notes: "Bootstrapped until Bose's strategic investment. Owns the Luna ring and band line (LifeOS app)."
+    ios: [1498457147, 1573689962]   # NoiseFit, NoiseFit Track
+    financials:
+      - { metric: revenue,  period: FY23, value: 1426, currency: INR, unit: crore, source: "MCA filing as reported in the business press", confidence: reported }
+      - { metric: revenue,  period: FY24, value: 1140, currency: INR, unit: crore, source: "MCA filing as reported in the business press (approximate)", confidence: estimate }
+      - { metric: net_loss, period: FY24, value: 80,   currency: INR, unit: crore, source: "MCA filing as reported in the business press (approximate)", confidence: estimate }
+
+  - brand: Fire-Boltt
+    entity: Fire-Boltt (operating company, verify on MCA)
+    hq: New Delhi, India
+    founded: 2015
+    ownership: private
+    wikipedia: "Fire-Boltt"
+    notes: "Grew to India's #1 smartwatch shipper by volume in 2023 on sub-₹2,000 watches; 2025 press reported financial stress and a shrinking catalogue, which the store_dry signal also sees."
+    ios: [6453763721]   # FIREBOLTT FIT
+    financials:
+      - { metric: revenue, period: FY23, value: 1320, currency: INR, unit: crore, source: "MCA filing as reported in the business press (approximate)", confidence: estimate }
+
+  - brand: Boult
+    entity: Boult Audio (Exotic Mile Pvt. Ltd.)
+    hq: New Delhi, India
+    founded: 2017
+    ownership: private
+    ios: [1629163626]   # GOBOULT Fit
+    financials: []
+
+  - brand: Crossbeats
+    entity: Crossbeats (Bengaluru)
+    hq: Bengaluru, India
+    founded: 2017
+    ownership: private
+    ios: [6472877472, 1547584045]   # Crossbeats.Fit, CB-ACTIV
+    financials: []
+
+  - brand: Sekyo
+    entity: Sekyo (India)
+    hq: India
+    ownership: private
+    ios: [1583912879]
+    financials: []
+
+  - brand: Hammer
+    entity: Hammer Electronics
+    hq: New Delhi, India
+    ownership: private
+    financials: []
+
+  - brand: Gizmore
+    entity: Gizmore (Royal Gizmore Pvt. Ltd.)
+    hq: New Delhi, India
+    ownership: private
+    financials: []
+
+  - brand: Just Corseca
+    entity: Corseca (Jeevan Diesels & Electricals Ltd. group)
+    hq: Mumbai, India
+    ownership: private
+    financials: []
+
+  - brand: pTron
+    entity: Palred Technologies Ltd. (Palred Electronics)
+    hq: Hyderabad, India
+    founded: 1999
+    ownership: listed
+    ticker: PALREDTEC.NS
+    notes: "pTron is the consumer brand of BSE/NSE-listed Palred Technologies: quarterly results are public."
+    financials: []
+
+  - brand: Zebronics
+    entity: Zebronics India Pvt. Ltd.
+    hq: Chennai, India
+    founded: 1997
+    ownership: private
+    wikipedia: "Zebronics"
+    ios: [6466559582, 1148462693]   # ZEB-Fit Plus, ZEB-FIT
+    financials: []
+
+  - brand: Portronics
+    entity: Portronics Digital Pvt. Ltd.
+    hq: New Delhi, India
+    founded: 2010
+    ownership: private
+    wikipedia: "Portronics"
+    financials: []
+
+  - brand: Ambrane
+    entity: Ambrane India Pvt. Ltd.
+    hq: New Delhi, India
+    founded: 2012
+    ownership: private
+    financials: []
+
+  - brand: Blaupunkt
+    entity: Blaupunkt India (brand licence)
+    hq: New Delhi, India
+    ownership: brand-licence
+    financials: []
+
+  - brand: Fastrack
+    entity: Titan Company Ltd. (Tata group)
+    hq: Bengaluru, India
+    founded: 1984
+    ownership: listed
+    ticker: TITAN.NS
+    scope: parent   # revenue rows are Titan group; segment_revenue is Watches & Wearables
+    wikipedia: "Titan Company"
+    notes: "Fastrack smartwatches sit inside Titan's watches & wearables segment; group figures below are for all of Titan."
+    ios: [1209937341, 1508265074]   # Fastrack Reflex, Fastrack Smart World
+    financials:
+      - { metric: revenue,    period: FY24, value: 51084, currency: INR, unit: crore, source: "Titan annual report FY24 (total income)", confidence: reported }
+      - { metric: net_profit, period: FY24, value: 3496,  currency: INR, unit: crore, source: "Titan annual report FY24", confidence: reported }
+      - { metric: revenue,    period: FY25, value: 60456, currency: INR, unit: crore, source: "Titan FY25 results as reported (approximate)", confidence: estimate }
+      - { metric: segment_revenue, period: FY24, value: 3950, currency: INR, unit: crore, source: "Titan annual report FY24, Watches & Wearables segment (approximate)", confidence: estimate }
+      - { metric: segment_revenue, period: FY25, value: 4650, currency: INR, unit: crore, source: "Titan FY25 results, Watches & Wearables segment (approximate)", confidence: estimate }
+
+  - brand: Mivi
+    entity: Mivi (Hyderabad)
+    hq: Hyderabad, India
+    founded: 2015
+    ownership: private
+    financials: []
+
+  - brand: CultSport
+    entity: Curefit Healthcare Pvt. Ltd. (cult.fit)
+    hq: Bengaluru, India
+    founded: 2016
+    ownership: private
+    investors: [Tata Digital, Zomato, Accel, Temasek]
+    ios: [1458584124]   # cultsport Health & Fitness
+    financials: []
+
+  - brand: beatXP
+    entity: beatXP (Gurugram)
+    hq: Gurugram, India
+    ownership: private
+    financials: []
+
+  - brand: Urban
+    entity: Inbase Technologies Pvt. Ltd. (URBAN)
+    hq: New Delhi, India
+    ownership: private
+    financials: []
+
+  - brand: Luna
+    entity: Nexxbase Marketing Pvt. Ltd. (Noise)
+    hq: Gurugram, India
+    ownership: subsidiary
+    notes: "Luna is Noise's premium ring and band line; see Noise for the company figures."
+    ios: [6456215977]   # Luna Band and Ring: LifeOS
+    financials: []
+
+  - brand: Gabit
+    entity: Gabit (Bengaluru)
+    hq: Bengaluru, India
+    founded: 2022
+    ownership: private
+    ios: [6443792938]
+    financials: []
+
+  - brand: Ultrahuman
+    entity: Ultrahuman Healthcare Pvt. Ltd.
+    hq: Bengaluru, India
+    founded: 2019
+    ownership: private
+    wikipedia: "Ultrahuman"
+    investors: [Blume Ventures, Steadview Capital, Nexus Venture Partners, Alpha Wave, Zomato (Deepinder Goyal)]
+    notes: "Ring maker with its own factory (UltraFactory, Indonesia / Texas). 2025: lost a US ITC patent case to Oura, which blocked US imports of the Ring AIR; India and Europe unaffected."
+    ios: [1491286709]
+    financials:
+      - { metric: funding_round, period: 2024, value: 35,  currency: USD, unit: million, source: "Series B as reported in the press", confidence: reported }
+      - { metric: funding_total, period: 2024, value: 60,  currency: USD, unit: million, source: "Cumulative funding as reported in the press (approximate)", confidence: estimate }
+
+  - brand: FITTR
+    entity: Squats Fitness Pvt. Ltd. (FITTR)
+    hq: Pune, India
+    founded: 2016
+    ownership: private
+    investors: [Peak XV (Sequoia India), Surge, Elevation Capital]
+    ios: [6473716474, 1332568703]   # FITTR ONE, FITTR
+    financials: []
+
+  - brand: Amazfit
+    entity: Zepp Health Corp.
+    hq: Hefei, China
+    founded: 2013
+    ownership: listed
+    ticker: ZEPP
+    sec_cik: 1720446
+    wikipedia: "Zepp Health"
+    notes: "Formerly Huami, Xiaomi's wearables partner. US-listed, so annual figures come straight from EDGAR."
+    ios: [1127269366]   # Zepp
+    financials: []
+
+  - brand: Google Fitbit
+    entity: Alphabet Inc. (Google)
+    hq: Mountain View, USA
+    ownership: listed
+    ticker: GOOGL
+    scope: parent   # Alphabet group figures; Fitbit is not broken out
+    sec_cik: 1652044
+    wikipedia: "Fitbit"
+    notes: "Fitbit is a line inside Google's Devices & Services; Alphabet group figures below are not comparable to the Indian rivals."
+    ios: [462638897]   # Google Health (Fitbit)
+    financials: []
+
+  - brand: Polar
+    entity: Polar Electro Oy
+    hq: Kempele, Finland
+    founded: 1977
+    ownership: private
+    wikipedia: "Polar Electro"
+    ios: [717172678]   # Polar Flow
+    financials: []
+
+  - brand: Whoop
+    entity: WHOOP, Inc.
+    hq: Boston, USA
+    founded: 2012
+    ownership: private
+    wikipedia: "Whoop (company)"
+    investors: [SoftBank Vision Fund 2, IVP, Cavu, Thursday Ventures]
+    notes: "Subscription-only screenless band. Entered India in 2024 with whoop.in."
+    ios: [933944389]
+    financials:
+      - { metric: valuation, period: 2021, value: 3600, currency: USD, unit: million, source: "Series F as reported in the press", confidence: reported }
+
+  - brand: Garmin
+    entity: Garmin Ltd.
+    hq: Schaffhausen, Switzerland
+    founded: 1989
+    ownership: listed
+    ticker: GRMN
+    scope: company  # the group is mostly wearables; segment_revenue is the fitness segment
+    sec_cik: 1121788
+    wikipedia: "Garmin"
+    notes: "Fitness segment (watches, Cirqa band) is Garmin's largest; group figures from EDGAR."
+    ios: [583446403]   # Garmin Connect
+    financials:
+      - { metric: segment_revenue, period: 2024, value: 1770, currency: USD, unit: million, source: "Garmin 10-K FY2024, fitness segment (approximate)", confidence: estimate }
+
+  - brand: Oura
+    entity: Oura Health Oy
+    hq: Oulu, Finland
+    founded: 2013
+    ownership: private
+    wikipedia: "Oura Health"
+    investors: [Fidelity, ICONIQ Growth, Dexcom (strategic), Temasek, Whale Rock]
+    notes: "Smart-ring category leader. Sells in India through Amazon and Croma, no local store."
+    ios: [1043837948]
+    financials:
+      - { metric: revenue,   period: 2024, value: 500,   currency: USD, unit: million, source: "Company statements reported in the press (approximate)", confidence: estimate }
+      - { metric: valuation, period: 2025, value: 11000, currency: USD, unit: million, source: "Series E as reported in the press (2025)", confidence: reported }
+
+  - brand: Samsung
+    entity: Samsung Electronics Co., Ltd.
+    hq: Suwon, South Korea
+    founded: 1969
+    ownership: listed
+    ticker: 005930.KS
+    scope: parent
+    wikipedia: "Samsung Electronics"
+    notes: "Group figures are not comparable; the radar tracks the share price and India wearables news (Galaxy Ring, Galaxy Fit, Galaxy Watch)."
+    ios: [1117310635, 1117312500]   # Samsung Galaxy Watch, Samsung Galaxy Fit
+    financials: []
+
+# Sector-level financial searches: news terms that are about money, run by the financials collector on top of each
+# brand's own name so that FY results, funding rounds and valuations get picked up even when the headline does not
+# mention a product.
+money_terms: ["revenue FY25", "net loss FY24", "funding round", "valuation", "IPO DRHP", "acquisition", "results quarter"]

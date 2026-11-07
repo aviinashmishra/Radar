@@ -123,8 +123,8 @@ def run() -> int:
         with db.tx() as c:
             c.execute("INSERT INTO watch_prices(name,brand,price,status,page_hash,source,seen_at) VALUES(?,?,?,?,?,?,?)",
                       (key, item["brand"], res["price"], res["status"], res["hash"], res["source"], db.now()))
-        if not prev:
-            continue
+        if not prev or prev["source"] == "sheet":
+            continue  # the first live reading is a baseline; the sheet's price is not a price change
         if res["price"] and prev["price"] and abs(res["price"] - prev["price"]) / prev["price"] >= 0.03:
             pct = (res["price"] - prev["price"]) / prev["price"] * 100
             if db.add_event(item["brand"], "watchlist", "watch_price_change",

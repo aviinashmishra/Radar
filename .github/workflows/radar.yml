@@ -44,6 +44,9 @@ jobs:
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       SMTP_FROM: ${{ secrets.SMTP_FROM }}
       SMTP_TO: ${{ secrets.SMTP_TO }}
+      SEC_CONTACT: ${{ vars.SEC_CONTACT }}        # contact address EDGAR asks automated clients for (Settings > Variables)
+      SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}   # optional: Pebble's own orders for the sales reports
+      SHOPIFY_STORE: ${{ vars.SHOPIFY_STORE }}
       RADAR_AI_PROVIDER: ${{ vars.RADAR_AI_PROVIDER || 'auto' }}
       ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD || '6' }}
       GITHUB_TOKEN: ${{ github.token }}   # radar.cloud uses it to read and write the `data` release
@@ -88,6 +91,9 @@ jobs:
       - name: Weekly brief
         if: github.event.schedule == '30 3 * * 1'
         run: python -m radar.runner --brief 7
+      - name: Reports due today (daily; weekly on Monday; monthly, sector and yearly on the 1st)
+        if: github.event.schedule == '30 3 * * *' || github.event.schedule == '30 3 * * 1'
+        run: python -m radar.reports --due --push
 
       - name: Publish the snapshot
         # also after a failed collector: every finished step is already committed to the database

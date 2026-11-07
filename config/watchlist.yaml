@@ -164,6 +164,7 @@ products:
     status: On sale
     evidence: None found
     origin: Indian
+    url: https://www.boat-lifestyle.com/products/smart-ring-active
   - name: boAt Valour Ring 1
     brand: boAt
     segment: ring
@@ -172,6 +173,7 @@ products:
     status: On sale
     evidence: None found
     origin: Indian
+    url: https://www.boat-lifestyle.com/products/valour-ring-1
   - name: Gabit Smart Ring
     brand: Gabit
     segment: ring

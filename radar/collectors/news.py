@@ -1,102 +1,139 @@
-"""Google News RSS per brand + sector-wide searches. Free, no key, India edition."""
+"""News per brand + sector-wide searches from two aggregators (Google News RSS and Bing News RSS; India editions,
+free, no key). Every item is run through radar/relevance.py, tagged with a topic (launch, funding, financials,
+leadership, legal, ...) by radar/newsintel.py, and de-duplicated across aggregators by normalised headline so the
+same story from two feeds is one event.
+"""
 from __future__ import annotations
+import re
 import time
 from datetime import datetime, timedelta, timezone
-from urllib.parse import quote_plus
+from email.utils import parsedate_to_datetime
+from urllib.parse import quote_plus, urlparse
 import feedparser
 from .. import db
 from ..config import settings
+from ..relevance import relevant as _relevant
 from .base import get, tracked, log
 
 GN = "https://news.google.com/rss/search?q={q}&hl=en-IN&gl=IN&ceid=IN:en"
+BING = "https://www.bing.com/news/search?q={q}&format=rss&cc=IN&setlang=en"
 MAX_AGE_DAYS = 21
-# A headline must look like our sector, otherwise "Noise", "Hammer" or "Pebble" pull in Trump speeches and geology.
-import re
-SECTOR_RX = re.compile(r"smart ?watch|wearable|earbud|ear ?phone|headphone|neckband|\btws\b|audio|speaker|soundbar|charger|"
-                       r"power ?bank|gadget|electronics|smart ?ring|fitness band|bluetooth|\banc\b|launch|unveil|d2c|"
-                       r"e-?commerce|shopify|amazon|flipkart|idc|counterpoint|funding|acqui|ipo|nexxbase|imagine marketing|"
-                       r"srk powertech|boat|noise colorfit|fire-?boltt|boult|ptron|zebronics|portronics|ambrane|gizmore|"
-                       r"crossbeats|corseca|blaupunkt|fastrack|mivi|cultsport|beatxp|pebble", re.I)
-
-
-# Brand news must name the brand. Google News happily returns "Galaxy S27" for "Fitbit India" and a Norton motorcycle
-# for "Urban wearables", so the headline is checked for the brand itself, then for what the story is about.
-CATEGORY_RX = re.compile(r"smart ?watch|wearable|earbud|ear ?phone|headphone|neckband|\btws\b|speaker|soundbar|charger|power ?bank|"
-                         r"smart ?ring|\brings?\b|fitness|\bbands?\b|tracker|bluetooth|gadget|electronics|\baudio\b|health|sleep|"
-                         r"\bd2c\b|\bwatch(es)?\b|\bbuds\b|\banc\b", re.I)
-BUSINESS_RX = re.compile(r"funding|raises|\bipo\b|acqui|valuation|revenue|market share|\bidc\b|counterpoint|investor|layoff", re.I)
-PRODUCT_TALK_RX = re.compile(r"price|specs|features|battery|review|unbox|\bai\b|₹|\brs\.? ?\d", re.I)
-AMBIGUOUS = {"noise", "hammer", "pebble", "urban", "luna", "polar", "boat", "titan", "fire", "ring"}  # everyday English words
-GENERIC_HEAD = {"just", "imagine", "google", "the", "galaxy"}                                     # term openers that are not the brand
-COLLOCATIONS = re.compile(r"noise[- ]?(cancel\w*|reduc\w*|isolat\w*)|white noise|active noise", re.I)
+PROVIDERS = ("google", "bing")
 
 
 def relevant(title: str, summary: str, term: str, brand=None) -> bool:
-    """Sector searches only need to look like the sector. Brand searches need the brand named in the headline; brands
-    whose name is an everyday word (Noise, Urban, boAt) also need product or business context, and global brands
-    (tier: adjacent) only count for wearables or business news, not their phones and tablets."""
-    if brand is None:
-        return bool(SECTOR_RX.search(f"{title} {summary}"))
-    text = COLLOCATIONS.sub(" ", title)
-    names = {w for w in (brand.name, term.split()[0]) if w.lower() not in GENERIC_HEAD}
-    # an internal capital (boAt, BoAt, pTron, beatXP) is unmistakably the brand
-    styled = any(t[1:] != t[1:].lower() and t != t.upper() for w in names
-                 for t in re.findall(rf"(?<![A-Za-z]){re.escape(w)}(?![a-z])", text, re.I))
-    if styled:
-        return True
-    hit = ambiguous = False
-    for w in names:
-        if w.lower() in AMBIGUOUS:
-            if re.search(rf"(?<![A-Za-z])({re.escape(w.capitalize())}|{re.escape(w.upper())})(?![a-z])", text):
-                hit = ambiguous = True
-        elif re.search(rf"(?<![a-z]){re.escape(w.lower())}(?![a-z])", text.lower()):
-            hit = True
-    if not hit:
-        return False
-    if brand.tier == "adjacent":
-        return bool(CATEGORY_RX.search(text) or BUSINESS_RX.search(text))
-    if ambiguous:
-        return bool(CATEGORY_RX.search(text) or BUSINESS_RX.search(text) or PRODUCT_TALK_RX.search(text))
-    return True
+    """Sector searches only need to look like the sector; brand searches need the brand named in the headline,
+    with product or business context for everyday-word names and global brands (rules in radar/relevance.py)."""
+    return _relevant(title, brand, term, summary=summary)
 
 
-def _fetch(term: str) -> list[dict]:
+def norm_title(title: str) -> str:
+    """Headline key for cross-feed de-duplication: lowercase, no publisher suffix, no punctuation."""
+    t = re.split(r"\s+[-|–]\s+[^-|–]{2,40}$", title or "", maxsplit=1)[0]   # "… - Times of India"
+    return re.sub(r"[^a-z0-9 ]", "", t.lower()).strip()[:140]
+
+
+def _plain(html: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html or "")).strip()
+
+
+def _when(entry) -> datetime | None:
+    if getattr(entry, "published_parsed", None):
+        return datetime.fromtimestamp(time.mktime(entry.published_parsed), tz=timezone.utc)
+    if entry.get("published"):
+        try:
+            return parsedate_to_datetime(entry["published"]).astimezone(timezone.utc)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _entries(url: str, provider: str, min_gap: float) -> list[dict]:
     try:
-        r = get(GN.format(q=quote_plus(f"{term} when:21d")), timeout=20, min_gap=1.5)
-    except Exception as e:
-        log.warning("news fetch failed for %s: %s", term, e)
+        r = get(url, timeout=25, min_gap=min_gap,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"}
+                if provider == "bing" else None)
+    except Exception as e:  # noqa: BLE001
+        log.warning("%s news fetch failed: %s", provider, e)
+        return []
+    if r.status_code != 200:
+        log.info("%s news %s -> %s", provider, url[:80], r.status_code)
         return []
     feed = feedparser.parse(r.text)
     out = []
     cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
     for e in feed.entries:
-        pub = None
-        if getattr(e, "published_parsed", None):
-            pub = datetime.fromtimestamp(time.mktime(e.published_parsed), tz=timezone.utc)
+        pub = _when(e)
         if pub and pub < cutoff:
             continue
         src = ""
         if getattr(e, "source", None):
-            src = e.source.get("title", "")
-        out.append({"title": e.get("title", ""), "link": e.get("link", ""), "published": pub.isoformat() if pub else "",
-                    "source": src, "summary": e.get("summary", "")})
+            src = e.source.get("title", "") if isinstance(e.source, dict) else str(e.source)
+        if not src:
+            src = e.get("news_source") or e.get("source_title") or ""
+        link = e.get("link", "")
+        if not src and link:
+            src = urlparse(link).netloc.replace("www.", "")
+        out.append({"title": _plain(e.get("title", "")), "link": link, "published": pub.isoformat() if pub else "",
+                    "source": src, "summary": _plain(e.get("summary", "") or e.get("description", ""))[:600], "provider": provider})
     return out
 
 
-def _ingest(brand: str, term: str, items: list[dict]) -> int:
+def fetch_google(term: str, recency: str = "21d") -> list[dict]:
+    return _entries(GN.format(q=quote_plus(f"{term} when:{recency}")), "google", 1.5)
+
+
+def fetch_bing(term: str) -> list[dict]:
+    return _entries(BING.format(q=quote_plus(term)), "bing", 1.0)
+
+
+def _fetch(term: str) -> list[dict]:
+    items = fetch_google(term)
+    if "bing" in PROVIDERS:
+        items += fetch_bing(term)
+    return items
+
+
+_SECTOR_RX = None
+
+
+def sector_topic(text: str) -> bool:
+    """True when a sector-wide article is actually about the category (a segment word or 'wearable'); keeps
+    'Coca-Cola bottler files for IPO' and laptop round-ups out of the sector feed."""
+    global _SECTOR_RX
+    if _SECTOR_RX is None:
+        alts = [sg.get("keywords") for sg in settings.segments if sg.get("keywords")] + [r"wearable", r"hearable", r"audio brand"]
+        _SECTOR_RX = re.compile("|".join(f"(?:{a})" for a in alts), re.I)
+    return bool(_SECTOR_RX.search(text or ""))
+
+
+def _ingest(brand: str, term: str, items: list[dict], *, extra: dict | None = None) -> int:
+    from ..newsintel import topic_of
+    from ..relevance import attribute
     n = 0
     b = settings.brand(brand)
+    sector = brand == "Sector"
     for it in items:
-        if not it["link"] or not relevant(it["title"], it["summary"], term, b):
+        if not it["link"] or not it["title"] or not relevant(it["title"], it["summary"], term, b):
             continue
-        with db.tx() as c:
-            exists = c.execute("SELECT 1 FROM seen_urls WHERE source='news' AND url=?", (it["link"],)).fetchone()
-            if exists:
+        if sector:  # a sector search that names a tracked brand ("Oura Ring 5 launches in India") files under that brand
+            if not sector_topic(f"{it['title']} {it['summary']}"):
                 continue
+            brand = attribute(it["title"])
+        key = norm_title(it["title"])
+        with db.tx() as c:
+            if c.execute("SELECT 1 FROM seen_urls WHERE source='news' AND url=?", (it["link"],)).fetchone():
+                continue
+            if key and c.execute("SELECT 1 FROM seen_urls WHERE source='news-title' AND url=?", (key,)).fetchone():
+                continue  # the same headline from the other aggregator
             c.execute("INSERT INTO seen_urls(brand,source,url,seen_at) VALUES(?,?,?,?)", (brand, "news", it["link"], db.now()))
-        if db.add_event(brand, "news", "news", it["title"], detail=f"{it['source']} | {it['published'][:10]} | q={term}",
-                        url=it["link"], data={"publisher": it["source"], "published": it["published"], "term": term},
-                        dedupe_key=f"news|{it['link']}"):
+            if key:
+                c.execute("INSERT OR IGNORE INTO seen_urls(brand,source,url,seen_at) VALUES(?,?,?,?)", (brand, "news-title", key, db.now()))
+        topic = topic_of(it["title"], it["summary"])
+        data = {"publisher": it["source"], "published": it["published"], "term": term, "provider": it["provider"],
+                "topic": topic, "summary": it["summary"][:400], **(extra or {})}
+        if db.add_event(brand, "news", "news", it["title"], detail=f"{it['source']} | {it['published'][:10]} | {topic} | q={term}",
+                        url=it["link"], data=data, dedupe_key=f"news|{it['link']}"):
             n += 1
     return n
 

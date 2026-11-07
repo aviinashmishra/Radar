@@ -1,5 +1,6 @@
 """Push alerts: Telegram, generic webhook (Discord/Slack), and always the console + DB."""
 from __future__ import annotations
+import json
 import logging
 import requests
 from . import db
@@ -9,7 +10,18 @@ log = logging.getLogger("radar.alerts")
 ICON = {"new_product": "🆕", "price_drop": "🔻", "price_rise": "🔺", "sale_started": "🔥", "stock_out": "📦", "restock": "📦",
         "hidden_product": "🕵️", "news": "📰", "social": "💬", "hiring": "🧑‍💼", "homepage_change": "🖼️", "new_collection": "🗂️",
         "bestseller_move": "🏆", "new_ad": "📣", "new_domain": "🌱", "price_war": "⚔️", "stockout_opportunity": "🎯",
-        "launch_predictor": "🚀", "momentum": "📈", "store_unreachable": "🚧"}
+        "launch_predictor": "🚀", "momentum": "📈", "store_unreachable": "🚧", "store_dry": "🏜️",
+        "stock_move": "📉", "financial_result": "📊", "financial_fact": "💰", "attention_spike": "👀", "trending_now": "🔎",
+        "press": "📢", "news_storm": "🌩️", "war_chest": "🏦", "undercut": "✂️", "pain_point": "🩹"}
+
+
+def _impact_line(e: dict) -> str:
+    try:
+        d = json.loads(e.get("data") or "{}") if isinstance(e.get("data"), str) else (e.get("data") or {})
+    except ValueError:
+        d = {}
+    imp = d.get("impact")
+    return f"Impact: {imp['label']}\n" if imp else ""
 
 
 def _send(text: str) -> None:
@@ -32,6 +44,7 @@ def format_event(e: dict) -> str:
     return (f"{ICON.get(e['kind'], '•')} [{e['importance']}/10] {e['brand']} · {e['kind'].replace('_', ' ')}\n"
             f"{e['title']}\n"
             + (f"Why: {e['so_what']}\n" if e.get("so_what") else "")
+            + _impact_line(e)
             + (f"Move: {e['counter_move']}\n" if e.get("counter_move") and e['counter_move'] != "No action" else "")
             + (f"{e['url']}" if e.get("url") else "")).strip()
 

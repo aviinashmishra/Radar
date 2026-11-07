@@ -61,8 +61,8 @@ def run() -> int:
         added, removed = sorted(set(apps) - old), sorted(old - set(apps))
         if added or removed:
             if db.add_event(b.name, "techstack", "stack_change",
-                            f"{b.name} stack changed: " + (f"added {', '.join(added)}" if added else "") +
-                            (f"; removed {', '.join(removed)}" if removed else ""),
+                            f"{b.name} stack changed: " + "; ".join(([f"added {', '.join(added)}"] if added else []) +
+                                                                    ([f"removed {', '.join(removed)}"] if removed else [])),
                             detail="New checkout, BNPL, CRM or review app = a conversion or retention bet.", url=b.shopify,
                             data={"added": added, "removed": removed}, dedupe_key=f"stack|{b.name}|{'+'.join(added)}|{'-'.join(removed)}"):
                 n += 1

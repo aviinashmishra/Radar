@@ -1,0 +1,96 @@
+# India market model: how big each segment is, where Pebble stands, and the assumptions behind the "₹ at risk"
+# impact estimate the radar prints on events and signals.
+#
+# Everything here is a seed that the dashboard shows with its source and confidence. Replace the figures with the
+# IDC / Counterpoint numbers you have under licence, or your own, and the impact model follows. Units are millions of
+# devices per calendar year; value is INR crore per year; asp is the average selling price in INR.
+# confidence: tracker (a named analyst figure) | estimate (triangulated from press and ASPs; verify)
+
+year: 2024
+sources:
+  - "IDC India Monthly Wearable Device Tracker, CY2024 press coverage (smartwatch, earwear, wristband units and growth)"
+  - "Counterpoint Research India smartwatch and TWS shipment coverage, 2024-2025"
+  - "Average selling prices triangulated from the tracked stores' live catalogues (Pricing page)"
+
+segments:
+  watch:
+    name: "Smartwatches"
+    units_m: 35.1
+    growth_pct: -34
+    asp_inr: 1800
+    value_cr: 6300
+    trend: "Shipments fell by a third in 2024 as the sub-₹2,000 segment saturated; brands moved to fewer, dearer SKUs."
+    confidence: estimate
+    shares_pct: { Noise: 24, Fire-Boltt: 18, boAt: 17, Fastrack: 7, Samsung: 4, Pebble: 2, Amazfit: 1 }
+  earbuds:
+    name: "TWS earbuds and earwear"
+    units_m: 83.0
+    growth_pct: 0
+    asp_inr: 1500
+    value_cr: 12450
+    trend: "Flat in units; the value is moving to ANC and the ₹2,000-5,000 band."
+    confidence: estimate
+    shares_pct: { boAt: 30, Boult: 10, Noise: 8, Samsung: 3, Pebble: 1 }
+  band:
+    name: "Screenless smart bands"
+    units_m: 1.5
+    growth_pct: 25
+    asp_inr: 2800
+    value_cr: 420
+    trend: "The one wrist category still growing: Whoop-style recovery bands at ₹2,000-10,000 plus subscription plays."
+    confidence: estimate
+    shares_pct: { Samsung: 30, Pebble: 20, Noise: 10, Sekyo: 5, Whoop: 5, Amazfit: 3 }
+    pebble_rank: 2
+    pebble_rank_source: "IDC India wristbands ranking as cited by the company"
+  ring:
+    name: "Smart rings"
+    units_m: 0.4
+    growth_pct: 90
+    asp_inr: 12000
+    value_cr: 480
+    trend: "Nascent and premium: Ultrahuman, Oura, Samsung at ₹20,000+, Indian brands pushing the ₹5,000-12,000 band."
+    confidence: estimate
+    shares_pct: { Ultrahuman: 35, boAt: 15, Noise: 12, Samsung: 10, Oura: 8, Pebble: 3 }
+  speaker:
+    name: "Bluetooth speakers"
+    units_m: 12.0
+    growth_pct: 5
+    asp_inr: 1800
+    value_cr: 2160
+    trend: "Steady; party speakers and soundbars carry the value growth."
+    confidence: estimate
+    shares_pct: { boAt: 25, Zebronics: 10, Portronics: 5, Pebble: 2 }
+  charger:
+    name: "Chargers, cables and power banks"
+    units_m: 60.0
+    growth_pct: 8
+    asp_inr: 700
+    value_cr: 4200
+    trend: "Commodity; GaN chargers and 20,000 mAh banks hold price."
+    confidence: estimate
+    shares_pct: { Portronics: 10, Ambrane: 8, boAt: 6, Pebble: 2 }
+
+# Pebble itself. Revenue is a starting estimate (private company, no public filing): set it from the management
+# accounts and the impact figures become real money. segment_mix_pct must add up to about 100.
+pebble:
+  revenue_cr: 250
+  revenue_period: FY25
+  revenue_confidence: estimate
+  segment_mix_pct: { watch: 40, earbuds: 20, band: 18, ring: 5, speaker: 10, charger: 7 }
+
+# Impact model. Every figure is INR per month.
+#   monthly_segment_revenue(S)  = pebble.revenue_cr * mix[S] / 12
+#   overlap(rival)              = how much of Pebble's buyers consider that rival: core Indian D2C rival 0.5, global
+#                                 premium (tier: adjacent) 0.15; a brand with a known share in S scales by share/20
+#   price cut of p% by a rival  = monthly_segment_revenue * overlap * elasticity * p / 100      (capped at max_share)
+#   broad sale (n SKUs, avg p%) = the same, times min(1, n / 20)
+#   rival launch in S           = monthly_segment_revenue * overlap * launch_shift_pct / 100
+#   rival best-seller out of stock = upside: segment value / 12 * rival share * stockout_capture_pct / 100
+#   rival store dry             = upside: segment value / 12 * rival share * stockout_capture_pct / 100 * 2
+assumptions:
+  price_elasticity: 1.2       # % change in Pebble volume per 1 % relative price move by a close rival
+  overlap_core: 0.5
+  overlap_adjacent: 0.15
+  launch_shift_pct: 3         # share a credible rival launch takes from Pebble in that segment over a quarter
+  stockout_capture_pct: 10    # share of a rival's stuck demand Pebble can capture with ads while they are out
+  max_share_at_risk: 0.4      # never show more than 40 % of a segment's monthly revenue at risk from one event

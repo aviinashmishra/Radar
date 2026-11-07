@@ -84,17 +84,82 @@ Locally nothing changes: `python run.py` still runs collectors, scheduler, strea
 
 ## The dashboard
 
-Seven views, light / dark / system theme, keyboard-first:
+Fifteen views, light / dark / system theme, keyboard-first:
 
-- **Today**: action cards (importance, why, counter-move, Done / Later), open signals, a threat radar ring of
-  rivals by activity, and what changed in the last 24 hours per brand.
+- **Today**: a KPI strip (open actions, changes in 24 h, news in 7 d, ₹ at risk this month, money moves, days to the
+  next sale), action cards (importance, why, **₹/month impact**, counter-move, Done / Later), open signals, the threat
+  radar ring, what changed per brand, pressure on Pebble by rival, this week's most-covered stories, listed rivals that moved.
 - **Feed**: every detected change with filters; new events arrive as a "N new" pill, click to show.
+- **News**: stories clustered across publishers (one headline = every outlet that ran it), topic chips (launch, funding,
+  financials, legal, leadership, partnership, distribution, manufacturing, marketing, market data, reviews), filters by
+  brand / topic / window, a headline search, strongest-first or newest-first, share of voice with trend, topic mix,
+  what is trending in India right now (falls back to what India is starting to search for in the category), news
+  velocity per brand, and the publishers that cover the sector. Every story has a topic-specific "why it matters" and
+  "what to do" line, the ₹/month impact estimate when the model can price it, and a details panel with the summary,
+  first-seen / last-seen, every outlet, and links to the brand page, its financials and the web. "Refresh news" fetches
+  Google News, Bing News and the newsroom feeds now.
+- **Financials**: the company behind every brand with revenue, YoY growth, net result and margin, valuation or funding,
+  scale versus Pebble and the parent's share price (1-day, 30-day, 52-week position). Conglomerates (Titan, Alphabet,
+  Samsung; `scope: parent` in `companies.yaml`) are never compared on group revenue: seed a `segment_revenue` row and the
+  wearables arm is compared instead. Cards for scale versus Pebble, growth and a funding / valuation timeline sit above
+  the peer table. Click a row for the revenue and profit series, the share-price line, every figure on file with its
+  source link and confidence, the money news, and links to SEC filings, Yahoo Finance and Wikipedia. "Refresh
+  financials" reads EDGAR, share prices and money news now.
 - **Brands**: one card per brand with a 14-day activity sparkline; brand pages have timeline, catalogue with
-  price history, best-sellers and insights (launch evidence, companion app, complaint themes, homepage shot).
+  price history, best-sellers, insights (launch evidence, companion app, complaint themes, homepage shot), **News**
+  (stories, attention curve, pressure on Pebble, topics) and **Financials** tabs.
+- **Segments**: a log-scale price ladder per form factor with Pebble highlighted (see below).
 - **Pricing**: Pebble vs the field, undercuts, white-space heatmap, price position per Pebble SKU.
-- **Market**: search demand, creators, companion apps, pain points, tech stack, visual watch.
+- **Market**: market size per segment (units, value, growth, ASP, shares, Pebble's rank), money at stake from rivals'
+  moves, the share-of-signal table, then search demand, creators, companion apps, pain points, tech stack, visual watch.
+- **Channels**: where every brand is sold (Amazon.in, Flipkart, Blinkit per city, Zepto, Instamart, Croma, Reliance
+  Digital, Vijay Sales, offline), marketplace prices and ratings, price parity vs own store, discount depth.
+- **Reviews**: voice of the customer end to end. A written market read (what Indian buyers praise and complain about
+  across every brand, the segment that draws the most complaints, where Pebble sits against the field), demand themes
+  split into praise and complaints and labelled table stakes / open wound / contested, "what India asks for" (Google
+  autocomplete grouped into feature asks: blood pressure, calling, AMOLED, battery, rings, price point ...), mood by
+  week, a per-segment table, a ratings scoreboard (Google Play, App Store, own store, Amazon.in, composite), the brand x
+  theme heat matrix, a conclusion paragraph per brand with quotes, an item explorer (brand, source, theme, polarity,
+  text), optional AI reads of a brand or of the whole field, and a "refresh reviews" button. Brand pages get a Reviews
+  tab with the same read for one brand.
+- **Regions**: India map of search interest per state, own sales per state and city, quick-commerce shelves per city;
+  where rivals out-index Pebble.
+- **Reports**: daily / weekly / monthly / yearly sales and performance reports, the sector & industry report, rivals'
+  sales-proxy index, CSV import of Pebble's own sales.
+- **Strategy**: segment scorecard, USP claims with evidence, problems to fix, threats, opportunities, SWOT, 30/60/90 plan.
 - **Briefs** and **Settings** (run tiers, integrations, collector log, CSV export).
 - `Ctrl K` or `/` opens the command palette: jump to a brand or page, search the feed, or ask the radar.
+
+## Money, markets and impact
+
+Three config files drive it, all plain YAML:
+
+| File | Holds | Used by |
+|---|---|---|
+| `config/companies.yaml` | per brand: legal entity, HQ, ownership, Yahoo ticker, SEC CIK, Wikipedia article, App Store ids, investors, seeded financial figures with source and confidence | Financials page, financials / attention / app-store collectors |
+| `config/market.yaml` | India market model: units, value, growth, ASP and shares per segment, Pebble's revenue and segment mix, the impact-model assumptions | Market page, the ₹/month impact on every event and signal, briefs |
+| `config/competitors.yaml` | brands, stores, news terms, newsroom and analyst RSS feeds, sector searches | everything else |
+
+**Where the money figures come from.** US-listed parents (Garmin, Zepp Health / Amazfit, Alphabet / Fitbit) are read
+from SEC EDGAR's XBRL company facts: revenue, gross and operating profit, net result per fiscal year, straight from
+the 10-K / 20-F (`SEC_CONTACT` in `.env` identifies the tool, as EDGAR asks). Listed parents (also Titan / Fastrack,
+Samsung, Palred / pTron) get a daily closing price, and a move of 5 % or more, a 52-week high or low, becomes a
+`stock_move` event. For private Indian companies the radar searches the news for revenue, profit, loss, funding and
+valuation per brand and extracts the figures (₹ crore and $ million amounts next to the metric word; with a Claude or
+Gemini key the model does the extraction). Every figure carries its source and a confidence (`filing` > `reported` >
+`ai` > `extracted` > `estimate`), and seeded estimates in `companies.yaml` are shown as estimates until a better source
+replaces them. A new revenue, funding or valuation figure for a core rival raises a `war_chest` signal.
+
+**Impact model.** `market.yaml` states Pebble's revenue (an estimate until you set it) and segment mix. For each rival
+move the radar prints ₹/month at risk or upside: a price cut is monthly segment revenue × overlap with that rival ×
+elasticity × the cut; a launch shifts a stated share of the segment; a rival's best-seller going out of stock is
+upside (a share of its stuck demand). The assumptions are listed on the Market page and every amount's basis is in its
+tooltip. Sums are capped at what a segment earns. It is an estimate to argue with, not a forecast.
+
+**Market size.** Segment units, value, growth, ASP and the brand shares are seeds from press coverage of the IDC and
+Counterpoint trackers; replace them with licensed numbers and the Market page, briefs and chat follow. The page adds
+what the radar measures live: median store price, rival count and Pebble SKUs per segment, and the share of signal
+(news mentions, autocomplete suggestions, creator views, app rating counts, Wikipedia attention) per brand.
 
 ## Segments and the watchlist
 
@@ -122,8 +187,17 @@ blocks plain requests). Price moves and sold-out / pre-order flips become `watch
 | Tech stack | Store HTML markers | New checkout, BNPL, CRM or review apps = conversion/retention bets |
 | Visual watch | Playwright screenshots + pixel diff (+ Claude vision when configured) | Banner, offer and layout changes text diffing misses |
 | Price position | Fuzzy matcher: category + specs + price | Every Pebble SKU vs its nearest rival SKUs; `undercut` signal when a rival drops >10% below |
+| News, two aggregators | Google News RSS + Bing News RSS (India editions), de-duplicated by headline | Every brand and sector story once, with a topic; `news_storm` signal when 4+ outlets run one story |
+| Newsrooms + analyst feeds | Samsung, Google Fitbit, Garmin, Oura, Whoop, Ultrahuman, Polar RSS; Counterpoint, Entrackr, Inc42, Gizmochina, 91mobiles filtered to the sector | Official announcements days before coverage; shipment data and funding news filed under the brand they name |
+| Trending now | Google Trends "trending in India" RSS, matched to brands and segments | The moment a rival or category trends nationally (`trending_now`) |
+| Attention | Wikipedia daily page views per company | A public-attention index; `attention_spike` at 3x the 30-day median |
+| Apple App Store | iTunes lookup API, India store | iOS rating, rating count, version and release date next to the Play figures (premium buyers skew iPhone) |
+| Share prices | Yahoo Finance daily chart for listed parents | `stock_move` on a 5 %+ day, 52-week highs and lows, 30-day trend on the Financials page |
+| Filings | SEC EDGAR XBRL company facts | Revenue, gross / operating / net result per fiscal year for Garmin, Zepp Health, Alphabet (`financial_result`) |
+| Money news | Google + Bing searches for revenue / loss / funding / valuation per brand, regex or AI extraction | Revenue, profit, loss, funding and valuation figures for private Indian rivals (`financial_fact`, `war_chest`) |
 
-Plus a two-way Telegram bot (`/ask`, `/top`, `/brand`, `/signals`, `/brief`, `/run`, `/status`), CSV export of every
+Plus a two-way Telegram bot (`/ask`, `/top`, `/brand`, `/news [brand]`, `/money [brand]`, `/reviews [brand]`, `/signals`, `/brief`, `/run`, `/status`), a stale-build guard (the dashboard notices when the files on disk are newer than the running
+server and offers a one-click restart, `POST /api/restart`; a 404 from a known route shows the same button), CSV export of every
 table (`/api/export/<table>.csv`), and an email digest for the briefs when `SMTP_*` is set.
 
 Screenshots need a browser once: `python -m playwright install chromium`. Set `screenshots: false` in the config to skip.
@@ -159,7 +233,9 @@ radar/collectors/         shopify, news, reddit, feeds, youtube, searchdemand, p
                           appstore, screenshots, ads, newstores
 radar/enrich.py           Claude structured-output classification + heuristic fallback
 radar/gemini.py           Gemini backend: JSON scoring, text, vision, tool-use chat (google-genai SDK)
-radar/signals.py          cross-event rules (price war, stock-out, launch, undercut, pain point, momentum)
+radar/relevance.py        is a headline / video / search / post really about the brand (aliases, look-alikes)
+radar/maintenance.py      versioned data repairs that run in every copy of the database (local and the worker)
+radar/signals.py          cross-event rules (price war, stock-out, store dry, launch, undercut, pain point, momentum)
 radar/matcher.py          Pebble SKU <-> rival SKU matching, price position, undercuts
 radar/analytics.py        white-space, benchmark, winners, influencers, app health, search demand, pain points
 radar/bot.py              two-way Telegram bot
@@ -184,6 +260,7 @@ python -m radar.runner --once --tier all      # everything once
 python -m radar.runner --loop                 # scheduler without the web server
 python -m radar.runner --brief 7              # write + push the weekly brief
 python -m radar.cloud pull | push             # cloud worker: restore / publish the snapshot (GitHub Actions)
+python -m radar.maintenance                   # apply pending data repairs now (the runner does it on every sweep)
 ```
 
 ## API
@@ -203,7 +280,43 @@ Add a block under `brands:` in `config/competitors.yaml`. A Shopify URL gives th
 brands without one are still covered by news, Reddit and watch pages. Restart the server (in cloud mode, commit
 the change on GitHub: the push starts a sweep).
 
+Optional keys per brand, for keeping its page clean:
+
+| Key | Use it when |
+|---|---|
+| `apps` | Google Play package ids of its companion apps (rating, installs, update tells) |
+| `search_terms` | the name is an everyday word: YouTube and autocomplete search these phrases instead (`"URBAN smartwatch"`) |
+| `aliases` | product lines that can only mean this brand (`"Airdopes"`, `"Galaxy Ring"`); regex allowed (`"Whoop \d"`) |
+| `exclude` | look-alikes that are never this brand (`"Urban Cruiser"`, `"Pebble Time"`, `"Insta360"`) |
+| `store` + `platform` | the store left Shopify but has a JSON catalogue the radar can read (`platform: justcorseca`) |
+
+A brand whose name is an everyday word (Noise, Urban, Polar, Whoop) or a global brand (`tier: adjacent`) only
+gets a result when it also mentions a product or business context; rules live in `radar/relevance.py`.
+
 ## Ground rules baked in
 
 Public, unauthenticated data only. One request per second per host, a descriptive User-Agent, official
 APIs where they exist (Meta Ad Library, Google News RSS, Reddit RSS, crt.sh). Nothing behind a login.
+
+## Distribution, voice of the customer, regions, sales reports and strategy
+
+Five more pages turn the radar from "what rivals changed" into "where they sell, what buyers say, where demand is,
+how Pebble is doing and what to do about it". All of it runs on the same collectors / SQLite / dashboard pipeline;
+the tables live in `radar/schema_ext.py`.
+
+| Page | What it shows | Where the data comes from |
+|---|---|---|
+| **Channels** | brand x channel matrix (Amazon.in, Flipkart, Blinkit per city, Zepto, Instamart, Croma, Reliance Digital, Vijay Sales, offline), prices, MRP, ratings, sponsored slots, price parity vs the brand's own store, discount depth, quick-commerce shelves per city | `collectors/channels.py` reads the public search results of Amazon.in and Flipkart for every brand (medium tier, each brand refreshed every 6 h) and Blinkit's search API per city (daily); retailers that block automated reads (Croma, Reliance) and app-only quick commerce (Zepto, Instamart) are marked **reported** from news / press / social mentions. Events: `channel_listed`, `channel_delisted`, `channel_price_drop`/`rise`, `channel_oos`/`back`, `channel_rating_drop`, `channel_undercut` (marketplace below D2C price), `qc_expansion`. Config: `config/channels.yaml` |
+| **Reviews** | what buyers say per brand: items, average rating, negative share, complaint and praise themes (battery, accuracy, app, build, comfort, display, sound, service, value, delivery, design, water, features), a brand x theme heat matrix, quotes, an optional AI read per brand | `collectors/voice.py`: YouTube comments under each brand's newest videos (YouTube's own endpoint, no key), App Store reviews in the India store (`ios:` ids in `companies.yaml`), Google Play reviews (`apps:` ids), Amazon.in product-page reviews of each brand's most-rated listings, plus the Judge.me store reviews already collected. Sentiment from the star rating or a lexicon that knows Hinglish. Events: `voice_wave` (5+ complaints on one theme in a week), `praise_wave` |
+| **Regions** | an India map with three modes: search interest per state per brand, Pebble's own sales per state and city, Blinkit shelves per city; "where rivals out-index Pebble", strongholds, brand reach | `collectors/regions.py`: Google Trends interest by sub-region (no key, 12 brands a day), place names mentioned next to each brand in news / social / comments, the quick-commerce listings, and the `sales` table |
+| **Reports** | daily / weekly / monthly / yearly performance reports and the sector & industry report, with an AI executive summary when a key is set; a sales trend, segment / channel / state / SKU splits and growth vs the previous period; rivals' **sales-proxy index** (units estimated from reviews and ratings gained in the period); CSV import of Pebble's own sales | `radar/sales.py`, `radar/reports.py`. Own sales come from a CSV / JSON import (`POST /api/sales/import`, template on the page) or hourly from the Shopify Admin API when `SHOPIFY_ADMIN_TOKEN` is set. Reports are written automatically (daily 08:00 IST, weekly Monday, monthly + sector on the 1st, yearly on 1 January) by the scheduler and the GitHub Actions workflow, pushed to Telegram / email, stored in `reports`, downloadable as Markdown |
+| **Strategy** | segment scorecard (defend / attack / enter / watch from size, growth, HHI concentration, Pebble's share, price fit, white space), USP claims with the evidence (rival complaint themes Pebble does not share, Pebble's praise, subscription-free wedge, accuracy evidence), problems to fix by severity, threats, opportunities, SWOT, a 30 / 60 / 90-day plan and an AI strategy memo | `radar/strategy.py` over everything above plus `config/market.yaml`; recomputed every 6 hours or on demand |
+
+Chat tools (`channels`, `voice`, `regions`, `sales_report`, `strategy`, `reports`), CSV exports (`channel_listings`,
+`channel_history`, `voice`, `region_interest`, `sales`, `reports`) and the Telegram `/report [daily|weekly|monthly|yearly|sector]`
+command cover the same data. `python -m radar.reports --kind monthly` writes a report from the command line;
+`python -m radar.collectors.sales file.csv` imports sales on the worker.
+
+Sales proxies are a relative gauge, not a count: `proxy:` in `config/channels.yaml` holds the ratings-per-100-units
+assumptions; replace them with your own conversion rates. Listings of third-party straps, cases and "compatible with"
+accessories are ignored so a ₹186 strap for a Pebble watch never counts as a Pebble listing.

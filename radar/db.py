@@ -66,6 +66,17 @@ CREATE TABLE IF NOT EXISTS watch_prices (
 CREATE INDEX IF NOT EXISTS ix_wp ON watch_prices(name, seen_at);
 CREATE TABLE IF NOT EXISTS videos (
   video_id TEXT PRIMARY KEY, brand TEXT, title TEXT, channel TEXT, views INTEGER, published TEXT, query TEXT, seen_at TEXT);
+CREATE TABLE IF NOT EXISTS quotes (
+  brand TEXT, ticker TEXT, day TEXT, close REAL, prev_close REAL, change_pct REAL, currency TEXT, high52 REAL, low52 REAL,
+  market_cap REAL, name TEXT, seen_at TEXT, PRIMARY KEY (ticker, day));
+CREATE TABLE IF NOT EXISTS financials (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, brand TEXT, metric TEXT, period TEXT, value REAL, currency TEXT, unit TEXT,
+  source TEXT, url TEXT, confidence TEXT, seen_at TEXT, UNIQUE (brand, metric, period, source));
+CREATE INDEX IF NOT EXISTS ix_fin ON financials(brand, metric, period);
+CREATE TABLE IF NOT EXISTS attention (
+  brand TEXT, article TEXT, day TEXT, views INTEGER, PRIMARY KEY (article, day));
+CREATE TABLE IF NOT EXISTS trending (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, traffic TEXT, brand TEXT, segment TEXT, url TEXT, seen_at TEXT, UNIQUE (title, seen_at));
 """
 
 
@@ -88,6 +99,8 @@ def _open() -> sqlite3.Connection:
         c.row_factory = sqlite3.Row
         c.execute("PRAGMA journal_mode=WAL")
         c.executescript(SCHEMA)
+        from .schema_ext import SCHEMA as SCHEMA_EXT  # distribution, voice, regions, sales, reports tables
+        c.executescript(SCHEMA_EXT)
         for table in ("events", "signals"):  # additive migration: workflow status for the Today view
             cols = {r[1] for r in c.execute(f"PRAGMA table_info({table})").fetchall()}
             if "status" not in cols:

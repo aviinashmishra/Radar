@@ -1,0 +1,62 @@
+# Where the products are actually bought: marketplaces, quick commerce and large-format retail.
+#
+# The channels collector reads each channel's public search page / API for every tracked brand and records every
+# listing it finds: price, MRP, stock, rating and rating count, per city for quick commerce (a Blinkit shelf is
+# hyperlocal). Diffs become events: channel_listed, channel_delisted, channel_price_drop / rise, channel_oos,
+# channel_back, channel_rating_drop, channel_undercut (marketplace cheaper than the brand's own store) and
+# qc_expansion (a brand appears on Blinkit in a new city).
+#
+# reader: amazon | flipkart | blinkit   read live
+#         news                           no public endpoint we can read politely (Croma and Reliance Digital block
+#                                        automated reads, Zepto and Instamart need app sessions): presence is taken
+#                                        from news, press and social mentions ("now available on Zepto") instead.
+# Add a channel with a reader of `news` for any retailer you want on the matrix (Vijay Sales, Poorvika, Sangeetha ...);
+# the mention patterns are regexes matched against headlines and post titles.
+
+channels:
+  - { key: amazon,    name: "Amazon.in",         type: marketplace,    reader: amazon,   mention: "amazon(\\.in)?|great indian festival|prime day" }
+  - { key: flipkart,  name: "Flipkart",          type: marketplace,    reader: flipkart, mention: "flipkart|big billion" }
+  - { key: myntra,    name: "Myntra",            type: marketplace,    reader: news,     mention: "myntra" }
+  - { key: tatacliq,  name: "Tata CLiQ",         type: marketplace,    reader: news,     mention: "tata cliq|tatacliq" }
+  - { key: blinkit,   name: "Blinkit",           type: quick_commerce, reader: blinkit,  mention: "blinkit" }
+  - { key: zepto,     name: "Zepto",             type: quick_commerce, reader: news,     mention: "zepto" }
+  - { key: instamart, name: "Swiggy Instamart",  type: quick_commerce, reader: news,     mention: "instamart" }
+  - { key: croma,     name: "Croma",             type: retail,         reader: news,     mention: "\\bcroma\\b" }
+  - { key: reliance,  name: "Reliance Digital",  type: retail,         reader: news,     mention: "reliance digital|jio ?mart" }
+  - { key: vijay,     name: "Vijay Sales",       type: retail,         reader: news,     mention: "vijay sales" }
+  - { key: poorvika,  name: "Poorvika / Sangeetha / regional chains", type: retail, reader: news, mention: "poorvika|sangeetha|bajaj electronics|lot mobiles|big c mobiles" }
+  - { key: offline,   name: "Offline retail (general trade)", type: retail, reader: news, mention: "offline (retail|store|expansion|presence)|retail stores?|general trade|multi-?brand outlets?|\\bmbo\\b|exclusive stores?|brand stores?" }
+
+# Quick-commerce shelves are read per city (lat/lon of a central pincode). Also used by the Regions page.
+cities:
+  - { name: Delhi,      state: Delhi,          lat: 28.6139, lon: 77.2090 }
+  - { name: Mumbai,     state: Maharashtra,    lat: 19.0760, lon: 72.8777 }
+  - { name: Bengaluru,  state: Karnataka,      lat: 12.9716, lon: 77.5946 }
+  - { name: Hyderabad,  state: Telangana,      lat: 17.3850, lon: 78.4867 }
+  - { name: Chennai,    state: Tamil Nadu,     lat: 13.0827, lon: 80.2707 }
+  - { name: Kolkata,    state: West Bengal,    lat: 22.5726, lon: 88.3639 }
+  - { name: Pune,       state: Maharashtra,    lat: 18.5204, lon: 73.8567 }
+  - { name: Ahmedabad,  state: Gujarat,        lat: 23.0225, lon: 72.5714 }
+  - { name: Jaipur,     state: Rajasthan,      lat: 26.9124, lon: 75.7873 }
+  - { name: Lucknow,    state: Uttar Pradesh,  lat: 26.8467, lon: 80.9462 }
+  - { name: Chandigarh, state: Punjab,         lat: 30.7333, lon: 76.7794 }
+  - { name: Kochi,      state: Kerala,         lat: 9.9312,  lon: 76.2673 }
+
+# What to type into each channel's search box per brand. {brand} expands to the brand's search_terms (or its name);
+# {segment} to the display word of each segment the brand sells in (watch -> smartwatch, band -> smart band ...).
+# Marketplaces get the first `marketplace_queries_per_brand` of these; quick commerce only the first.
+queries: ["{brand}", "{brand} {segment}"]
+marketplace_queries_per_brand: 2
+segment_words: { band: "smart band", ring: "smart ring", watch: "smartwatch", earbuds: "earbuds", neckband: "neckband", headphones: "headphones", speaker: "speaker", powerbank: "power bank", charger: "charger" }
+marketplace_refresh_hours: 6        # a brand's marketplace listings are re-read when older than this (the medium tier runs every 30-60 min)
+max_listings_per_query: 20
+price_move_pct: 8                   # a listing's price must move at least this much to become an event
+undercut_pct: 8                     # marketplace price this far below the brand's own store price = channel conflict
+delisted_after_days: 4              # a listing not seen for this long while its query still runs = delisted
+
+# Sales proxies: the radar never sees rivals' invoices, so it estimates units from public counters.
+#   ratings_per_100_units  how many buyers leave a rating per 100 units sold (marketplaces 1-3, companion apps 0.5-1)
+proxy:
+  marketplace_ratings_per_100_units: 2.0
+  app_ratings_per_100_units: 0.8
+  store_reviews_per_100_units: 1.5

@@ -19,6 +19,18 @@ TABLES = {
     "videos": "SELECT brand,channel,views,published,title,video_id FROM videos ORDER BY views DESC",
     "search_suggestions": "SELECT seed,suggestion,brand,first_seen,last_seen FROM search_suggestions ORDER BY seed",
     "app_metrics": "SELECT brand,package,name,rating,ratings_count,downloads,updated_on,seen_at FROM app_metrics ORDER BY package,seen_at",
+    "financials": "SELECT brand,metric,period,value,currency,unit,confidence,source,url,seen_at FROM financials ORDER BY brand,metric,period",
+    "quotes": "SELECT brand,ticker,day,close,prev_close,change_pct,currency,high52,low52,name FROM quotes ORDER BY ticker,day",
+    "attention": "SELECT brand,article,day,views FROM attention ORDER BY brand,day",
+    "trending": "SELECT seen_at,title,traffic,brand,segment,url FROM trending ORDER BY id DESC",
+    "news": "SELECT created_at,brand,importance,title,url,json_extract(data,'$.publisher') publisher,json_extract(data,'$.topic') topic,"
+            "json_extract(data,'$.provider') provider FROM events WHERE source='news' ORDER BY id DESC",
+    "channel_listings": "SELECT channel,city,brand,title,price,mrp,available,rating,rating_count,sponsored,position,url,first_seen,last_seen FROM channel_listings ORDER BY brand,channel,city",
+    "channel_history": "SELECT channel,city,item_key,price,available,rating,rating_count,seen_at FROM channel_history ORDER BY channel,item_key,seen_at",
+    "voice": "SELECT created,brand,source,rating,sentiment,themes,author,likes,text,url FROM voice ORDER BY created DESC",
+    "region_interest": "SELECT brand,region,level,basis,period,value,detail,seen_at FROM region_interest ORDER BY brand,basis,region",
+    "sales": "SELECT day,order_ref,sku,title,segment,channel,state,city,units,revenue,source FROM sales ORDER BY day DESC",
+    "reports": "SELECT created_at,kind,period,title,body FROM reports ORDER BY id DESC",
 }
 
 

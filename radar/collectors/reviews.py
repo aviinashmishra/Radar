@@ -8,6 +8,7 @@ from __future__ import annotations
 import html as htmllib
 import re
 from .. import db
+from ..analytics import on_radar
 from ..config import settings
 from .base import get, tracked, log
 
@@ -49,8 +50,9 @@ def run() -> int:
         if not b.shopify or not st or not st["shop"] or "Judge.me" not in (st["apps"] or ""):
             continue
         domain = b.host
-        tops = db.q("SELECT p.product_id, p.title, p.handle FROM bestseller_rank r JOIN products p ON p.brand=r.brand AND "
-                    "p.product_id=r.product_id WHERE r.brand=? ORDER BY r.rank LIMIT ?", (b.name, TOP_N))
+        tops = [p for p in db.q("SELECT p.product_id, p.title, p.handle, p.product_type FROM bestseller_rank r JOIN products p "
+                                "ON p.brand=r.brand AND p.product_id=r.product_id WHERE r.brand=? ORDER BY r.rank", (b.name,))
+                if on_radar(p["product_type"], p["title"])][:TOP_N]  # best-sellers in our categories, not FITTR's oats
         for p in tops:
             try:
                 d = fetch(st["shop"], domain, p["product_id"])
@@ -65,7 +67,7 @@ def run() -> int:
                 for rv in d["reviews"]:
                     c.execute("INSERT OR IGNORE INTO reviews(brand,product_id,review_key,rating,title,body,created,seen_at) VALUES(?,?,?,?,?,?,?,?)",
                               (b.name, p["product_id"], rv["key"], rv["rating"], rv["title"], rv["body"], rv["created"], db.now()))
-            url = f"{b.shopify}/products/{p['handle']}"
+            url = b.product_url(p["handle"])
             if prev and d["total"] - prev["total"] >= max(5, int(prev["total"] * 0.05)):
                 if db.add_event(b.name, "reviews", "review_surge", f"{p['title'][:80]} gained {d['total'] - prev['total']} reviews (now {d['total']})",
                                 detail="Review velocity tracks sales. Something is moving this SKU.", url=url,

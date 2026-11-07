@@ -1,6 +1,6 @@
 """YouTube search sensor + influencer map.
 
-Searches "<brand> <query>" sorted by upload date and records each video with channel and views.
+Searches "<brand or search_term> <query>" sorted by upload date and records each on-brand video with channel and views.
 New videos become `video` events; the analytics layer turns the table into an influencer leaderboard
 (which creators cover which rivals, how many views they pull) so Pebble can reach those creators first.
 """
@@ -10,9 +10,11 @@ import re
 from urllib.parse import quote_plus
 from .. import db
 from ..config import settings
+from ..relevance import relevant
 from .base import get, tracked, log
 
 URL = "https://www.youtube.com/results?search_query={q}&sp=CAI%253D"  # CAI= : sort by upload date
+RECENT_RX = re.compile(r"(sec|second|min|minute|hr|hour|day)s? ago|\b1 (wk|week) ago", re.I)  # YouTube writes "3 days ago", "5 hr ago", "1 wk ago"
 
 
 def _walk(o):
@@ -60,27 +62,32 @@ def search(q: str) -> list[dict]:
 @tracked("youtube")
 def run() -> int:
     n = 0
-    first = db.q1("SELECT COUNT(*) c FROM videos")["c"] == 0
     for b in settings.brands:
-        for q in settings.youtube_queries:
-            query = f"{b.name} {q}"
-            try:
-                vids = search(query)
-            except Exception as e:  # noqa: BLE001
-                log.info("youtube %s failed: %s", query, e)
-                continue
-            for v in vids:
-                if db.q1("SELECT 1 FROM videos WHERE video_id=?", (v["video_id"],)):
-                    continue
-                if not re.search(re.escape(b.name.split("-")[0]), v["title"], re.I):
-                    continue  # the search engine drifted off-brand
-                with db.tx() as c:
-                    c.execute("INSERT OR IGNORE INTO videos(video_id,brand,title,channel,views,published,query,seen_at) VALUES(?,?,?,?,?,?,?,?)",
-                              (v["video_id"], b.name, v["title"], v["channel"], v["views"], v["published"], query, db.now()))
-                if first and "hour" not in v["published"] and "day" not in v["published"]:
-                    continue  # on the first run only this week's videos become events; the rest seed the influencer map
-                if db.add_event(b.name, "youtube", "video", f"{v['channel']}: {v['title']}"[:300],
-                                detail=f"{v['views']:,} views · {v['published']} · q={query}",
-                                url=f"https://www.youtube.com/watch?v={v['video_id']}", data=v, dedupe_key=f"yt|{v['video_id']}"):
-                    n += 1
+        for term in (b.search_terms or [b.name]):
+            for q in settings.youtube_queries:
+                n += _query(b, term, f"{term} {q}")
+    return n
+
+
+def _query(b, term: str, query: str) -> int:
+    n = 0
+    try:
+        vids = search(query)
+    except Exception as e:  # noqa: BLE001
+        log.info("youtube %s failed: %s", query, e)
+        return 0
+    for v in vids:
+        if db.q1("SELECT 1 FROM videos WHERE video_id=?", (v["video_id"],)):
+            continue
+        if not relevant(v["title"], b, term, strict=True):
+            continue  # the search engine drifted off-brand (Urban cycles, Polar cooktops, Samsung phones)
+        with db.tx() as c:
+            c.execute("INSERT OR IGNORE INTO videos(video_id,brand,title,channel,views,published,query,seen_at) VALUES(?,?,?,?,?,?,?,?)",
+                      (v["video_id"], b.name, v["title"], v["channel"], v["views"], v["published"], query, db.now()))
+        if not RECENT_RX.search(v["published"] or ""):
+            continue  # only this week's uploads are news; older ones a search surfaces today just feed the influencer map
+        if db.add_event(b.name, "youtube", "video", f"{v['channel']}: {v['title']}"[:300],
+                        detail=f"{v['views']:,} views · {v['published']} · q={query}",
+                        url=f"https://www.youtube.com/watch?v={v['video_id']}", data=v, dedupe_key=f"yt|{v['video_id']}"):
+            n += 1
     return n

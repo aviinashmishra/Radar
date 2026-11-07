@@ -78,11 +78,11 @@ def matches() -> list[dict]:
     for r in rows:
         o = out[r["self_id"]]
         o.update({"self_id": r["self_id"], "self_title": r["self_title"], "self_price": r["self_price"], "category": r["category"],
-                  "self_url": f"{settings.self_brand.shopify}/products/{r['self_handle']}" if settings.self_brand else ""})
+                  "self_url": settings.self_brand.product_url(r["self_handle"]) if settings.self_brand else ""})
         b = settings.brand(r["brand"])
         o["matches"].append({"brand": r["brand"], "title": r["rival_title"], "price": r["rival_price"], "score": r["score"],
                              "available": bool(r["rival_available"]), "gap_pct": round(100 * (r["self_price"] - r["rival_price"]) / r["rival_price"]) if r["rival_price"] else None,
-                             "url": f"{b.shopify}/products/{r['rival_handle']}" if b and b.shopify else ""})
+                             "url": b.product_url(r["rival_handle"]) if b else ""})
     res = list(out.values())
     for o in res:
         gaps = [m["gap_pct"] for m in o["matches"] if m["gap_pct"] is not None]

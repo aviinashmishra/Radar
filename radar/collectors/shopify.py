@@ -8,8 +8,13 @@ Everything here is public, unauthenticated JSON that every Shopify store exposes
 
 Events produced: new_product, price_drop, price_rise, discount_started, discount_ended, stock_out, restock,
 delisted, new_collection, bestseller_move, hidden_product, sale_started.
+
+Stores that leave Shopify can still be read when they expose a JSON catalogue: `platform:` in competitors.yaml
+picks the adapter (Just Corseca's Next.js store since 2026-11). Adapters return Shopify-shaped products, so every
+diff below works unchanged.
 """
 from __future__ import annotations
+import ast
 import json
 import re
 from urllib.parse import unquote
@@ -20,6 +25,12 @@ from .base import Unavailable, get, get_json, tracked
 
 BEST_HANDLE_RX = re.compile(r"best|top-?sell|trending|most-?popular|bestseller", re.I)
 PRELAUNCH_RX = re.compile(r"coming[- ]soon|pre-?order|pre-?launch|launching|new[- ]launch|teaser|upcoming", re.I)
+TEST_RX = re.compile(r"^\s*(test|testing|dummy|sample)\b|\btest (product|item|sku)\b|do not (buy|order)", re.I)
+
+
+def is_test_product(title: str, price: float | None) -> bool:
+    """Placeholder SKUs stores create while setting up ("test" at INR 5) are not launches."""
+    return bool(TEST_RX.search(title or "")) or (price is not None and 0 < price < 10)
 
 
 def _product_row(brand: str, p: dict) -> dict:
@@ -58,6 +69,31 @@ def fetch_catalogue(base: str) -> list[dict]:
     return out
 
 
+def fetch_justcorseca(base: str) -> list[dict]:
+    """Just Corseca's own backend: one JSON list, already in best-seller order, mapped to Shopify's product shape."""
+    items = get_json(f"{base}/backend-proxy/product-category/products?sortBy=bestsellers") or []
+    out = []
+    for p in items if isinstance(items, list) else []:
+        try:
+            colours = ast.literal_eval(p.get("colorVariants") or "[]")  # a Python-repr string of dicts
+        except (ValueError, SyntaxError):
+            colours = []
+        variants = [{"price": v.get("retailPrice"), "compare_at_price": v.get("mrp"), "available": bool(v.get("isAvailable"))}
+                    for v in colours if isinstance(v, dict) and v.get("retailPrice") is not None]
+        if not variants:
+            variants = [{"price": p.get("retailPrice"), "compare_at_price": p.get("mrp"), "available": bool(p.get("isAvailable"))}]
+        pid = re.sub(r"[^0-9a-f]", "", (p.get("productId") or "").split("-", 1)[-1].lower())
+        if not pid or not p.get("productDetailsPageSlug"):
+            continue
+        out.append({"id": int(pid[:15], 16), "handle": p["productDetailsPageSlug"], "title": p.get("productName", ""),
+                    "product_type": "", "vendor": "Just Corseca", "tags": [], "variants": variants,
+                    "images": [{"src": p.get("mainImageUrl") or ""}]})
+    return out
+
+
+FEEDS = {"shopify": fetch_catalogue, "justcorseca": fetch_justcorseca}
+
+
 def fetch_sitemap_handles(base: str) -> set[str]:
     handles: set[str] = set()
     for i in (1, 2, 3):
@@ -82,9 +118,9 @@ def run_brand(brand_name: str) -> int:
     if not brand or not brand.shopify:
         return 0
     base = brand.shopify
-    products = fetch_catalogue(base)
+    products = FEEDS.get(brand.platform, fetch_catalogue)(base)
     if not products:
-        r = get(f"{base}/products.json?limit=1")
+        r = get(f"{base}/products.json?limit=1" if brand.platform == "shopify" else f"{base}/")
         moved = r.url.split("//", 1)[-1].split("/", 1)[0]
         why = f"HTTP {r.status_code}" + (f", now redirects to {moved}" if moved != brand.host else "")
         had = db.q1("SELECT COUNT(*) c FROM products WHERE brand=?", (brand.name,))["c"]
@@ -96,13 +132,19 @@ def run_brand(brand_name: str) -> int:
         raise Unavailable(f"catalogue unavailable: {why}")
 
     known = {r["product_id"]: r for r in db.q("SELECT * FROM products WHERE brand=?", (brand.name,))}
+    rows = [_product_row(brand.name, p) for p in products]
+    replatformed = bool(known) and not (set(known) & {r["product_id"] for r in rows})
+    if replatformed:  # same brand, new store platform: old ids mean nothing, so re-baseline instead of 100 "NEW" + 100 "removed"
+        with db.tx() as c:
+            for table in ("products", "price_history", "bestseller_rank", "collections"):
+                c.execute(f"DELETE FROM {table} WHERE brand=?", (brand.name,))
+        known = {}
     first_run = not known
     ts = db.now()
     n_events = 0
     drops = []
     seen_ids = set()
-
-    rows = [_product_row(brand.name, p) for p in products]
+    url = brand.product_url
     with db.tx() as c:
         for row in rows:
             pid = row["product_id"]
@@ -133,7 +175,7 @@ def run_brand(brand_name: str) -> int:
                     if db.add_event(brand.name, "shopify", kind,
                                     f"{row['title']}: {settings.currency} {op:,.0f} -> {np_:,.0f} ({pct:+.0f}%)",
                                     detail=f"type={row['product_type'] or 'n/a'} compare_at={row['compare_at']}",
-                                    url=f"{base}/products/{row['handle']}",
+                                    url=url(row['handle']),
                                     data={"product_id": pid, "old": op, "new": np_, "pct": round(pct, 1),
                                           "product_type": row["product_type"], "image": row["image"]},
                                     dedupe_key=f"shopify|{brand.name}|{kind}|{pid}|{np_}"):
@@ -145,7 +187,7 @@ def run_brand(brand_name: str) -> int:
                     off = _pct(nc, row["price"])
                     if db.add_event(brand.name, "shopify", "discount_started",
                                     f"{row['title']} now {abs(off):.0f}% off (MRP {nc:,.0f} -> {row['price']:,.0f})",
-                                    url=f"{base}/products/{row['handle']}",
+                                    url=url(row['handle']),
                                     data={"product_id": pid, "mrp": nc, "price": row["price"], "image": row["image"],
                                           "product_type": row["product_type"]},
                                     dedupe_key=f"shopify|{brand.name}|discount_started|{pid}|{row['price']}|{nc}"):
@@ -154,7 +196,7 @@ def run_brand(brand_name: str) -> int:
                     changed = True
                     if db.add_event(brand.name, "shopify", "discount_ended",
                                     f"{row['title']} discount removed (was MRP {oc:,.0f})",
-                                    url=f"{base}/products/{row['handle']}",
+                                    url=url(row['handle']),
                                     data={"product_id": pid, "product_type": row["product_type"]},
                                     dedupe_key=f"shopify|{brand.name}|discount_ended|{pid}|{ts[:10]}"):
                         n_events += 1
@@ -165,7 +207,7 @@ def run_brand(brand_name: str) -> int:
                 if db.add_event(brand.name, "shopify", kind,
                                 f"{row['title']} {'went OUT OF STOCK' if kind == 'stock_out' else 'is back in stock'}"
                                 + (f" (best-seller #{rank['rank']})" if rank else ""),
-                                url=f"{base}/products/{row['handle']}",
+                                url=url(row['handle']),
                                 data={"product_id": pid, "bestseller_rank": rank["rank"] if rank else None,
                                       "price": row["price"], "product_type": row["product_type"], "image": row["image"]},
                                 dedupe_key=f"shopify|{brand.name}|{kind}|{pid}|{ts[:13]}"):
@@ -173,7 +215,7 @@ def run_brand(brand_name: str) -> int:
             if old["title"] != row["title"] and old["title"]:
                 changed = True
                 db.add_event(brand.name, "shopify", "renamed", f"'{old['title']}' renamed to '{row['title']}'",
-                             url=f"{base}/products/{row['handle']}", data={"product_id": pid},
+                             url=url(row['handle']), data={"product_id": pid},
                              dedupe_key=f"shopify|{brand.name}|renamed|{pid}|{row['title']}")
             c.execute(
                 "UPDATE products SET handle=:handle,title=:title,product_type=:product_type,vendor=:vendor,tags=:tags,"
@@ -188,7 +230,7 @@ def run_brand(brand_name: str) -> int:
     # ---- new products (after the tx so events see the rows) ----
     if not first_run:
         for row in rows:
-            if row["product_id"] not in known:
+            if row["product_id"] not in known and not is_test_product(row["title"], row["price"]):
                 tags = row["tags"].lower()
                 pre = bool(PRELAUNCH_RX.search(tags + " " + row["title"]))
                 if db.add_event(brand.name, "shopify", "new_product",
@@ -196,7 +238,7 @@ def run_brand(brand_name: str) -> int:
                                 + (" [pre-launch tag]" if pre else ""),
                                 detail=f"type={row['product_type'] or 'n/a'} variants={row['variants']} "
                                        f"in_stock={bool(row['available'])} tags={row['tags'][:200]}",
-                                url=f"{base}/products/{row['handle']}",
+                                url=url(row['handle']),
                                 data={"product_id": row["product_id"], "price": row["price"], "image": row["image"],
                                       "product_type": row["product_type"], "prelaunch": pre},
                                 dedupe_key=f"shopify|{brand.name}|new_product|{row['product_id']}"):
@@ -209,9 +251,9 @@ def run_brand(brand_name: str) -> int:
                                 data={"product_id": pid, "last_price": old["price"], "product_type": old["product_type"]},
                                 dedupe_key=f"shopify|{brand.name}|delisted|{pid}"):
                     n_events += 1
-        # many drops at once = a sale just started
-        if len(drops) >= max(5, int(0.08 * len(rows))):
-            avg = sum(d[3] for d in drops) / len(drops)
+        # many real cuts at once = a sale just started (five 4% trims on door sensors are not a sale)
+        avg = sum(d[3] for d in drops) / len(drops) if drops else 0
+        if len(drops) >= max(5, int(0.08 * len(rows))) and abs(avg) >= 8:
             if db.add_event(brand.name, "shopify", "sale_started",
                             f"SALE: {len(drops)} products cut by avg {abs(avg):.0f}% in one sweep",
                             detail="; ".join(f"{t} {o:,.0f}->{n:,.0f}" for t, o, n, _ in drops[:12]),
@@ -223,7 +265,8 @@ def run_brand(brand_name: str) -> int:
                      f"Radar started tracking {brand.name}: {len(rows)} products, "
                      f"{sum(1 for r in rows if r['available'])} in stock, "
                      f"{sum(1 for r in rows if r['compare_at'] and r['price'] and r['compare_at'] > r['price'])} discounted",
-                     data={"products": len(rows)}, dedupe_key=f"shopify|{brand.name}|baseline")
+                     data={"products": len(rows), "replatformed": replatformed},
+                     dedupe_key=f"shopify|{brand.name}|baseline" + (f"|{ts[:10]}" if replatformed else ""))
         # products created in the last 14 days are "recent launches" even on the first run
         cutoff = (datetime.now(timezone.utc) - timedelta(days=14)).isoformat()
         for row in rows:
@@ -232,15 +275,18 @@ def run_brand(brand_name: str) -> int:
                                 f"RECENT LAUNCH: {row['title']} at {settings.currency} {row['price'] or 0:,.0f} "
                                 f"(added {row['created_at'][:10]})",
                                 detail=f"type={row['product_type'] or 'n/a'} in_stock={bool(row['available'])}",
-                                url=f"{base}/products/{row['handle']}",
+                                url=url(row['handle']),
                                 data={"product_id": row["product_id"], "price": row["price"], "image": row["image"],
                                       "product_type": row["product_type"]},
                                 dedupe_key=f"shopify|{brand.name}|new_product|{row['product_id']}"):
                     n_events += 1
 
-    n_events += _collections(brand, base, first_run)
-    n_events += _bestsellers(brand, base, first_run)
-    n_events += _hidden(brand, base, {r["handle"] for r in rows})
+    if brand.platform == "shopify":
+        n_events += _collections(brand, base, first_run)
+        n_events += _bestsellers(brand, base, first_run)
+        n_events += _hidden(brand, base, {r["handle"] for r in rows})
+    else:  # custom feeds come in best-seller order
+        n_events += _bestsellers(brand, base, first_run, items=products[:50])
     return n_events
 
 
@@ -270,13 +316,14 @@ def _collections(brand, base, first_run) -> int:
     return n
 
 
-def _bestsellers(brand, base, first_run) -> int:
+def _bestsellers(brand, base, first_run, items: list | None = None) -> int:
     """Rank movement inside the best-seller collection (collection order = sales order on Shopify)."""
-    cols = db.q("SELECT handle,title FROM collections WHERE brand=?", (brand.name,))
-    handle = next((c["handle"] for c in cols if BEST_HANDLE_RX.search(c["handle"] + " " + (c["title"] or ""))), None)
-    url = f"{base}/collections/{handle}/products.json?limit=50" if handle else f"{base}/collections/all/products.json?limit=50"
-    data = get_json(url)
-    items = (data or {}).get("products") or []
+    handle = "feed"
+    if items is None:
+        cols = db.q("SELECT handle,title FROM collections WHERE brand=?", (brand.name,))
+        handle = next((c["handle"] for c in cols if BEST_HANDLE_RX.search(c["handle"] + " " + (c["title"] or ""))), None)
+        url = f"{base}/collections/{handle}/products.json?limit=50" if handle else f"{base}/collections/all/products.json?limit=50"
+        items = (get_json(url) or {}).get("products") or []
     if not items:
         return 0
     old = {r["product_id"]: r["rank"] for r in db.q("SELECT product_id,rank FROM bestseller_rank WHERE brand=?", (brand.name,))}
@@ -293,7 +340,7 @@ def _bestsellers(brand, base, first_run) -> int:
         if (prev is None and i <= 10) or (prev is not None and prev - i >= 5 and i <= 20):
             if db.add_event(brand.name, "shopify", "bestseller_move",
                             f"{p.get('title')} climbed to best-seller #{i}" + (f" (from #{prev})" if prev else " (new entry)"),
-                            url=f"{base}/products/{p.get('handle')}",
+                            url=brand.product_url(p.get("handle")),
                             data={"product_id": pid, "rank": i, "prev": prev, "collection": handle or "all"},
                             dedupe_key=f"shopify|{brand.name}|bestseller_move|{pid}|{i}"):
                 n += 1

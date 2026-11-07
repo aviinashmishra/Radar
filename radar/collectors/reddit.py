@@ -1,10 +1,12 @@
 """Reddit buzz and complaints via public RSS (no API key). Reddit rate-limits aggressively, so we go slow."""
 from __future__ import annotations
+import re
 import time
 from urllib.parse import quote_plus
 import feedparser
 from .. import db
 from ..config import settings
+from ..relevance import attribute, relevant
 from .base import get, tracked, log
 
 SEARCH = "https://www.reddit.com/search.rss?q={q}&sort=new&t=month"
@@ -24,11 +26,11 @@ def _entries(url: str) -> list:
 
 
 def _brand_for(text: str) -> str:
-    t = text.lower()
-    for b in settings.brands:
-        if b.name.lower() in t:
-            return b.name
-    return "Sector"
+    return attribute(text)
+
+
+def _plain(html: str) -> str:
+    return re.sub(r"<[^>]+>", " ", html or "")
 
 
 def _ingest(entries, default_brand: str, tag: str) -> int:
@@ -42,8 +44,13 @@ def _ingest(entries, default_brand: str, tag: str) -> int:
                 continue
             c.execute("INSERT INTO seen_urls(brand,source,url,seen_at) VALUES(?,?,?,?)", (default_brand, "reddit", link, db.now()))
         title = e.get("title", "")
-        brand = _brand_for(title + " " + e.get("summary", "")) if default_brand == "Sector" else default_brand
-        if brand == "Sector" and tag.startswith("r/"):
+        text = f"{title} {_plain(e.get('summary', ''))[:600]}"
+        if default_brand == "Sector":
+            brand = _brand_for(text)
+        else:  # a brand search: the post itself must be about the brand, not a deals roundup that matched one word
+            b = settings.brand(default_brand)
+            brand = default_brand if b and relevant(text, b) else ("Sector" if relevant(text, None) else "")
+        if not brand or (brand == "Sector" and tag.startswith("r/")):
             continue  # subreddit firehose: only keep posts that name a tracked brand
         if db.add_event(brand, "reddit", "social", f"r/ {title}", detail=f"{tag} | {e.get('author', '')}",
                         url=link, data={"tag": tag}, dedupe_key=f"reddit|{link}"):

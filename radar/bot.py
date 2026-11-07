@@ -26,8 +26,64 @@ def handle(text: str) -> str:
     cmd, _, arg = text.partition(" ")
     cmd = cmd.lower().split("@")[0]
     if cmd in ("/start", "/help"):
-        return ("Pebble Radar bot.\n/ask <question>\n/top [days]\n/brand <name>\n/signals\n/brief\n/run [fast|medium|slow|all]\n/status\n"
-                "Or just type a question.")
+        return ("Pebble Radar bot.\n/ask <question>\n/top [days]\n/brand <name>\n/news [brand]\n/money [brand]\n/reviews [brand]\n/signals\n/brief\n"
+                "/report [daily|weekly|monthly|yearly|sector]\n/run [fast|medium|slow|all]\n/status\nOr just type a question.")
+    if cmd == "/news":
+        from . import newsintel
+        st = newsintel.stories(7, arg.strip() or None, limit=8)
+        return "\n\n".join(f"[{s['importance']}] {s['brand']} · {s['topic']} · {s['n_sources']} outlet{'s' if s['n_sources'] != 1 else ''}\n"
+                           f"{s['title'][:110]}\n{s['sources'][0]['url'] if s['sources'] else ''}" for s in st) or "No stories this week."
+    if cmd == "/reviews":
+        from . import voice
+        if arg.strip():
+            v = voice.brand_view(arg.strip(), 90)
+            if not v["summary"]:
+                return f"No comments or reviews for '{arg.strip()}' yet."
+            b = v["summary"]
+            qs = "\n".join(f"“{q['text'][:140]}” ({q['source']})" for q in (b["quotes"]["neg"][:2] + b["quotes"]["pos"][:1]))
+            return f"{v['conclusion']}\n\n{qs}"
+        m = voice.market(90)
+        top = "\n".join(f"{r['brand']}: {r['composite'] or '–'}★ composite · {r['voice_items']} items · {r['neg_pct'] if r['neg_pct'] is not None else '–'}% negative"
+                        for r in m["scoreboard"][:10])
+        return f"{m['conclusion']}\n\nScoreboard:\n{top}"
+    if cmd == "/money":
+        from . import finance
+        if arg.strip():
+            p = finance.profile(arg.strip())
+            if not (p["revenue"] or p["quote"] or p["valuation"]):
+                return f"Nothing on file for '{arg.strip()}'."
+            r, q, pr = p["revenue"], p["quote"], p["profit"]
+            lines = [f"{p['brand']} · {p['entity'] or ''} ({p['ownership'] or 'private'})"]
+            if r:
+                lines.append(f"Revenue {finance.fmt_money(r['value'], r['currency'], r['unit'])} {r['period']} ({r['confidence']})"
+                             + (f", {p['revenue_growth_pct']:+.1f}% YoY" if p["revenue_growth_pct"] is not None else ""))
+            if pr:
+                lines.append(f"Net result {finance.fmt_money(pr['signed'], pr['currency'], pr['unit'])} {pr['period']}")
+            if p["valuation"]:
+                lines.append(f"Valuation {finance.fmt_money(p['valuation']['value'], p['valuation']['currency'], p['valuation']['unit'])} ({p['valuation']['period']})")
+            if q:
+                lines.append(f"Share {q['ticker']} {q['close']:,.2f} {q['currency']} ({q['change_pct']:+.1f}% 1d, {q['change_30d_pct']:+.1f}% 30d)" if q.get("change_30d_pct") is not None
+                             else f"Share {q['ticker']} {q['close']:,.2f} {q['currency']} ({q['change_pct']:+.1f}% 1d)")
+            if p["scale_vs_pebble"]:
+                lines.append(f"{p['scale_vs_pebble']}× Pebble's revenue ({p['scale_basis']})")
+            return "\n".join(lines)
+        rows = finance.peers()["brands"]
+        out = []
+        for p in rows[:14]:
+            r = p["revenue"]
+            if not r:
+                continue
+            out.append(f"{p['brand']}: {finance.fmt_money(r['value'], r['currency'], r['unit'])} {r['period']}"
+                       + (f" {p['revenue_growth_pct']:+.0f}%" if p["revenue_growth_pct"] is not None else "")
+                       + (f" · {p['scale_vs_pebble']}× Pebble" if p["scale_vs_pebble"] else " · group figure" if p["scale_basis"] == "parent" else ""))
+        return "\n".join(out) or "No figures on file yet."
+    if cmd == "/report":
+        from . import reports
+        kind = arg.strip() or "weekly"
+        if kind not in reports.KINDS:
+            return "kind must be daily, weekly, monthly, yearly or sector"
+        r = reports.build(kind, push=False)
+        return r["body"][:3800]
     if cmd == "/top":
         days = int(arg) if arg.strip().isdigit() else 7
         rows = db.q("SELECT importance,brand,kind,title FROM events WHERE created_at>=datetime('now', ?) AND kind<>'baseline' "

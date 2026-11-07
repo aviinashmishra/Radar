@@ -5,6 +5,9 @@
 # `news_terms` are extra Google News search phrases on top of the brand name.
 # `segments` tags the brand's product segments (keys from `segments:` below); `origin` Indian | Global;
 # `tier` core | adjacent (global premium brands watched for pricing and launches, not SKU by SKU).
+# `apps` Google Play package ids; `search_terms` YouTube/autocomplete phrases for everyday-word names;
+# `aliases` product lines that can only mean the brand; `exclude` look-alikes that never are (see radar/relevance.py).
+# `store` + `platform` read a non-Shopify store with a JSON catalogue (Just Corseca).
 # Curated products with sheet data live in watchlist.yaml.
 
 sector: "Indian consumer electronics D2C: screenless smart bands, smart rings, smartwatches, TWS earbuds, speakers, chargers"
@@ -46,7 +49,10 @@ brands:
     news_terms: ["Pebble smartwatch India", "Pebblecart", "Pebble Qore"]
     watch_pages:
       - https://www.pebblecart.com/pages/about-us
-    apps: ["com.mensa.pebble"]          # companion app on Google Play (check this is the right one)
+    apps: ["com.mensa.pebble", "com.pebble.plus", "com.pebble.ring.app"]   # Pebble Go, Pebble Qore, Pebble Halo (SRK Powertech)
+    aliases: ["Pebble Qore", "Pebble Halo", "Pebble Iris", "Pebblecart", "Qore Vox", "Pebble Cosmos"]
+    exclude: ["Pebble Time", "Pebble 2 Duo", "Core Devices", "PebbleOS", "Rebble", "Migicovsky", "Pebble Climbing"]  # the revived US Pebble watch
+    search_terms: ["Pebble smartwatch", "Pebble Qore"]
 
   # ---------------- Indian mass-market rivals (full catalogue tracking) ----------------
   - name: boAt
@@ -56,6 +62,7 @@ brands:
     watch_pages:
       - https://www.boat-lifestyle.com/pages/careers
     apps: ["com.coveiot.android.boat", "com.boAt.wristgear"]
+    aliases: ["Airdopes", "Rockerz", "boAt Wave", "boAt Storm", "boAt Stone", "boAt Lunar", "Valour Ring", "boAt Crest"]
   - name: Noise
     shopify: https://www.gonoise.com
     segments: [watch, band, ring, earbuds, neckband]
@@ -63,11 +70,12 @@ brands:
     watch_pages:
       - https://www.gonoise.com/pages/careers
     apps: ["com.noisefit"]
+    aliases: ["ColorFit", "NoiseFit", "Noise Buds", "Noise REP", "Noise Luna"]
   - name: Fire-Boltt
     shopify: https://www.fireboltt.com
     segments: [watch, earbuds]
     news_terms: ["Fire-Boltt smartwatch"]
-    apps: ["com.crrepa.band.fireboltt", "com.wiiteer.fireboltt"]
+    apps: ["com.crrepa.band.fireboltt", "com.wiiteer.fireboltt", "com.savexrising.fbactive"]
   - name: Boult
     shopify: https://www.boultaudio.com
     segments: [earbuds, watch, neckband, speaker]
@@ -77,30 +85,38 @@ brands:
     shopify: https://www.crossbeats.com
     segments: [watch, band, earbuds]
     news_terms: ["Crossbeats", "Crossbeats Vector band"]
+    apps: ["com.crossbeats.fit", "com.yc.cbsmartfit"]
+    exclude: ["Lumex", "projector", "dashcam"]
   - name: Sekyo
     shopify: https://sekyo.in
     segments: [band, watch]
     news_terms: ["Sekyo Flex band", "Sekyo smartwatch"]
+    apps: ["com.tgelec.sekyo"]
   - name: Hammer
     shopify: https://www.hammeronline.in
     segments: [watch, band, earbuds]
     news_terms: ["Hammer smartwatch India"]
+    apps: ["com.crrepa.band.hammerfit"]
+    search_terms: ["Hammer smartwatch", "Hammer earbuds"]
   - name: Gizmore
     shopify: https://www.gizmore.in
     segments: [watch, band, speaker]
     news_terms: ["Gizmore"]
   - name: Just Corseca
-    shopify: https://www.justcorseca.in
+    store: https://www.justcorseca.com
     segments: [watch, earbuds, speaker]
     news_terms: ["Just Corseca"]
+    platform: justcorseca                # left Shopify on 2026-11-03; read through its JSON backend
   - name: pTron
     shopify: https://www.ptron.in
     segments: [earbuds, watch, speaker]
     news_terms: ["pTron"]
+    apps: ["com.legend.pTron.app"]
   - name: Zebronics
     shopify: https://zebronics.com
     segments: [watch, earbuds, speaker]
     news_terms: ["Zebronics"]
+    apps: ["com.crrepa.band.zeb", "com.zeb.fit.plus"]
   - name: Portronics
     shopify: https://www.portronics.com
     segments: [earbuds, speaker, charger]
@@ -113,86 +129,147 @@ brands:
     shopify: https://www.blaupunktaudio.in
     segments: [earbuds, headphones, speaker]
     news_terms: ["Blaupunkt audio India"]
+    exclude: ["car stereo", "android stereo", "car audio", "spare wheel"]
   - name: Fastrack
     segments: [watch]
     news_terms: ["Fastrack smartwatch", "Titan smartwatch"]
     watch_pages:
       - https://www.fastrack.in/smart-watches
+    apps: ["com.titan.fastrack.reflex"]
+    search_terms: ["Fastrack smartwatch"]
+    exclude: ["bags?", "sunglass(es)?", "eyewear", "perfume", "wallets?", "belts?", "analog", "automatic", "Gambit"]   # off-market lines
   - name: Mivi
     segments: [earbuds, speaker]
     news_terms: ["Mivi earbuds"]
   - name: CultSport
     segments: [watch]
     news_terms: ["cultsport smartwatch"]
+    apps: ["com.app.fitplus"]
+    search_terms: ["cultsport smartwatch"]
+    exclude: ["shoes?", "cultbike", "treadmill", "cycle", "dumbbells?", "yoga mat"]
   - name: beatXP
     segments: [watch]
     news_terms: ["beatXP"]
+    apps: ["com.beatxp.dafit"]
 
   # ---------------- Screenless band and smart ring specialists (from the Competitors sheet) ----------------
   - name: Urban
     segments: [band, watch]
     news_terms: ["URBAN Arc band", "Urban wearables India"]
+    aliases: ["Urban Arc", "URBAN Fit"]
+    exclude: ["Urban Company", "Urban Cruiser", "Hyryder", "Urban Ladder", "Urban Decay", "Urban Outfitters", "Urban Clap", "Urban One"]
+    search_terms: ["URBAN smartwatch", "Urban Arc band"]
   - name: Luna
     segments: [band, ring]
     news_terms: ["Luna ring Noise", "Luna band"]
+    apps: ["com.noisefit.luna"]          # Luna Band and Ring: LifeOS (by Noise)
+    aliases: ["Luna Ring", "Luna Band", "LifeOS"]
+    exclude: ["Insta360", "E-?Luna", "Kinetic", "Cult of Luna", "ZeroLifestyle"]
+    search_terms: ["Luna ring", "Luna band"]
   - name: Gabit
     segments: [ring]
     news_terms: ["Gabit smart ring"]
     watch_pages:
       - https://www.gabit.com/ring
+    apps: ["com.gabitrn"]
   - name: Ultrahuman
     segments: [ring]
     news_terms: ["Ultrahuman ring", "Ultrahuman India"]
+    apps: ["com.ultrahuman.android"]
   - name: FITTR
     shopify: https://shop.fittr.care
     segments: [ring]
     news_terms: ["FITTR HART ring"]
+    apps: ["com.squats.fittr_hart"]
   - name: Amazfit
     shopify: https://in.amazfit.com
     origin: Global
     tier: adjacent
     segments: [band, ring, watch]
     news_terms: ["Amazfit India", "Amazfit Helio"]
+    apps: ["com.huami.watch.hmwatchmanager"]   # Zepp
+    aliases: ["Helio", "Amazfit Balance", "Amazfit Active", "Amazfit Bip", "T[- ]?Rex", "Amazfit GTR", "Amazfit GTS", "Cheetah"]
   - name: Google Fitbit
     origin: Global
     tier: adjacent
     segments: [band, watch]
     news_terms: ["Fitbit Air India", "Fitbit India"]
+    apps: ["com.fitbit.FitbitMobile"]
+    aliases: ["Fitbit"]
   - name: Polar
     origin: Global
     tier: adjacent
     segments: [band, watch]
     news_terms: ["Polar Loop band", "Polar India"]
+    apps: ["fi.polar.polarflow"]
+    aliases: ["Polar Loop", "Polar Vantage", "Polar Grit", "Polar Pacer", "Polar Ignite", "Polar Verity", "Polar H\\d+", "Polar Flow"]
+    exclude: ["Polar bear", "Polar Express", "Polar vortex", "Bajaj"]
+    search_terms: ["Polar Loop", "Polar watch"]
   - name: Whoop
     origin: Global
     tier: adjacent
     segments: [band]
     news_terms: ["Whoop India", "Whoop 5.0"]
+    apps: ["com.whoop.android"]
+    aliases: ["Whoop \\d", "Whoop MG", "Whoop Peak", "Whoop One", "Whoop Life", "Whoop band", "Whoop strap"]
+    search_terms: ["Whoop band", "Whoop 5.0"]
   - name: Garmin
     origin: Global
     tier: adjacent
     segments: [band, watch]
     news_terms: ["Garmin Cirqa", "Garmin India launch"]
+    apps: ["com.garmin.android.apps.connectmobile"]
+    aliases: ["Cirqa", "Forerunner", "Venu", "Fenix", "Vivoactive", "Vivosmart", "Instinct", "Enduro", "Epix", "Tactix"]
+    search_terms: ["Garmin Cirqa", "Garmin smartwatch"]
   - name: Oura
     origin: Global
     tier: adjacent
     segments: [ring]
     news_terms: ["Oura Ring India"]
+    apps: ["com.ouraring.oura"]
+    aliases: ["Oura Ring"]
+    search_terms: ["Oura Ring"]
   - name: Samsung
     origin: Global
     tier: adjacent
     segments: [ring, watch, earbuds]
     news_terms: ["Samsung Galaxy Ring India", "Galaxy Watch India launch"]
+    apps: ["com.samsung.android.app.watchmanager"]   # Galaxy Wearable
+    aliases: ["Galaxy Ring", "Galaxy Watch", "Galaxy Buds", "Galaxy Fit"]
+    search_terms: ["Galaxy Ring", "Galaxy Watch"]
 
-# Sector-wide searches (not tied to a brand). Catch new entrants, category trends and launches.
+# Sector-wide searches (not tied to a brand). Catch new entrants, category trends, launches, analyst data and policy.
 sector_news_terms:
   - "screenless fitness band India"
   - "smart ring India launch"
   - "smartwatch launch India"
   - "TWS earbuds launch India"
   - "wearables India IDC"
+  - "Counterpoint India smartwatch shipments"
   - "D2C electronics India funding"
   - "Bluetooth speaker launch India"
+  - "wearables PLI scheme India"
+  - "BIS smartwatch import India"
+  - "smartwatch customs duty India"
+  - "wearable brand IPO India"
+
+# Newsrooms, blogs and analyst feeds read as RSS/Atom (the feeds collector). Shopify stores' own blogs are found
+# automatically. kind: press = the brand's own announcements; industry = analyst / trade feed, filtered to the
+# sector and filed under whichever tracked brand it names (filter: sector). A newly added feed is read as a
+# baseline first; only items published after that become events.
+feeds:
+  - { brand: Samsung,       kind: press,    url: "https://news.samsung.com/in/feed" }
+  - { brand: Google Fitbit, kind: press,    url: "https://blog.google/products/fitbit/rss/" }
+  - { brand: Garmin,        kind: press,    url: "https://www.garmin.com/en-US/newsroom/rss/" }
+  - { brand: Oura,          kind: press,    url: "https://ouraring.com/blog/feed/" }
+  - { brand: Whoop,         kind: press,    url: "https://www.whoop.com/thelocker/feed/" }
+  - { brand: Ultrahuman,    kind: press,    url: "https://blog.ultrahuman.com/feed/" }
+  - { brand: Polar,         kind: press,    url: "https://www.polar.com/blog/feed/" }
+  - { brand: Sector,        kind: industry, url: "https://www.counterpointresearch.com/feed/", filter: sector }
+  - { brand: Sector,        kind: industry, url: "https://www.gizmochina.com/feed/", filter: sector }
+  - { brand: Sector,        kind: industry, url: "https://www.91mobiles.com/hub/feed/", filter: sector }
+  - { brand: Sector,        kind: industry, url: "https://entrackr.com/feed/", filter: sector }
+  - { brand: Sector,        kind: industry, url: "https://inc42.com/feed/", filter: sector }
 
 # Reddit communities and search phrases that surface buzz, complaints and unmet needs.
 reddit:

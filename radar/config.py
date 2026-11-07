@@ -12,11 +12,14 @@ load_dotenv(ROOT / ".env")
 
 CONFIG_PATH = Path(os.environ.get("RADAR_CONFIG", ROOT / "config" / "competitors.yaml"))
 
+# Where a product page lives on each storefront platform the radar can read (see collectors/shopify.py).
+PRODUCT_PATH = {"shopify": "/products/", "justcorseca": "/in/product/"}
+
 
 @dataclass
 class Brand:
     name: str
-    shopify: str | None = None
+    shopify: str | None = None                            # store root (`shopify:` or `store:` in competitors.yaml)
     self_brand: bool = False
     news_terms: list[str] = field(default_factory=list)
     watch_pages: list[str] = field(default_factory=list)
@@ -24,12 +27,21 @@ class Brand:
     segments: list[str] = field(default_factory=list)   # e.g. ["band", "ring"]
     origin: str = "Indian"                                # Indian | Global
     tier: str = "core"                                    # core | adjacent (global premium, watched more lightly)
+    platform: str = "shopify"                             # shopify | justcorseca (custom JSON backend)
+    search_terms: list[str] = field(default_factory=list)  # YouTube + autocomplete phrases (default: the name)
+    aliases: list[str] = field(default_factory=list)     # product lines that can only mean this brand
+    exclude: list[str] = field(default_factory=list)     # look-alikes that are never this brand
 
     @property
     def host(self) -> str | None:
         if not self.shopify:
             return None
         return self.shopify.split("//", 1)[-1].strip("/")
+
+    def product_url(self, handle: str | None) -> str:
+        if not self.shopify or not handle:
+            return ""
+        return f"{self.shopify}{PRODUCT_PATH.get(self.platform, '/products/')}{handle}"
 
 
 @dataclass
@@ -58,6 +70,13 @@ class Settings:
     gemini_model: str = "gemini-3.8-flash"
     ai_choice: str = "auto"                               # RADAR_AI_PROVIDER: auto | claude | gemini | off
     cloud_repo: str = ""                                  # owner/name: where the cloud snapshot lives
+    companies: dict = field(default_factory=dict)         # brand -> corporate facts, tickers, seeded financials (companies.yaml)
+    money_terms: list[str] = field(default_factory=list)  # financial news phrases run per brand
+    market: dict = field(default_factory=dict)            # India market model + impact assumptions (market.yaml)
+    sec_contact: str = ""                                 # SEC EDGAR asks for a contact in the user agent
+
+    def company(self, name: str) -> dict:
+        return self.companies.get(name) or self.companies.get(name.lower()) or {}
 
     def brand(self, name: str) -> Brand | None:
         for b in self.brands:
@@ -93,7 +112,7 @@ def load() -> Settings:
     brands = [
         Brand(
             name=b["name"],
-            shopify=(b.get("shopify") or "").rstrip("/") or None,
+            shopify=(b.get("shopify") or b.get("store") or "").rstrip("/") or None,
             self_brand=bool(b.get("self")),
             news_terms=b.get("news_terms", []) or [],
             watch_pages=b.get("watch_pages", []) or [],
@@ -101,6 +120,10 @@ def load() -> Settings:
             segments=b.get("segments", []) or [],
             origin=b.get("origin", "Indian"),
             tier=b.get("tier", "core"),
+            platform=b.get("platform", "shopify"),
+            search_terms=b.get("search_terms", []) or [],
+            aliases=b.get("aliases", []) or [],
+            exclude=b.get("exclude", []) or [],
         )
         for b in raw["brands"]
     ]
@@ -112,6 +135,9 @@ def load() -> Settings:
         db = str(Path(tempfile.gettempdir()) / "radar" / "radar.db")
     db_path = Path(db) if Path(db).is_absolute() else ROOT / db
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    companies_raw = _side_yaml("companies.yaml")
+    companies = {c["brand"]: c for c in (companies_raw.get("companies") or []) if c.get("brand")}
+    market = _side_yaml("market.yaml")
     return Settings(
         sector=raw.get("sector", ""),
         currency=raw.get("currency", "INR"),
@@ -137,7 +163,22 @@ def load() -> Settings:
         gemini_model=os.environ.get("GEMINI_MODEL") or "gemini-3.8-flash",
         ai_choice=(os.environ.get("RADAR_AI_PROVIDER") or "auto").strip().lower(),
         cloud_repo=str(raw.get("cloud_repo") or ""),
+        companies=companies,
+        money_terms=companies_raw.get("money_terms") or [],
+        market=market,
+        sec_contact=(os.environ.get("SEC_CONTACT") or "").strip(),
     )
+
+
+def _side_yaml(name: str) -> dict:
+    """A sibling of competitors.yaml (companies.yaml, market.yaml); missing or empty is fine."""
+    p = CONFIG_PATH.parent / name
+    if not p.exists():
+        return {}
+    try:
+        return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return {}
 
 
 settings = load()

@@ -45,6 +45,40 @@ TOOLS = [
      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False}},
     {"name": "app_health", "description": "Rivals' companion apps on Google Play: rating, rating count, installs, last update.", "strict": True,
      "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False}},
+    {"name": "financials", "description": "Company behind each brand with revenue, profit/loss, growth, valuation, funding and share price "
+                                          "(source and confidence per figure). Empty brand = every brand.", "strict": True,
+     "input_schema": {"type": "object", "properties": {"brand": {"type": "string"}}, "required": ["brand"], "additionalProperties": False}},
+    {"name": "news_stories", "description": "News stories clustered across publishers, with topic (launch, funding, financials, legal, ...), "
+                                            "number of outlets and first-seen date. Also share of voice per brand.", "strict": True,
+     "input_schema": {"type": "object", "properties": {"brand": {"type": "string"}, "topic": {"type": "string"}, "days": {"type": "integer"}},
+                      "required": ["brand", "topic", "days"], "additionalProperties": False}},
+    {"name": "market_size", "description": "India market model: units, value, growth, ASP and shares per segment, Pebble's share and rank, "
+                                           "plus the share-of-signal table (news, search, creators, apps, attention) per brand.", "strict": True,
+     "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False}},
+    {"name": "impact", "description": "Estimated INR per month at risk or upside for Pebble from rivals' moves over the window, "
+                                      "by rival and by segment, with the biggest single events and the model's assumptions.", "strict": True,
+     "input_schema": {"type": "object", "properties": {"days": {"type": "integer"}}, "required": ["days"], "additionalProperties": False}},
+    {"name": "channels", "description": "Distribution: which brands are live on Amazon.in, Flipkart and Blinkit (per city), or reported on Zepto, "
+                                        "Instamart, Croma, Reliance Digital etc., with prices, ratings and marketplace undercuts of own-store prices. "
+                                        "A brand name returns its listings; empty = the whole matrix.", "strict": True,
+     "input_schema": {"type": "object", "properties": {"brand": {"type": "string"}}, "required": ["brand"], "additionalProperties": False}},
+    {"name": "voice", "description": "Voice of the customer: YouTube comments, App Store / Play / Amazon / store reviews per brand with sentiment, "
+                                     "complaint and praise themes and quotes. Filters: brand, theme (battery, accuracy, app, build, comfort, display, "
+                                     "sound, service, value, delivery, design, water, features), polarity (pos/neg).", "strict": True,
+     "input_schema": {"type": "object", "properties": {"brand": {"type": "string"}, "theme": {"type": "string"}, "polarity": {"type": "string"}, "days": {"type": "integer"}},
+                      "required": ["brand", "theme", "polarity", "days"], "additionalProperties": False}},
+    {"name": "regions", "description": "Region view of India: search interest per state per brand (Google Trends), Pebble's own sales by state and city, "
+                                       "quick-commerce availability per city, and the states where rivals out-index Pebble.", "strict": True,
+     "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False}},
+    {"name": "sales_report", "description": "Sales report for a period: Pebble's own revenue / units by segment, channel, state, SKU with growth "
+                                            "(when sales are imported) and every brand's sales-proxy index. kind: daily, weekly, monthly, yearly; "
+                                            "period e.g. 2026-11-05, 2026-W44, 2026-10, 2025 or empty for the last complete one.", "strict": True,
+     "input_schema": {"type": "object", "properties": {"kind": {"type": "string"}, "period": {"type": "string"}}, "required": ["kind", "period"], "additionalProperties": False}},
+    {"name": "strategy", "description": "The strategy playbook: segment scorecard (defend / attack / enter / watch), USP claims with evidence, "
+                                        "problems to fix, threats, opportunities, SWOT and the 30/60/90-day plan.", "strict": True,
+     "input_schema": {"type": "object", "properties": {}, "required": [], "additionalProperties": False}},
+    {"name": "reports", "description": "Stored daily / weekly / monthly / yearly / sector reports (Markdown). kind empty = list the latest of each.", "strict": True,
+     "input_schema": {"type": "object", "properties": {"kind": {"type": "string"}}, "required": ["kind"], "additionalProperties": False}},
 ]
 
 
@@ -96,6 +130,65 @@ def run_tool(name: str, a: dict):
         return analytics.search_demand()
     if name == "app_health":
         return analytics.app_health()
+    if name == "financials":
+        from . import finance
+        if a.get("brand"):
+            p = finance.profile(a["brand"])
+            p["rows"] = p["rows"][-40:]
+            if p.get("quote"):
+                p["quote"].pop("closes", None)
+            return p
+        return finance.peers()["brands"]
+    if name == "news_stories":
+        from . import newsintel
+        return {"stories": [{k: v for k, v in s.items() if k != "sources"} | {"links": [x["url"] for x in s["sources"][:3]]}
+                            for s in newsintel.stories(days=a.get("days") or 14, brand=a.get("brand") or None, topic=a.get("topic") or None, limit=40)],
+                "share_of_voice": newsintel.share_of_voice(30)[:15]}
+    if name == "market_size":
+        from . import market
+        return {"sizes": market.sizes(), "share_of_signal": market.share_of_signal()}
+    if name == "impact":
+        from . import market
+        return market.pressure(a.get("days") or 30)
+    if name == "channels":
+        from . import channels
+        if a.get("brand"):
+            d = channels.brand(a["brand"])
+            for ch in d["channels"]:
+                for ls in ch["listings"]:
+                    ls.pop("history", None)
+            return d
+        m = channels.matrix()
+        return {"channels": [c["name"] for c in m["channels"]], "brands": [{"brand": b["brand"], "present": b["channels_present"],
+                "cells": {k: {"status": c["status"], "listings": c["listings"], "min_price": c["min_price"], "rating": c["rating"], "cities": c["cities"]} for k, c in b["cells"].items()}}
+                for b in m["brands"]], "undercuts": channels.parity()[:20]}
+    if name == "voice":
+        from . import voice
+        s = voice.summary(a.get("days") or 90, a.get("brand") or None)
+        m = voice.market(a.get("days") or 90) if not a.get("brand") else None
+        return {"summary": [{k: v for k, v in b.items() if k != "quotes"} for b in s["brands"]],
+                "market": m and {"conclusion": m["conclusion"], "demand": m["demand"][:10], "segments": m["by_segment"], "asks": m["asks"][:8],
+                                 "scoreboard": [{k: r[k] for k in ("brand", "composite", "play", "ios", "store", "neg_pct")} for r in m["scoreboard"][:15]]},
+                "items": [{"brand": r["brand"], "source": r["source"], "rating": r["rating"], "sentiment": r["sentiment"], "themes": r["themes"], "text": r["text"][:300], "created": r["created"]}
+                          for r in voice.items(a.get("brand") or "", "", a.get("theme") or "", a.get("polarity") or "", "", a.get("days") or 90, 40)]}
+    if name == "regions":
+        from . import regions
+        r = regions.overview()
+        return {"gaps": r["gaps"], "strongholds": r["strongholds"], "brands": r["brands"], "sales": r["sales"],
+                "cities": [{k: v for k, v in c.items() if k not in ("lat", "lon")} for c in r["cities"]],
+                "states": [{"state": s["state"], "pebble_interest": s["pebble_interest"], "field_interest": s["field_interest"], "leader": s["leader"], "sales_revenue": s["sales_revenue"]} for s in r["states"] if s["field_interest"] is not None or s["sales_revenue"]]}
+    if name == "sales_report":
+        from . import sales
+        return sales.report(a.get("kind") or "weekly", a.get("period") or None)
+    if name == "strategy":
+        from . import strategy
+        return strategy.playbook()
+    if name == "reports":
+        from . import reports
+        if a.get("kind"):
+            rows = db.q("SELECT id, created_at, kind, period, title, body FROM reports WHERE kind=? ORDER BY id DESC LIMIT 2", (a["kind"],))
+            return [dict(r, body=r["body"][:12000]) for r in rows]
+        return reports.list_reports()
     return {"error": f"unknown tool {name}"}
 
 

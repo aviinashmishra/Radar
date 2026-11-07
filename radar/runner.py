@@ -14,7 +14,7 @@ import threading
 import time
 from datetime import datetime
 from . import db, enrich, signals, alerts, brief
-from .collectors import FAST, MEDIUM, SLOW
+from .collectors import FAST, MEDIUM, SLOW, ALL
 
 log = logging.getLogger("radar.runner")
 INTERVALS = {"fast": 10 * 60, "medium": 30 * 60, "slow": 24 * 3600}
@@ -26,7 +26,11 @@ def busy() -> bool:
 
 
 def post_process() -> dict:
-    from . import matcher
+    from . import maintenance, matcher
+    try:
+        maintenance.run()  # versioned data repairs; a no-op once a database is up to date
+    except Exception:  # noqa: BLE001 - a failed repair must never stop scoring and alerts
+        log.exception("maintenance failed; continuing")
     n_enriched = 0
     while n := enrich.enrich_pending():  # drain: a first sweep makes ~800 events and only scored ones reach the dashboard
         n_enriched += n
@@ -55,6 +59,29 @@ def run_tier(tier: str) -> dict:
         _busy.release()
 
 
+def run_one(name: str) -> dict:
+    """One collector by name (news, financials, trends, attention, ...) followed by the usual scoring, matching,
+    signals and alerts. Progress lives in kv `collect:<name>` so the dashboard button can poll it."""
+    mods = {m.__name__.rsplit(".", 1)[-1]: m for m in ALL}
+    if name not in mods:
+        return {"error": f"unknown collector {name}"}
+    if not _busy.acquire(blocking=False):
+        return {"skipped": "another run in progress"}
+    db.kv_set(f"collect:{name}", {"state": "running", "started": db.now()})
+    t0 = time.time()
+    try:
+        n = mods[name].run()
+        post = post_process()
+        res = {"state": "done", "at": db.now(), "added": n, **post, "seconds": round(time.time() - t0)}
+    except Exception as e:  # noqa: BLE001 - the button must always get an answer
+        log.exception("collector %s failed", name)
+        res = {"state": "failed", "at": db.now(), "error": f"{type(e).__name__}: {e}", "seconds": round(time.time() - t0)}
+    finally:
+        _busy.release()
+    db.kv_set(f"collect:{name}", res)
+    return res
+
+
 def loop(stop: threading.Event | None = None) -> None:
     """Blocking scheduler loop. First pass runs every tier so the DB is warm."""
     stop = stop or threading.Event()
@@ -80,6 +107,13 @@ def loop(stop: threading.Event | None = None) -> None:
             brief.write(days=7)
             db.kv_set("last_weekly_brief", week)
             last_weekly = week
+        if datetime.now().hour >= 8 and db.kv_get("last_reports_check", "") != today:  # daily / weekly / monthly / yearly / sector reports
+            try:
+                from . import reports
+                reports.run_due(push=True)
+            except Exception:  # noqa: BLE001
+                log.exception("reports failed")
+            db.kv_set("last_reports_check", today)
         stop.wait(30)
 
 

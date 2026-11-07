@@ -66,6 +66,25 @@ def categorize(product_type: str, title: str, tags: str = "") -> str:
     return "Other"
 
 
+OFF_RADAR = {"Other", "Camera & home", "Accessory"}
+# Things multi-category stores sell that are never Pebble's market. Explicit on purpose: categorize() files a boAt
+# power bank under "Accessory", so it is too rough to demote events with.
+OFF_TOPIC_RX = re.compile(r"\boats\b|protein|\bwhey\b|supplement|muesli|peanut butter|nutrition|door sensor|window sensor|"
+                          r"smoke detector|gas leak|air purifier|projector|\bled tv\b|smart tv|led monitors?|gaming monitors?|"
+                          r"\brouter\b|\bups\b|dashcam|cctv|security camera|trimmer|shaver|keyboard|\bmouse\b|laptop stand|"
+                          r"cooling stand|mobile holder|selfie stick|car stereo|android stereo|cleaning brush|spare wheel", re.I)
+
+
+def on_radar(product_type: str, title: str, tags: str = "") -> bool:
+    """A product in the categories the radar competes in (not FITTR's oats, Sekyo's door sensors or a sizing kit)."""
+    return categorize(product_type, title, tags) not in OFF_RADAR
+
+
+def off_topic(product_type: str, title: str) -> bool:
+    """Clearly outside the market (oats, door sensors, projectors): such events stay in the feed but never alert."""
+    return bool(OFF_TOPIC_RX.search(f"{product_type or ''} {title or ''}"))
+
+
 def _band(price: float) -> str:
     b = settings.price_bands
     for lo, hi in zip(b, b[1:]):
@@ -156,7 +175,7 @@ def winners(limit: int = 25) -> list[dict]:
             score += 2  # selling out is a signal too
         out.append({**p, "rank": rank, "changes": flips[key], "score": round(score, 1),
                     "category": categorize(p["product_type"], p["title"]),
-                    "url": f"{settings.brand(p['brand']).shopify}/products/{p['handle']}" if settings.brand(p["brand"]) and settings.brand(p["brand"]).shopify else ""})
+                    "url": settings.brand(p["brand"]).product_url(p["handle"]) if settings.brand(p["brand"]) else ""})
     out = [o for o in out if o["brand"] != me]
     return sorted(out, key=lambda x: -x["score"])[:limit]
 
@@ -238,10 +257,13 @@ def review_pain_points(days: int = 60) -> list[dict]:
     themes = {"battery": r"battery|charg", "build quality": r"broke|break|crack|cheap|quality|flimsy|loose", "app / connectivity": r"app|bug|update|sync|bluetooth|connect|disconnect",
               "service / warranty": r"service|warranty|support|refund|replace|return", "accuracy": r"accura|heart rate|spo2|step|sleep|track",
               "sound / mic": r"sound|bass|mic|call|noise|anc|volume", "display": r"display|screen|bright|touch", "delivery": r"deliver|courier|late|packag"}
-    rows = db.q("SELECT brand, product_id, rating, body FROM reviews WHERE rating<=2 AND created>=datetime('now', ?)", (f"-{days} days",))
+    rows = db.q("SELECT r.brand, r.product_id, r.rating, r.body, p.title, p.product_type FROM reviews r LEFT JOIN products p "
+                "ON p.brand=r.brand AND p.product_id=r.product_id WHERE r.rating<=2 AND r.created>=datetime('now', ?)", (f"-{days} days",))
     counts = defaultdict(lambda: defaultdict(int))
     examples = defaultdict(dict)
     for r in rows:
+        if off_topic(r["product_type"] or "", r["title"] or ""):
+            continue
         for t, rx in themes.items():
             if re.search(rx, r["body"], re.I):
                 counts[r["brand"]][t] += 1
@@ -301,7 +323,7 @@ def segment_ladder(segment: str, per_brand: int = 6) -> dict:
                                      "status": "on sale" if p["available"] else "sold out", "self": p["brand"] == me,
                                      "rank": ranks.get((p["brand"], p["product_id"])), "source": "store",
                                      "origin": b.origin if b else "Indian", "subscription": "None",
-                                     "url": f"{b.shopify}/products/{p['handle']}" if b and b.shopify else ""})
+                                     "url": b.product_url(p["handle"]) if b else ""})
     store = []
     for brand, items in by_brand.items():
         items.sort(key=lambda x: (x["rank"] is None, x["rank"] or 0, x["price"]))

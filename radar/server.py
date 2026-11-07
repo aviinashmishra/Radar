@@ -20,7 +20,7 @@ from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileResponse
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
-from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig
+from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig, newsintel, finance, market
 from .config import settings, ROOT
 
 log = logging.getLogger("radar.server")
@@ -64,9 +64,58 @@ def _ev(r: dict) -> dict:
     return r
 
 
+_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _code_mtime() -> float:
+    """Newest modification time across the radar package and its dashboard files."""
+    newest = 0.0
+    for p in list((_ROOT / "radar").rglob("*.py")) + list(STATIC.glob("*")):
+        try:
+            newest = max(newest, p.stat().st_mtime)
+        except OSError:
+            continue
+    return newest
+
+
+BUILD_LOADED = _code_mtime()   # what this process is running
+
+
+def build_info() -> dict:
+    """Whether the files on disk are newer than the running process (the classic 'I updated but it 404s' problem)."""
+    on_disk = _code_mtime()
+    return {"loaded": BUILD_LOADED, "on_disk": on_disk, "stale": on_disk > BUILD_LOADED + 1, "pid": os.getpid(), "hosted": cloud.HOSTED}
+
+
+def _relaunch() -> None:
+    """Start a fresh server process on the same host/port once this one has let go of the socket, then exit."""
+    import subprocess
+    import sys
+    host, port = os.environ.get("RADAR_HOST", "127.0.0.1"), os.environ.get("RADAR_PORT", "8080")
+    child = (f"import socket, time, os\n"
+             f"for _ in range(60):\n"
+             f"    s = socket.socket(); s.settimeout(0.5)\n"
+             f"    if s.connect_ex(({host!r}, {int(port)})) != 0: s.close(); break\n"
+             f"    s.close(); time.sleep(0.5)\n"
+             f"os.chdir({str(ROOT)!r})\n"
+             f"from radar.server import main\nmain()\n")
+    log_path = _ROOT / "data" / "server.log"
+    log_path.parent.mkdir(exist_ok=True)
+    flags = 0
+    if os.name == "nt":
+        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
+    with open(log_path, "ab") as out:
+        subprocess.Popen([sys.executable, "-X", "utf8", "-c", child], cwd=str(_ROOT), stdout=out, stderr=subprocess.STDOUT,
+                         stdin=subprocess.DEVNULL, creationflags=flags, close_fds=True, env={**os.environ, "RADAR_RESTARTED": "1"})
+    time.sleep(1.0)
+    log.info("restarting: handing port %s to a fresh process", port)
+    os._exit(0)
+
+
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return (STATIC / "index.html").read_text(encoding="utf-8")
+    # the dashboard is one file that changes with every update: never let a browser keep an old copy
+    return HTMLResponse((STATIC / "index.html").read_text(encoding="utf-8"), headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -91,6 +140,13 @@ def stats():
         "events_total": db.q1("SELECT COUNT(*) c FROM events")["c"],
         "events_24h": db.q1("SELECT COUNT(*) c FROM events WHERE created_at>=datetime('now','-1 day')")["c"],
         "signals_7d": db.q1("SELECT COUNT(*) c FROM signals WHERE created_at>=datetime('now','-7 day')")["c"],
+        "build": build_info(),
+        "news_7d": db.q1("SELECT COUNT(*) c FROM events WHERE source='news' AND created_at>=datetime('now','-7 day')")["c"],
+        "financial_facts": db.q1("SELECT COUNT(*) c FROM financials")["c"],
+        "listed": db.q1("SELECT COUNT(DISTINCT ticker) c FROM quotes")["c"],
+        "sources": ["Shopify stores", "watchlist pages", "Google News", "Bing News", "newsroom + analyst RSS", "Reddit", "YouTube",
+                    "Google autocomplete", "Google Trends", "Judge.me reviews", "Google Play", "Apple App Store", "Wikipedia page views",
+                    "Yahoo Finance quotes", "SEC EDGAR filings", "homepage screenshots", "tech stack", "crt.sh domains", "Meta Ad Library"],
         "last_runs": {t: db.kv_get(f"last_run:{t}") for t in ("fast", "medium", "slow", "all")},
         "runs": db.q("SELECT collector, brand, finished_at, ok, events, note FROM runs ORDER BY id DESC LIMIT 25"),
         "festival": sig.nearest_festival(),
@@ -156,10 +212,103 @@ def updates(after_id: int = 0, after_sig: int = 0):
             "after_sig": sg[-1]["id"] if len(sg) == 20 else max(top_sig, after_sig), "events": ev, "signals": sg}
 
 
+def _sig(s: dict) -> dict:
+    s["data"] = json.loads(s["data"] or "{}")
+    if "impact" not in s["data"]:
+        try:
+            imp = market.impact(s)
+        except Exception:  # noqa: BLE001
+            imp = None
+        if imp:
+            s["data"]["impact"] = imp
+    return s
+
+
 @app.get("/api/signals")
 def signals_api(days: int = 30):
-    return [dict(s, data=json.loads(s["data"] or "{}")) for s in
-            db.q("SELECT * FROM signals WHERE created_at>=datetime('now', ?) ORDER BY id DESC LIMIT 100", (f"-{days} days",))]
+    return [_sig(s) for s in db.q("SELECT * FROM signals WHERE created_at>=datetime('now', ?) ORDER BY id DESC LIMIT 100", (f"-{days} days",))]
+
+
+# ---------------------------------------------------------------- news, money, market
+@app.get("/api/news")
+def news_api(days: int = 14, brand: str = "", topic: str = "", q: str = "", sort: str = "strength"):
+    """Story clusters (news across publishers), share of voice, velocity, topics, publishers, trending now.
+    With a brand, topic, text query or sort it returns just the matching stories."""
+    if brand or topic or q or sort != "strength":
+        return {"days": days, "stories": newsintel.stories(days, brand or None, topic or None, q=q, sort=sort),
+                "topic_list": [t for t, _ in newsintel.TOPICS]}
+    return {**newsintel.overview(days), "topic_list": [t for t, _ in newsintel.TOPICS]}
+
+
+COLLECT_TIER = {"news": "medium", "trends": "medium", "feeds": "medium", "searchdemand": "medium", "youtube": "medium",
+                "financials": "slow", "attention": "slow", "appstore": "slow", "reviews": "slow", "voice": "slow", "channels": "medium"}
+
+
+@app.post("/api/collect/{name}")
+def collect_now(name: str):
+    """Run one collector now (the Refresh buttons on News and Financials). Local: a background thread, poll GET for
+    the result. Cloud: the dashboard cannot collect, so the worker's tier is dispatched instead."""
+    if name not in COLLECT_TIER:
+        raise HTTPException(404, f"unknown collector {name}")
+    if cloud.HOSTED:
+        if msg := cloud.public_lock():
+            return {"state": "locked", "message": msg}
+        return {"state": "dispatched", **cloud.dispatch(COLLECT_TIER[name])}
+    if runner.busy():
+        return {"state": "busy", "message": "A sweep is already running; this source refreshes with it."}
+    threading.Thread(target=runner.run_one, args=(name,), daemon=True).start()
+    return {"state": "running", "started": db.now()}
+
+
+@app.get("/api/collect/{name}")
+def collect_status(name: str):
+    return db.kv_get(f"collect:{name}") or {"state": "idle"}
+
+
+@app.post("/api/restart")
+def restart_server():
+    """Local mode: relaunch the server so it picks up updated code (the dashboard offers this when it sees a newer
+    build on disk or a 404 from a known route). Cloud mode redeploys on push, so there is nothing to restart."""
+    if cloud.HOSTED:
+        return {"ok": False, "message": "Cloud mode: Vercel redeploys on every push; nothing to restart here."}
+    if runner.busy():
+        return {"ok": False, "message": "A sweep is running; restart when it finishes (see Settings)."}
+    threading.Thread(target=_relaunch, daemon=True).start()
+    return {"ok": True, "message": "Restarting… the dashboard reconnects in a few seconds.", "pid": os.getpid()}
+
+
+@app.get("/api/financials")
+def financials_api():
+    return finance.peers()
+
+
+@app.get("/api/financials/{name}")
+def financials_brand_api(name: str):
+    return finance.profile(name)
+
+
+@app.get("/api/market/size")
+def market_size_api():
+    return market.sizes()
+
+
+@app.get("/api/market/share")
+def market_share_api(days: int = 30):
+    return market.share_of_signal(days)
+
+
+@app.get("/api/market/pressure")
+def market_pressure_api(days: int = 30):
+    return market.pressure(days)
+
+
+@app.get("/api/attention")
+def attention_api(days: int = 30):
+    """Daily Wikipedia page views per brand for sparklines, plus the latest trending-in-India matches."""
+    series = {}
+    for r in db.q("SELECT brand, day, views FROM attention WHERE day>=date('now', ?) ORDER BY brand, day", (f"-{days} days",)):
+        series.setdefault(r["brand"], []).append({"day": r["day"], "views": r["views"]})
+    return {"series": series, "trending": newsintel.trending(15)}
 
 
 @app.get("/api/brand/{name}")
@@ -169,15 +318,34 @@ def brand_page(name: str):
                  "FROM products WHERE brand=? ORDER BY last_changed DESC LIMIT 500", (name,))
     for p in prods:
         p["category"] = analytics.categorize(p["product_type"], p["title"])
+        p["url"] = b.product_url(p["handle"]) if b else ""
+    best = db.q("SELECT r.rank, p.title, p.price, p.available, p.handle FROM bestseller_rank r JOIN products p "
+                "ON p.brand=r.brand AND p.product_id=r.product_id WHERE r.brand=? ORDER BY r.rank LIMIT 20", (name,))
+    for p in best:
+        p["url"] = b.product_url(p["handle"]) if b else ""
     watch = analytics._watchlist_rows(brand=name)
     for w in watch:   # price trail for the sparkline / history line
         w["history"] = db.q("SELECT price, status, seen_at FROM watch_prices WHERE name=? AND price>0 ORDER BY id", (w["name"],))
+    fin = finance.profile(name)
     return {"brand": name, "shopify": b.shopify if b else None, "meta": analytics.brand_meta(name), "watchlist": watch,
             "events": [_ev(r) for r in db.q("SELECT * FROM events WHERE brand=? AND kind<>'baseline' ORDER BY id DESC LIMIT 300", (name,))],
             "products": prods,
-            "bestsellers": db.q("SELECT r.rank, p.title, p.price, p.available, p.handle FROM bestseller_rank r JOIN products p "
-                                "ON p.brand=r.brand AND p.product_id=r.product_id WHERE r.brand=? ORDER BY r.rank LIMIT 20", (name,)),
-            "launch": (db.kv_get("launch_scores") or {}).get(name)}
+            "bestsellers": best,
+            "launch": (db.kv_get("launch_scores") or {}).get(name),
+            "stories": newsintel.stories(days=60, brand=name, limit=40),
+            "finance": fin,
+            "pressure": [p for p in market.pressure(30)["by_brand"] if p["brand"] == name][:1],
+            "attention": db.q("SELECT day, views FROM attention WHERE brand=? AND day>=date('now','-30 days') ORDER BY day", (name,)),
+            "voice": _voice_view(name)}
+
+
+def _voice_view(name: str) -> dict | None:
+    try:
+        from . import voice
+        return voice.brand_view(name, 90)
+    except Exception:  # noqa: BLE001 - the brand page must render even if the voice table is missing
+        log.exception("voice view failed for %s", name)
+        return None
 
 
 @app.get("/api/products")
@@ -427,10 +595,27 @@ def today():
         b["kinds"][r["kind"]] = r["c"]
         b["max_importance"] = max(b["max_importance"], r["m"] or 0)
     done_today = db.q1("SELECT COUNT(*) c FROM events WHERE status='done' AND created_at>=datetime('now','-7 days')")["c"]
+    for s in signals_open:
+        if "impact" not in s["data"]:
+            try:
+                imp = market.impact(s)
+            except Exception:  # noqa: BLE001
+                imp = None
+            if imp:
+                s["data"]["impact"] = imp
+    pressure = market.pressure(30)
+    movers = [_ev(r) for r in db.q("SELECT * FROM events WHERE kind='stock_move' AND created_at>=datetime('now','-2 days') ORDER BY id DESC LIMIT 6")]
+    stories = newsintel.stories(days=7, limit=6)
     return {"actions": actions, "signals": signals_open,
             "by_brand": sorted(by_brand.values(), key=lambda x: (-x["max_importance"], -x["total"])),
             "done_7d": done_today, "festival": sig.nearest_festival(),
-            "last_sweep": db.kv_get("last_run:fast") or db.kv_get("last_run:all")}
+            "last_sweep": db.kv_get("last_run:fast") or db.kv_get("last_run:all"),
+            "kpis": {"events_24h": db.q1("SELECT COUNT(*) c FROM events WHERE created_at>=datetime('now','-1 day') AND kind<>'baseline'")["c"],
+                     "stories_7d": db.q1("SELECT COUNT(*) c FROM events WHERE source='news' AND created_at>=datetime('now','-7 days')")["c"],
+                     "risk_30d": pressure["total_risk"], "upside_30d": pressure["total_upside"],
+                     "trending": db.q1("SELECT COUNT(*) c FROM trending WHERE seen_at>=datetime('now','-1 day')")["c"],
+                     "money_7d": db.q1("SELECT COUNT(*) c FROM events WHERE kind IN ('financial_fact','financial_result','stock_move') AND created_at>=datetime('now','-7 days')")["c"]},
+            "movers": movers, "stories": stories, "pressure_top": pressure["by_brand"][:5]}
 
 
 @app.get("/api/brands/overview")
@@ -512,6 +697,194 @@ def watchlist_api():
 @app.get("/api/health")
 def health():
     return {"ok": True, "db": str(settings.db_path), "time": db.now(), "hosted": cloud.HOSTED}
+
+
+# ---------------------------------------------------------------- distribution, voice, regions, sales, reports, strategy
+@app.get("/static/{name}", include_in_schema=False)
+def static_file(name: str):
+    p = STATIC / Path(name).name
+    if not p.exists() or p.suffix not in (".js", ".css"):
+        raise HTTPException(404)
+    return FileResponse(p, media_type="text/javascript" if p.suffix == ".js" else "text/css", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/channels")
+def channels_api(days: int = 7):
+    from . import channels
+    return channels.matrix(days)
+
+
+@app.get("/api/channels/parity")
+def channels_parity(brand: str = ""):
+    from . import channels
+    return channels.parity(brand or None)
+
+
+@app.get("/api/channels/qc")
+def channels_qc():
+    from . import channels
+    return channels.qc_map()
+
+
+@app.get("/api/channels/price_index")
+def channels_price_index(days: int = 30):
+    from . import channels
+    return channels.price_index(days)
+
+
+@app.get("/api/channels/{name}")
+def channels_brand(name: str):
+    from . import channels
+    return channels.brand(name)
+
+
+@app.get("/api/voice")
+def voice_api(days: int = 90, brand: str = ""):
+    from . import voice
+    return voice.summary(days, brand or None)
+
+
+@app.get("/api/voice/matrix")
+def voice_matrix(days: int = 90):
+    from . import voice
+    return voice.theme_matrix(days)
+
+
+@app.get("/api/voice/items")
+def voice_items(brand: str = "", source: str = "", theme: str = "", polarity: str = "", q: str = "", days: int = 180, limit: int = 100):
+    from . import voice
+    return voice.items(brand, source, theme, polarity, q, days, limit)
+
+
+@app.get("/api/voice/timeline")
+def voice_timeline(brand: str, weeks: int = 12):
+    from . import voice
+    return voice.timeline(brand, weeks)
+
+
+@app.get("/api/voice/market")
+def voice_market(days: int = 90):
+    """The field as a whole: demand themes, segments, sources, weekly mood, ratings scoreboard, search asks, conclusion."""
+    from . import voice
+    return voice.market(days)
+
+
+@app.get("/api/voice/brand/{name}")
+def voice_brand(name: str, days: int = 90):
+    from . import voice
+    return voice.brand_view(name, days)
+
+
+@app.post("/api/voice/market_digest")
+def voice_market_digest(days: int = 90):
+    from . import voice
+    if msg := cloud.public_lock():
+        return {"text": None, "message": msg}
+    t = voice.market_digest(days)
+    return {"text": t, "message": None if t else "No AI key configured (GEMINI_API_KEY or ANTHROPIC_API_KEY)."}
+
+
+@app.post("/api/voice/digest")
+def voice_digest(brand: str, days: int = 90):
+    from . import voice
+    if settings.ai_enabled and (msg := cloud.public_lock()):
+        return {"text": None, "message": msg}
+    return {"text": voice.digest(brand, days), "ai": settings.ai_enabled}
+
+
+@app.get("/api/regions")
+def regions_api(days: int = 90):
+    from . import regions
+    return regions.overview(days)
+
+
+@app.get("/api/sales/report")
+def sales_report(kind: str = "weekly", period: str = ""):
+    from . import sales
+    return sales.report(kind, period or None)
+
+
+@app.get("/api/sales/series")
+def sales_series(kind: str = "monthly", n: int = 12):
+    from . import sales
+    return sales.series(kind, n)
+
+
+class SalesIn(BaseModel):
+    csv: str | None = None
+    rows: list[dict] | None = None
+    source: str = "csv"
+
+
+@app.post("/api/sales/import")
+def sales_import(body: SalesIn):
+    """Import Pebble's sales as CSV text or JSON rows (date, sku, title, channel, state, city, units, revenue)."""
+    from .collectors import sales as sc
+    if msg := cloud.public_lock():
+        raise HTTPException(403, msg)
+    if body.csv:
+        res = sc.import_text(body.csv, body.source or "csv")
+    elif body.rows:
+        res = sc.import_json(body.rows, body.source or "api")
+    else:
+        raise HTTPException(400, "send csv text or rows")
+    res["note"] = ("Cloud mode serves a read-only snapshot: the rows show until the next worker run. Import on the worker instead "
+                   "(python -m radar.collectors.sales file.csv) or set SHOPIFY_ADMIN_TOKEN." if cloud.HOSTED else None)
+    return res
+
+
+@app.get("/api/sales/template.csv")
+def sales_template():
+    body = "date,order,sku,title,channel,state,city,units,revenue\n2026-11-01,#1001,QORE-BLK,Pebble Qore Black,online store,Maharashtra,Mumbai,1,2999\n"
+    return Response(body, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=pebble_sales_template.csv"})
+
+
+@app.get("/api/reports")
+def reports_list(kind: str = "", limit: int = 40):
+    from . import reports
+    return {"reports": reports.list_reports(kind, limit), "kinds": list(reports.KINDS), "due": reports.due()}
+
+
+@app.get("/api/reports/{report_id}")
+def report_get(report_id: int):
+    r = db.q1("SELECT id, created_at, kind, period, title, body, data FROM reports WHERE id=?", (report_id,))
+    if not r:
+        raise HTTPException(404)
+    r["data"] = json.loads(r["data"] or "{}")
+    return r
+
+
+@app.get("/api/reports/{report_id}.md")
+def report_md(report_id: int):
+    r = db.q1("SELECT kind, period, body FROM reports WHERE id=?", (report_id,))
+    if not r:
+        raise HTTPException(404)
+    return Response(r["body"], media_type="text/markdown; charset=utf-8",
+                    headers={"Content-Disposition": f"attachment; filename=pebble_{r['kind']}_{r['period']}.md"})
+
+
+@app.post("/api/reports/build")
+def report_build(kind: str = Query("weekly", pattern="^(daily|weekly|monthly|yearly|sector)$"), period: str = "", push: bool = False):
+    from . import reports
+    if msg := cloud.public_lock():
+        return {"id": None, "message": msg}
+    r = reports.build(kind, period or None, push=push, ai=settings.ai_enabled)
+    r["message"] = "Report written. In cloud mode it shows now but is not kept; the worker writes the scheduled ones." if cloud.HOSTED else None
+    return r
+
+
+@app.get("/api/strategy")
+def strategy_api(refresh: bool = False):
+    from . import strategy
+    return strategy.playbook(refresh=refresh)
+
+
+@app.post("/api/strategy/memo")
+def strategy_memo(refresh: bool = False):
+    from . import strategy
+    if settings.ai_enabled and (msg := cloud.public_lock()):
+        return {"text": None, "message": msg}
+    return {"text": strategy.memo(refresh=refresh), "ai": settings.ai_enabled}
 
 
 def main() -> None:

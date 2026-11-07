@@ -1,16 +1,18 @@
 """Signal engine: cross-event rules that turn single events into decisions.
 
-price_war            3+ brands cut prices in the same product type within 48h
+price_war            3+ brands cut prices in the same product category within 48h
 sale_started         a brand cut many prices at once (from shopify collector) - labelled with the nearest festival
 stockout_opportunity a competitor best-seller (rank <= 10) is out of stock
 launch_predictor     hidden products + new products + 'launch' news + new collections + page changes in 14d
 momentum             a brand's event volume this week vs last week doubled
+store_dry            a rival's own store has (almost) nothing in stock - its D2C demand is up for grabs
 """
 from __future__ import annotations
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from . import db
+from .analytics import OFF_RADAR, categorize, off_topic
 from .config import settings
 
 
@@ -43,11 +45,14 @@ def run() -> int:
     today = db.now()[:10]
 
     # ---- price war ----
-    drops = db.q("SELECT brand, data FROM events WHERE kind='price_drop' AND created_at>=? AND brand<>?", (_since(2), me))
+    drops = db.q("SELECT brand, title, data FROM events WHERE kind='price_drop' AND created_at>=? AND brand<>?", (_since(2), me))
     by_type: dict[str, set] = defaultdict(set)
     for d in drops:
-        t = (json.loads(d["data"] or "{}").get("product_type") or "").lower() or "unknown"
-        by_type[t].add(d["brand"])
+        pt = json.loads(d["data"] or "{}").get("product_type") or ""
+        name = d["title"].rsplit(": ", 1)[0]
+        cat = categorize(pt, name)
+        if cat not in OFF_RADAR and not off_topic(pt, name):  # one category across brands, not "anything without a type"
+            by_type[cat.lower()].add(d["brand"])
     for t, brands in by_type.items():
         if len(brands) >= 3:
             if db.add_signal("price_war", "Sector", f"Price war brewing in '{t}': {', '.join(sorted(brands))} all cut prices in 48h",
@@ -57,17 +62,17 @@ def run() -> int:
                 n += 1
 
     # ---- sale started + festival label ----
-    for s in db.q("SELECT brand, title, data, created_at FROM events WHERE kind='sale_started' AND created_at>=?", (_since(1),)):
+    for s in db.q("SELECT brand, title, data, created_at, importance FROM events WHERE kind='sale_started' AND created_at>=?", (_since(1),)):
         fest = nearest_festival()
         label = f" {fest[1]} days before {fest[0]}" if fest and fest[1] >= 0 else (f" during {fest[0]}" if fest else "")
-        if db.add_signal("sale_started", s["brand"], f"{s['brand']} started a sale{label}", s["title"], 8,
+        if db.add_signal("sale_started", s["brand"], f"{s['brand']} started a sale{label}", s["title"], max(6, s["importance"] or 6),
                          {"festival": fest}, f"sale|{s['brand']}|{s['created_at'][:10]}"):
             n += 1
 
     # ---- stock-out opportunity ----
     for e in db.q("SELECT brand, title, url, data FROM events WHERE kind='stock_out' AND created_at>=? AND brand<>?", (_since(1), me)):
         d = json.loads(e["data"] or "{}")
-        if d.get("bestseller_rank") and d["bestseller_rank"] <= 10:
+        if d.get("bestseller_rank") and d["bestseller_rank"] <= 10 and not off_topic(d.get("product_type") or "", e["title"]):
             if db.add_signal("stockout_opportunity", e["brand"],
                              f"{e['brand']} best-seller #{d['bestseller_rank']} is out of stock - capture that demand now",
                              f"{e['title']}. Bid on its model name and category keywords, push Pebble's equivalent at "
@@ -114,9 +119,48 @@ def run() -> int:
     # ---- complaint cluster: 3+ low-star reviews on one rival SKU in a week = a weakness to advertise against ----
     for r in db.q("SELECT brand, json_extract(data,'$.product_id') pid, COUNT(*) c, MIN(title) t FROM events WHERE kind='complaint' "
                   "AND created_at>=? GROUP BY brand, pid HAVING c>=3", (_since(7),)):
+        prod = db.q1("SELECT title, product_type FROM products WHERE brand=? AND product_id=?", (r["brand"], r["pid"])) or {}
+        if off_topic(prod.get("product_type") or "", prod.get("title") or r["t"]):
+            continue  # FITTR's oats taking 1-star reviews is not a Pebble ad angle
         if db.add_signal("pain_point", r["brand"], f"{r['brand']} is taking complaints on one SKU ({r['c']} low-star reviews this week)",
                          f"{r['t']}. Pull the review bodies from the brand page and turn the recurring complaint into a Pebble ad angle.",
                          6, {"product_id": r["pid"], "count": r["c"]}, f"pain|{r['brand']}|{r['pid']}|{today}"):
+            n += 1
+
+    # ---- store dry: a rival's own store shows (almost) nothing in stock ----
+    week = datetime.now(timezone.utc).strftime("%G-W%V")
+    for r in db.q("SELECT brand, COUNT(*) n, SUM(available) a FROM products WHERE price>0 GROUP BY brand HAVING n>=20"):
+        if r["brand"] == me or (r["a"] or 0) > 0.05 * r["n"]:
+            continue
+        if db.add_signal("store_dry", r["brand"], f"{r['brand']}'s own store shows {r['a'] or 0} of {r['n']} products in stock",
+                         "Their D2C site cannot sell right now (stock crunch, wind-down or a move to marketplaces). Bid on their "
+                         "brand and model keywords and check whether Amazon/Flipkart listings are live.", 8,
+                         {"in_stock": r["a"] or 0, "products": r["n"]}, f"store_dry|{r['brand']}|{week}"):
+            n += 1
+
+    # ---- news storm: one story picked up by 4+ publishers in 48h (a launch, a round, a controversy) ----
+    from . import newsintel
+    for st in newsintel.stories(days=2, limit=40):
+        if st["brand"] in ("Sector", me) or st["n_sources"] < 4:
+            continue
+        if db.add_signal("news_storm", st["brand"], f"{st['brand']} is all over the news: {st['n_sources']} outlets on \"{st['title'][:80]}\"",
+                         f"Topic: {st['topic']}. Publishers: {', '.join(st['publishers'][:6])}. "
+                         "Decide today whether Pebble answers (comparison page, ads on their name) or stays out.",
+                         max(7, st["importance"] or 0), {"topic": st["topic"], "sources": st["n_sources"], "ids": st["ids"][:12]},
+                         f"storm|{st['brand']}|{today}"):
+            n += 1
+
+    # ---- war chest: a core rival raised money or reported results (price pressure follows funding) ----
+    for e in db.q("SELECT brand, title, url, data FROM events WHERE kind='financial_fact' AND created_at>=? AND brand<>?", (_since(1), me)):
+        d = json.loads(e["data"] or "{}")
+        b = settings.brand(e["brand"])
+        if d.get("metric") not in ("funding_round", "valuation", "revenue") or not b or b.tier == "adjacent":
+            continue
+        what = {"funding_round": "raised fresh capital", "valuation": "got a new valuation", "revenue": "reported revenue"}[d["metric"]]
+        if db.add_signal("war_chest", e["brand"], f"{e['brand']} {what}: {e['title'].split(':', 1)[-1].strip()[:90]}",
+                         "Funded rivals buy share with discounts and ad spend within two quarters. Review Pebble's price floor and "
+                         "the segments they overlap on the Financials page.", 7, {**d, "url": e["url"]},
+                         f"warchest|{e['brand']}|{d.get('metric')}|{d.get('period')}"):
             n += 1
 
     # ---- momentum ----
