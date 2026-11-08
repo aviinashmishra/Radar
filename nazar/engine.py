@@ -10,6 +10,7 @@ import importlib
 import importlib.util
 import logging
 import os
+import tempfile
 import socket
 import sys
 import threading
@@ -22,7 +23,8 @@ import yaml
 log = logging.getLogger("nazar.engine")
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = Path(os.environ.get("NAZAR_CONFIG") or ROOT / "config" / "nazar.yaml")
-DATA_DIR = Path(os.environ.get("NAZAR_DATA_DIR") or ROOT)   # relocates every sector database (tests use a scratch copy)
+HOSTED = bool(os.environ.get("VERCEL")) or os.environ.get("RADAR_HOSTED") == "1"   # Vercel: snapshots in the temp folder, collectors on GitHub
+DATA_DIR = Path(os.environ.get("NAZAR_DATA_DIR") or (Path(tempfile.gettempdir()) / "radar" if HOSTED else ROOT))   # relocates every sector database
 ENV_KEYS = ("RADAR_CONFIG", "RADAR_DB", "RADAR_SECTOR", "RADAR_SECTOR_LABEL", "RADAR_SNAPSHOT")
 _load_lock = threading.Lock()
 
@@ -139,6 +141,10 @@ def load_all() -> list[Sector]:
         return out
 
 
+def loaded() -> bool:
+    return bool(_SECTORS)
+
+
 def sectors() -> list[Sector]:
     return _SECTORS or load_all()
 
@@ -184,6 +190,11 @@ def _external_radar(sec: Sector) -> bool:
 def start_schedulers(stop: threading.Event) -> None:
     """One scheduler thread per sector, started a little apart so the first sweeps do not all hit the same hosts at once.
     NAZAR_SCHEDULERS=off disables collection (dashboard only)."""
+    if HOSTED:   # the GitHub Actions workflow collects; this process only serves the published snapshots
+        for sec in sectors():
+            sec.scheduler = "cloud"
+        log.info("cloud mode: collectors run on GitHub Actions, snapshots from the data release")
+        return
     if (os.environ.get("NAZAR_SCHEDULERS") or "on").lower() in ("off", "0", "no"):
         for sec in sectors():
             sec.scheduler = "off"
@@ -245,7 +256,7 @@ def _prime(stop: threading.Event) -> None:
 def start_bot(stop: threading.Event) -> None:
     """The Telegram bot polls one token; only the primary sector runs it (the others still push alerts)."""
     sec = primary()
-    if sec.scheduler == "external" or not sec.settings.telegram_token:
+    if HOSTED or sec.scheduler == "external" or not sec.settings.telegram_token:
         return
     bot = sec.sub("bot")
     threading.Thread(target=bot.loop, args=(stop,), daemon=True, name="nazar-telegram").start()

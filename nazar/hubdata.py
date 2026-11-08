@@ -308,6 +308,9 @@ def ask(question: str, sector: str | None) -> dict:
 
 def run(sector: str | None, tier: str) -> dict:
     sec = engine.get(sector)
+    if engine.HOSTED:
+        r = sec.sub("cloud").dispatch(tier, sec.key)
+        return {"ok": bool(r.get("started")), "message": f"{sec.label}: {r.get('message')}", "url": r.get("url")}
     if sec.scheduler == "external":
         return {"ok": False, "message": f"{sec.label} is collected by another radar process; use its own Run button."}
     if sec.runner.busy():

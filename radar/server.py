@@ -265,7 +265,7 @@ def collect_now(name: str):
     if cloud.HOSTED:
         if msg := cloud.public_lock():
             return {"state": "locked", "message": msg}
-        return {"state": "dispatched", **cloud.dispatch(COLLECT_TIER[name])}
+        return {"state": "dispatched", **cloud.dispatch(COLLECT_TIER[name], settings.sector_key or None)}
     if runner.busy():
         return {"state": "busy", "message": "A sweep is already running; this source refreshes with it."}
     threading.Thread(target=runner.run_one, args=(name,), daemon=True).start()
@@ -457,7 +457,7 @@ def run_now(tier: str = Query("fast", pattern="^(fast|medium|slow|all)$")):
     if cloud.HOSTED:  # the collectors live on GitHub Actions in cloud mode
         if msg := cloud.public_lock():
             return {"started": None, "message": msg}
-        return cloud.dispatch(tier)
+        return cloud.dispatch(tier, settings.sector_key or None)
     if runner.busy():
         return {"started": None, "busy": True}
     threading.Thread(target=runner.run_tier, args=(tier,), daemon=True).start()

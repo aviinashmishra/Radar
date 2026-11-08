@@ -10,6 +10,7 @@ Routing
                            its page and its texts written for that sector's perspective
 """
 from __future__ import annotations
+import asyncio
 import json
 import logging
 import os
@@ -186,6 +187,8 @@ def _relaunch() -> None:
 @hub.post("/nazar/api/restart")
 def api_restart():
     """Relaunch the whole hub (every sector) so new Python is loaded; the pages offer this when build_info says stale."""
+    if engine.HOSTED:
+        return {"ok": False, "message": "This is the cloud deployment: Vercel redeploys it on every push, nothing to restart here."}
     if any(s.runner.busy() for s in engine.sectors() if s.mod is not None and s.scheduler == "running"):
         return {"ok": False, "message": "A sweep is running in one of the sectors; restart when it finishes."}
     threading.Timer(0.5, _relaunch).start()
@@ -315,7 +318,16 @@ class Nazar:
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.hub(scope, receive, send)
+        if not engine.loaded():   # serverless: the first request of an instance may arrive before (or without) lifespan
+            await run_in_threadpool(engine.load_all)
         path = scope.get("path") or "/"
+        if engine.HOSTED and not (path == "/app" or path.startswith(RADAR_PATHS)):   # sector requests have the radar's own gate
+            pc = engine.primary().sub("cloud")
+            auth = next((v.decode("latin-1") for k, v in scope.get("headers") or [] if k == b"authorization"), None)
+            if path not in ("/nazar/api/health", "/favicon.ico") and pc.needs_password(path) and not pc.authorized(auth):
+                return await _plain(send, 401, "Password required", [(b"www-authenticate", b'Basic realm="Nazar", charset="UTF-8"')])
+            if path.startswith("/nazar/api/"):   # every sector's latest snapshot before a cross-sector answer (one cheap check per minute each)
+                await asyncio.gather(*(run_in_threadpool(sec.sub("cloud").refresh) for sec in engine.sectors()))
         if path == "/api/restart":
             scope2 = dict(scope); scope2["path"], scope2["raw_path"] = "/nazar/api/restart", b"/nazar/api/restart"
             return await self.hub(scope2, receive, send)
@@ -327,6 +339,13 @@ class Nazar:
             rewriter = _Rewriter(sec, send, path)
             return await sec.app(scope2, receive, rewriter.send)
         return await self.hub(scope, receive, send)
+
+
+async def _plain(send, status: int, text: str, extra: list[tuple[bytes, bytes]] | None = None) -> None:
+    body = text.encode("utf-8")
+    await send({"type": "http.response.start", "status": status,
+                "headers": [(b"content-type", b"text/plain; charset=utf-8"), (b"content-length", str(len(body)).encode())] + (extra or [])})
+    await send({"type": "http.response.body", "body": body})
 
 
 app = Nazar(hub)

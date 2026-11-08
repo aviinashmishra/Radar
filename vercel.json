@@ -3,11 +3,14 @@
   "functions": {
     "app.py": {
       "maxDuration": 120,
-      "includeFiles": "{config/**,radar/static/**}",
+      "includeFiles": "{config/**,radar/**,nazar/**}",
       "excludeFiles": "{data/**,.github/**,**/__pycache__/**}"
     }
   },
   "crons": [
-    { "path": "/api/cron/heartbeat", "schedule": "0 4 * * *" }
+    {
+      "path": "/api/cron/heartbeat",
+      "schedule": "0 4 * * *"
+    }
   ]
 }

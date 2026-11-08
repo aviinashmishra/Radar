@@ -59,7 +59,8 @@ Add a sector: copy a folder under `config/sectors/`, edit the three files, add a
 - If an older single-sector radar window is still holding port 8080, Nazar starts on 8090, uses that process's
   database for the IoT sector without starting a second scheduler on it, and says so in the console.
 - **Cloud**: the GitHub Actions workflow runs one job per sector (matrix, three at a time) and publishes
-  `<sector>.db.gz` next to the IoT `radar.db.gz` on the `data` release. The Vercel app still serves the IoT radar.
+  `<sector>.db.gz` next to the IoT `radar.db.gz` on the `data` release. The Vercel app serves the whole of Nazar
+  (hub + every sector) in cloud mode; each sector reads its own snapshot. `RADAR_ONLY=1` on Vercel serves just the IoT radar.
 - Alerts from a sector without a home brand are prefixed with the sector name (`[Fintech] ...`); the Telegram bot
   answers for the IoT sector.
 
@@ -113,8 +114,8 @@ bot. So the radar runs in two halves that need no server of their own:
 
 ```
  GitHub Actions (worker, free on a public repo)            Vercel (dashboard)
- every 15 min / hourly / daily                            app.py -> radar.server in cloud mode
-   pull last snapshot ──► run collectors ──► push ──►  release `data`: radar.db.gz  ◄── each instance downloads it,
+ every 15 min / hourly / daily, one job per sector         app.py -> nazar.server (hub + sectors) in cloud mode
+   pull last snapshot ──► run collectors ──► push ──►  release `data`: radar.db.gz, <sector>.db.gz  ◄── each instance downloads them,
                                                         (+ 3 days of screenshots)        re-checks once a minute
  Run button / Telegram /run  ◄──────────── GitHub API (workflow_dispatch) ◄────────────  (one tiny request)
 ```

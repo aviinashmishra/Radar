@@ -264,12 +264,12 @@ def public_lock() -> str | None:
     return None
 
 
-def dispatch(tier: str) -> dict:
-    """Start a sweep on GitHub Actions (the only place collectors run in cloud mode)."""
+def dispatch(tier: str, sector: str | None = None) -> dict:
+    """Start a sweep on GitHub Actions (the only place collectors run in cloud mode); `sector` limits the matrix."""
     if not (TOKEN and REPO):
         return {"started": None, "message": "Sweeps run on GitHub Actions on their own schedule. To start one from "
                                              "here, add GITHUB_TOKEN (fine-grained, Actions: write) to the Vercel project."}
-    r = _gh("POST", f"/repos/{REPO}/actions/workflows/{WORKFLOW}/dispatches", json={"ref": BRANCH, "inputs": {"tier": tier}})
+    r = _gh("POST", f"/repos/{REPO}/actions/workflows/{WORKFLOW}/dispatches", json={"ref": BRANCH, "inputs": {"tier": tier, **({"sector": sector} if sector else {})}})
     if r.status_code in (200, 204):
         return {"started": tier, "where": "github", "url": f"{WEB}/{REPO}/actions/workflows/{WORKFLOW}",
                 "message": f"{tier} sweep queued on GitHub Actions. New data appears here a minute after it finishes."}

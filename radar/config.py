@@ -196,8 +196,11 @@ def load() -> Settings:
     # (the one writable place on Vercel) or an absolute RADAR_DB set on purpose. A relative RADAR_DB, such as
     # the data/radar.db in a local .env, would point it at the local working database.
     db = os.environ.get("RADAR_DB") or "data/radar.db"
-    if (os.environ.get("VERCEL") or os.environ.get("RADAR_HOSTED") == "1") and not Path(db).is_absolute():
-        db = str(Path(tempfile.gettempdir()) / "radar" / "radar.db")
+    if os.environ.get("VERCEL") or os.environ.get("RADAR_HOSTED") == "1":
+        p = Path(db)
+        rel = p.relative_to(ROOT) if p.is_absolute() and p.is_relative_to(ROOT) else (None if p.is_absolute() else p)
+        if rel is not None:   # keep the sector's own sub-path, so ten sectors in one hub do not share one file
+            db = str(Path(tempfile.gettempdir()) / "radar" / rel)
     db_path = Path(db) if Path(db).is_absolute() else ROOT / db
     db_path.parent.mkdir(parents=True, exist_ok=True)
     companies_raw = _side_yaml("companies.yaml")
