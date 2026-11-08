@@ -627,3 +627,4 @@ world:
   - COP (Nov)
   - Quarterly results of utilities and module makers
 perspective: ''
+screenshots: true          # daily homepage capture of each company's site (visual-change watch)

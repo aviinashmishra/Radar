@@ -42,7 +42,33 @@ def _safe(sec: engine.Sector, fn, default):
 
 
 # ---------------------------------------------------------------- sectors overview
+_OVERVIEW: dict = {"rows": None, "at": 0.0, "lock": threading.Lock(), "refreshing": False}
+OVERVIEW_TTL = 60.0   # the per-sector summary walks ten databases (~15 s); serve the last one and refresh behind the scenes
+
+
 def sectors_overview() -> list[dict]:
+    """Cached: the first call computes synchronously, later calls answer at once and refresh in the background when stale."""
+    rows, age = _OVERVIEW["rows"], time.time() - _OVERVIEW["at"]
+    if rows is None:
+        with _OVERVIEW["lock"]:
+            if _OVERVIEW["rows"] is None:
+                _OVERVIEW.update(rows=_sectors_overview(), at=time.time())
+        return _OVERVIEW["rows"]
+    if age > OVERVIEW_TTL and not _OVERVIEW["refreshing"]:
+        _OVERVIEW["refreshing"] = True
+
+        def _bg():
+            try:
+                _OVERVIEW.update(rows=_sectors_overview(), at=time.time())
+            except Exception:  # noqa: BLE001
+                log.exception("sector overview refresh failed")
+            finally:
+                _OVERVIEW["refreshing"] = False
+        threading.Thread(target=_bg, daemon=True, name="nazar-overview").start()
+    return rows
+
+
+def _sectors_overview() -> list[dict]:
     out = []
     for sec in engine.sectors():
         def one(sec=sec):

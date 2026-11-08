@@ -16,7 +16,9 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+import contextvars
 import re
+import threading
 from . import db, analytics
 from .config import settings
 
@@ -278,10 +280,36 @@ def plan(card: list[dict], claims: dict, probs: list[dict], to: dict) -> dict:
     return {"30": d30[:8], "60": d60[:8], "90": d90[:8]}
 
 
+def _seat_key(base: str) -> str:
+    """Cache keys are per seat: the playbook written for Pebble is not the one written for Noise, or the neutral one."""
+    return f"{base}:{settings.self_brand.name if settings.self_brand else ''}"
+
+
+_REFRESHING: set[str] = set()
+
+
 def playbook(refresh: bool = False) -> dict:
-    cached = db.kv_get("strategy_playbook")
-    if cached and not refresh and cached.get("at", "") > (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat():
+    """Cached per seat for 6 hours. A stale copy is served at once while a fresh one is built in the background
+    (the build reads every table and takes ~20 s on a full database); only the very first build makes the caller wait."""
+    key = _seat_key("strategy_playbook")
+    cached = db.kv_get(key)
+    if cached and not refresh:
+        fresh = cached.get("at", "") > (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+        if not fresh and key not in _REFRESHING:
+            _REFRESHING.add(key)
+            ctx = contextvars.copy_context()   # the request's seat travels with the background build
+
+            def _bg():
+                try:
+                    ctx.run(_build)
+                finally:
+                    _REFRESHING.discard(key)
+            threading.Thread(target=_bg, daemon=True, name="radar-playbook").start()
         return cached["data"]
+    return _build()
+
+
+def _build() -> dict:
     card = scorecard()
     claims = usp()
     probs = problems()
@@ -291,7 +319,7 @@ def playbook(refresh: bool = False) -> dict:
                      "weaknesses": [p["problem"] for p in probs if p["area"] in ("product", "app", "pricing")][:5],
                      "opportunities": [c["claim"] for c in claims["claims"] if c["kind"] in ("attack", "wedge", "gap")][:3] + [o["title"] for o in to["opportunities"][:3]],
                      "threats": [t["title"] for t in to["threats"][:5]]}}
-    db.kv_set("strategy_playbook", {"at": db.now(), "data": data})
+    db.kv_set(_seat_key("strategy_playbook"), {"at": db.now(), "data": data})
     return data
 
 
@@ -300,15 +328,15 @@ def memo(refresh: bool = False) -> str | None:
     from . import enrich
     if not settings.ai_enabled:
         return None
-    cached = db.kv_get("strategy_memo")
+    cached = db.kv_get(_seat_key("strategy_memo"))
     if cached and not refresh and cached.get("at", "") > (datetime.now(timezone.utc) - timedelta(days=1)).isoformat():
         return cached["text"]
     pb = playbook()
-    prompt = ("You are advising Pebble's founders. From this playbook JSON write a strategy memo, max 450 words, plain text, short lines: "
+    prompt = (f"You are advising {settings.me}'s leadership." if settings.self_brand else "You are an independent analyst of this sector.") + ("  From this playbook JSON write a strategy memo, max 450 words, plain text, short lines: "
               "1) Where to play (which segments to defend / attack / enter and why) 2) How to win (3 USP claims with the evidence) "
               "3) What to fix first 4) Threats to prepare for 5) The 30/60/90 plan as three short lists. Use the numbers given; do not invent any.\n\n"
               + json.dumps({k: pb[k] for k in ("scorecard", "usp", "problems", "threats", "opportunities", "plan")}, default=str)[:40000])
     text = enrich.ask_text(prompt, max_tokens=1500)
     if text:
-        db.kv_set("strategy_memo", {"at": db.now(), "text": text})
+        db.kv_set(_seat_key("strategy_memo"), {"at": db.now(), "text": text})
     return text

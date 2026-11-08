@@ -268,6 +268,20 @@ def review_pain_points(days: int = 60) -> list[dict]:
             if re.search(rx, r["body"], re.I):
                 counts[r["brand"]][t] += 1
                 examples[r["brand"]].setdefault(t, r["body"][:160])
+    # App Store and Play 1-2 star reviews, already themed with this sector's own vocabulary (collectors/voice.py)
+    try:
+        vrows = db.q("SELECT brand, text, themes FROM voice WHERE source IN ('appstore','play') AND rating IS NOT NULL AND rating<=2 "
+                     "AND COALESCE(created, seen_at)>=date('now', ?)", (f"-{days} days",))
+    except Exception:  # noqa: BLE001 - an old database without the voice table
+        vrows = []
+    for r in vrows:
+        try:
+            ts = json.loads(r["themes"] or "[]")
+        except ValueError:
+            ts = []
+        for t in (ts if isinstance(ts, list) else list(ts)):
+            counts[r["brand"]][t] += 1
+            examples[r["brand"]].setdefault(t, (r["text"] or "")[:160])
     return [{"brand": b, "low_star_reviews": sum(ts.values()), "themes": dict(sorted(ts.items(), key=lambda x: -x[1])), "examples": examples[b]}
             for b, ts in sorted(counts.items(), key=lambda x: -sum(x[1].values()))]
 

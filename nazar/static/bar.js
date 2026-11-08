@@ -42,9 +42,10 @@
   /* a neutral sector has no "home brand": the tiles, chips and cards the radar built around one would only show dashes */
   /* a seat without first-party figures (any brand other than the YAML home brand) has no at-risk money or own sales either */
   if (!N.self || !N.own_data) {
-    const RX = N.self ? /at risk|upside|own sales|money at stake/i : /home brand|at risk|upside|own sales|on the shelf|\byou\b|\byour\b/i;
+    const seatLabel = N.self ? (N.self + " revenue").toLowerCase() : null;   // the "<seat> revenue" tile needs first-party figures
+    const RX = N.self ? /at risk|upside|own sales|money at stake/i : /home brand|at risk|upside|own sales|on the shelf|you|your/i;
     const prune = () => {
-      document.querySelectorAll("#view .kpi, #view .xk").forEach(k => { const l = k.querySelector(".l"); if (l && RX.test(l.textContent)) k.remove(); });
+      document.querySelectorAll("#view .kpi, #view .xk").forEach(k => { const l = k.querySelector(".l"); if (l && (RX.test(l.textContent) || (seatLabel && l.textContent.trim().toLowerCase() === seatLabel))) k.remove(); });
       document.querySelectorAll("#view .chip").forEach(c => { if (/home brand/i.test(c.textContent)) c.remove(); });
       const H2 = N.self ? /^(money at stake|own sales by state|pressure on )/i : /^(scale vs (home brand|you)|pressure on (home brand|you)|(home brand|you) vs|money at stake|(home brand|your) strongholds|own sales by state)/i;
       document.querySelectorAll("#view .card > h2").forEach(h => { if (H2.test(h.textContent.trim())) h.parentElement.remove(); });

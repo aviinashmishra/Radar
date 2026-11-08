@@ -5,6 +5,7 @@ Pillow measures how many pixels changed, and when Claude or Gemini is configured
 Events: visual_change. Images are served by the dashboard at /shots/<file>.
 """
 from __future__ import annotations
+import re
 import base64
 from pathlib import Path
 from .. import db
@@ -89,13 +90,14 @@ def run() -> int:
     n = 0
     day = db.now()[:10]
     for b in settings.brands:
-        if not b.shopify:
+        site = (b.shopify or b.website or "").rstrip("/")   # storefront, else the public company site
+        if not site:
             continue
-        safe = b.name.lower().replace(" ", "-")
+        safe = re.sub(r"[^a-z0-9]+", "-", b.name.lower()).strip("-")
         path = SHOTS / f"{safe}-{day}.jpg"
         if path.exists() or path.with_suffix(".png").exists():
             continue  # one per day
-        if not _capture(b.shopify + "/", path):
+        if not _capture(site + "/", path):
             continue
         prev = db.q1("SELECT path FROM screenshots WHERE brand=? ORDER BY id DESC LIMIT 1", (b.name,))
         pct = None
@@ -105,11 +107,11 @@ def run() -> int:
             except Exception as e:  # noqa: BLE001
                 log.info("diff failed: %s", e)
         with db.tx() as c:
-            c.execute("INSERT INTO screenshots(brand,url,path,diff_pct,taken_at) VALUES(?,?,?,?,?)", (b.name, b.shopify, str(path), pct, db.now()))
+            c.execute("INSERT INTO screenshots(brand,url,path,diff_pct,taken_at) VALUES(?,?,?,?,?)", (b.name, site, str(path), pct, db.now()))
         if pct is not None and pct >= THRESHOLD_PCT:
             desc = _describe(Path(prev["path"]), path, b.name) or f"{pct:.0f}% of the homepage pixels changed since the last capture."
             if db.add_event(b.name, "visual", "visual_change", f"{b.name} homepage looks {pct:.0f}% different today",
-                            detail=desc, url=b.shopify,
+                            detail=desc, url=site,
                             data={"diff_pct": pct, "before": f"/shots/{Path(prev['path']).name}", "after": f"/shots/{path.name}"},
                             dedupe_key=f"visual|{b.name}|{day}"):
                 n += 1

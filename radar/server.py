@@ -262,8 +262,11 @@ def news_api(days: int = 14, brand: str = "", topic: str = "", q: str = "", sort
     return {**newsintel.overview(days), "topic_list": [t for t, _ in newsintel.TOPICS]}
 
 
-COLLECT_TIER = {"news": "medium", "trends": "medium", "feeds": "medium", "searchdemand": "medium", "youtube": "medium",
-                "financials": "slow", "attention": "slow", "appstore": "slow", "reviews": "slow", "voice": "slow", "channels": "medium"}
+# every collector the runner knows, by name, with the tier the cloud worker runs it in (the Refresh buttons and
+# /api/collect/<name> accept any of them: news, financials, resolve, reviews, appstore, attention, regions, ...)
+from . import collectors as _collectors
+COLLECT_TIER = {m.__name__.rsplit(".", 1)[-1]: tier
+                for tier, mods in (("fast", _collectors.FAST), ("medium", _collectors.MEDIUM), ("slow", _collectors.SLOW)) for m in mods}
 
 
 @app.post("/api/collect/{name}")

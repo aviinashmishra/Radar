@@ -42,6 +42,7 @@ async def lifespan(_app: FastAPI):
     engine.load_all()
     engine.start_schedulers(_stop)
     engine.start_bot(_stop)
+    threading.Thread(target=hubdata.sectors_overview, daemon=True, name="nazar-overview-warm").start()   # first hub page answers at once
     exit_after = float(os.environ.get("NAZAR_EXIT_AFTER") or 0)   # tests and CI: stop by itself
     if exit_after:
         threading.Timer(exit_after, lambda: os._exit(0)).start()
