@@ -21,7 +21,8 @@ from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileRes
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig, newsintel, finance, market, channels, regions, perspective
-from .config import settings, ROOT
+from urllib.parse import quote, unquote
+from .config import settings, ROOT, SEAT
 
 log = logging.getLogger("radar.server")
 STATIC = Path(__file__).parent / "static"
@@ -67,7 +68,16 @@ async def gate(request: Request, call_next):
                         headers={"WWW-Authenticate": 'Basic realm="Pebble Radar", charset="UTF-8"'})
     if cloud.HOSTED and path != "/favicon.ico":
         await run_in_threadpool(cloud.refresh)
-    return await call_next(request)
+    raw = request.cookies.get(SEAT_COOKIE)      # this browser's seat for this sector; absent = the server's default
+    token = SEAT.set(unquote(raw)) if raw is not None else None
+    try:
+        return await call_next(request)
+    finally:
+        if token is not None:
+            SEAT.reset(token)
+
+
+SEAT_COOKIE = f"seat_{settings.sector_key or 'iot'}"
 
 
 def _ev(r: dict) -> dict:
@@ -434,14 +444,18 @@ def perspective_get():
 
 
 @app.post("/api/perspective")
-def perspective_set(body: PerspectiveIn):
-    """Switch the seat (persisted in this sector's database); the page reloads itself afterwards."""
-    if cloud.HOSTED and (msg := cloud.public_lock()):
-        raise HTTPException(403, msg)
-    try:
-        return perspective.set(body.brand)
-    except ValueError as e:
-        raise HTTPException(404, str(e))
+def perspective_set(body: PerspectiveIn, response: Response):
+    """Switch the seat for this browser (cookie, a year) and, when this server owns its database, make it the
+    default for everyone else too. The page reloads itself afterwards. Works the same on Vercel, where the
+    database is a read-only snapshot: the cookie is the whole state."""
+    name = body.brand.strip()
+    if name and settings.brand(name) is None:
+        raise HTTPException(404, f"{name!r} is not a brand in this sector")
+    if not cloud.HOSTED:
+        perspective.set(name)
+    response.set_cookie(SEAT_COOKIE, quote(name, safe=""), max_age=365 * 86400, samesite="lax", path="/")
+    SEAT.set(name)
+    return perspective.state()
 
 
 @app.post("/api/chat")

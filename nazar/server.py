@@ -21,7 +21,7 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from pydantic import BaseModel
@@ -321,24 +321,49 @@ class Nazar:
         if not engine.loaded():   # serverless: the first request of an instance may arrive before (or without) lifespan
             await run_in_threadpool(engine.load_all)
         path = scope.get("path") or "/"
-        if engine.HOSTED and not (path == "/app" or path.startswith(RADAR_PATHS)):   # sector requests have the radar's own gate
+        if path == "/api/restart":   # a sector page's restart button restarts the whole hub
+            scope2 = dict(scope); scope2["path"], scope2["raw_path"] = "/nazar/api/restart", b"/nazar/api/restart"
+            return await self.hub(scope2, receive, send)
+        if not (path == "/app" or path.startswith(RADAR_PATHS)):   # hub request: apply this browser's per-sector seats (cookies seat_<key>)
+            tokens = []
+            for sec in engine.sectors():
+                raw = _cookie(scope, f"seat_{sec.key}")
+                if raw is not None:
+                    cfg = sec.sub("config")
+                    tokens.append((cfg, cfg.SEAT.set(unquote(raw))))
+            try:
+                return await self._hub_request(scope, receive, send, path)
+            finally:
+                for cfg, tok in tokens:
+                    cfg.SEAT.reset(tok)
+        return await self._sector_request(scope, receive, send, path)
+
+    async def _hub_request(self, scope, receive, send, path):
+        if engine.HOSTED:   # sector requests have the radar's own gate
             pc = engine.primary().sub("cloud")
             auth = next((v.decode("latin-1") for k, v in scope.get("headers") or [] if k == b"authorization"), None)
             if path not in ("/nazar/api/health", "/favicon.ico") and pc.needs_password(path) and not pc.authorized(auth):
                 return await _plain(send, 401, "Password required", [(b"www-authenticate", b'Basic realm="Nazar", charset="UTF-8"')])
             if path.startswith("/nazar/api/"):   # every sector's latest snapshot before a cross-sector answer (one cheap check per minute each)
                 await asyncio.gather(*(run_in_threadpool(sec.sub("cloud").refresh) for sec in engine.sectors()))
-        if path == "/api/restart":
-            scope2 = dict(scope); scope2["path"], scope2["raw_path"] = "/nazar/api/restart", b"/nazar/api/restart"
-            return await self.hub(scope2, receive, send)
-        if path == "/app" or path.startswith(RADAR_PATHS):
-            sec = _sector_for(scope)
-            scope2 = dict(scope)
-            if path == "/app":
-                scope2["path"], scope2["raw_path"] = "/", b"/"
-            rewriter = _Rewriter(sec, send, path)
-            return await sec.app(scope2, receive, rewriter.send)
         return await self.hub(scope, receive, send)
+
+    async def _sector_request(self, scope, receive, send, path):
+        sec = _sector_for(scope)
+        scope2 = dict(scope)
+        if path == "/app":
+            scope2["path"], scope2["raw_path"] = "/", b"/"
+        rewriter = _Rewriter(sec, send, path)
+        # the browser's seat for this sector also applies while the page text is rewritten (the radar's own gate
+        # sets it for its handlers, but that scope ends before the response body is sent)
+        raw = _cookie(scope, f"seat_{sec.key}")
+        cfg = sec.sub("config")
+        token = cfg.SEAT.set(unquote(raw)) if raw is not None else None
+        try:
+            return await sec.app(scope2, receive, rewriter.send)
+        finally:
+            if token is not None:
+                cfg.SEAT.reset(token)
 
 
 async def _plain(send, status: int, text: str, extra: list[tuple[bytes, bytes]] | None = None) -> None:

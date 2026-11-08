@@ -48,7 +48,8 @@ def set(name: str | None) -> dict:  # noqa: A001 - mirrors kv_set
     """Switch and persist; SKU matches computed from the old seat are rebuilt in the background."""
     chosen = settings.set_perspective((name or "").strip() or None)
     db.kv_set(KEY, {"brand": chosen})
-    threading.Thread(target=_rebuild, name="radar-perspective", daemon=True).start()
+    if not (os.environ.get("VERCEL") or os.environ.get("RADAR_HOSTED") == "1"):
+        threading.Thread(target=_rebuild, name="radar-perspective", daemon=True).start()
     return state()
 
 

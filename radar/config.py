@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 from pathlib import Path
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 import yaml
 from dotenv import load_dotenv
@@ -12,6 +13,11 @@ ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
 CONFIG_PATH = Path(os.environ.get("RADAR_CONFIG", ROOT / "config" / "competitors.yaml"))
+
+# The seat for the current request: a browser's own choice (cookie seat_<sector>) set by the server's gate, read by
+# `Settings.self_brand`. _UNSET means "no choice in this request": fall back to the stored/default seat (flags).
+_UNSET = object()
+SEAT: ContextVar = ContextVar("radar_seat", default=_UNSET)
 
 # Where a product page lives on each storefront platform the radar can read (see collectors/shopify.py).
 PRODUCT_PATH = {"shopify": "/products/", "justcorseca": "/in/product/"}
@@ -137,6 +143,9 @@ class Settings:
 
     @property
     def self_brand(self) -> Brand | None:
+        seat = SEAT.get()
+        if seat is not _UNSET:            # this request carries its own seat ("" = neutral)
+            return self.brand(seat) if seat else None
         return next((b for b in self.brands if b.self_brand), None)
 
     def set_perspective(self, name: str | None) -> str | None:
