@@ -1,0 +1,371 @@
+# Nazar sector: E-commerce & D2C. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: Flipkart
+  entity: Flipkart Internet Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2007
+  ownership: subsidiary
+  wikipedia: Flipkart
+  investors:
+  - Walmart (majority)
+  - SoftBank
+  - GIC
+  - CPPIB
+  notes: India's largest marketplace; redomiciling to India for a 2026 IPO.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 17907
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 2358
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: valuation
+    period: '2024'
+    value: 36000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Amazon India
+  entity: Amazon Seller Services Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2013
+  ownership: subsidiary
+  wikipedia: Amazon (company)
+  notes: Committed $35B to India by 2030; Bazaar for low-price fashion; Now for quick commerce.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 25406
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 3470
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Meesho
+  entity: Meesho Ltd.
+  hq: Bengaluru, India
+  founded: 2015
+  ownership: listed
+  ticker: MEESHO.NS
+  wikipedia: Meesho
+  investors:
+  - Prosus
+  - SoftBank
+  - Peak XV
+  - Elevation
+  - Tiger Global
+  notes: Most orders of any Indian marketplace; zero-commission model; listed Dec 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 9390
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 3942
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Myntra
+  entity: Myntra Designs Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2007
+  ownership: subsidiary
+  wikipedia: Myntra
+  notes: Fashion leader; 30-minute fashion delivery (M-Now).
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 5122
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY24
+    value: 31
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Nykaa
+  entity: FSN E-Commerce Ventures Ltd.
+  hq: Mumbai, India
+  founded: 2012
+  ownership: listed
+  ticker: NYKAA.NS
+  wikipedia: Nykaa
+  notes: Beauty leader online and in 200+ stores; owned brands (Dot & Key, Kay Beauty) drive margin.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 7950
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 73
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Ajio
+  entity: Reliance Retail Ventures Ltd.
+  hq: Bengaluru, India
+  founded: 2016
+  ownership: subsidiary
+  wikipedia: Ajio
+  notes: Reliance's fashion platform; brought Shein back to India (2025).
+- brand: Tira
+  entity: Reliance Retail Ventures Ltd.
+  hq: Mumbai, India
+  founded: 2023
+  ownership: subsidiary
+  notes: Reliance's challenger to Nykaa; premium stores plus app.
+- brand: Tata Neu
+  entity: Tata Digital Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2019
+  ownership: subsidiary
+  wikipedia: Tata Neu
+  notes: Super-app that under-delivered; BigBasket and 1mg are its strongest assets.
+- brand: JioMart
+  entity: Reliance Retail Ventures Ltd.
+  hq: Mumbai, India
+  founded: 2020
+  ownership: subsidiary
+  wikipedia: JioMart
+  notes: Reliance Retail's omnichannel marketplace, backed by 19,000 stores.
+- brand: Snapdeal
+  entity: AceVector Ltd.
+  hq: Gurugram, India
+  founded: 2010
+  ownership: private
+  wikipedia: Snapdeal
+  investors:
+  - SoftBank
+  - Alibaba
+  - Foxconn
+  notes: Value-segment survivor; Unicommerce (listed) is the group's SaaS arm.
+- brand: Lenskart
+  entity: Lenskart Solutions Ltd.
+  hq: Gurugram, India
+  founded: 2010
+  ownership: listed
+  ticker: LENSKART.NS
+  wikipedia: Lenskart
+  investors:
+  - SoftBank
+  - Temasek
+  - KKR
+  - ADIA
+  - Fidelity
+  notes: 2,500+ stores in India and Asia; listed Nov 2025; the D2C-to-omnichannel template.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 6652
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 297
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Mamaearth
+  entity: Honasa Consumer Ltd.
+  hq: Gurugram, India
+  founded: 2016
+  ownership: listed
+  ticker: HONASA.NS
+  wikipedia: Honasa Consumer
+  notes: First D2C house to list (2023); The Derma Co passed ₹500 cr ARR.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 2067
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 73
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: FirstCry
+  entity: Brainbees Solutions Ltd.
+  hq: Pune, India
+  founded: 2010
+  ownership: listed
+  ticker: FIRSTCRY.NS
+  wikipedia: FirstCry
+  notes: Listed Aug 2024; 1,000+ stores; GlobalBees roll-up of D2C brands.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 7660
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 207
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Purplle
+  entity: Manash Lifestyle Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2011
+  ownership: private
+  investors:
+  - ADIA
+  - Premji Invest
+  - Kedaara
+  - Blume
+  notes: Tier-2 beauty leader; owned brands over half of sales.
+- brand: Shopify
+  entity: Shopify Inc.
+  hq: Ottawa, Canada
+  founded: 2006
+  ownership: listed
+  ticker: SHOP
+  sec_cik: 1594805
+  wikipedia: Shopify
+  notes: Powers most Indian D2C storefronts the radar reads; India pricing in rupees since 2024.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 8880
+    currency: USD
+    unit: million
+    source: SEC 40-F
+    confidence: filing
+- brand: Alibaba
+  entity: Alibaba Group Holding Ltd.
+  hq: Hangzhou, China
+  founded: 1999
+  ownership: listed
+  ticker: BABA
+  sec_cik: 1577552
+  wikipedia: Alibaba Group
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 996347
+    currency: CNY
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Shein
+  entity: Roadget Business Pte. Ltd.
+  hq: Singapore
+  founded: 2008
+  ownership: private
+  wikipedia: Shein
+  investors:
+  - Sequoia China
+  - General Atlantic
+  - Mubadala
+  notes: Back in India since Feb 2025 through Reliance Retail under a licence deal.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 38000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Temu
+  entity: PDD Holdings Inc.
+  hq: Dublin / Shanghai
+  founded: 2022
+  ownership: listed
+  ticker: PDD
+  sec_cik: 1737806
+  wikipedia: Temu
+  notes: Not in India yet; de-minimis rule changes in the US and EU set its expansion.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 393836
+    currency: CNY
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Shopee
+  entity: Sea Ltd.
+  hq: Singapore
+  founded: 2015
+  ownership: listed
+  ticker: SE
+  sec_cik: 1703399
+  wikipedia: Shopee
+  notes: Exited India in 2022; Southeast Asia's largest marketplace.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 16820
+    currency: USD
+    unit: million
+    source: SEC 20-F
+    confidence: filing
+- brand: Walmart
+  entity: Walmart Inc.
+  hq: Bentonville, United States
+  founded: 1962
+  ownership: listed
+  ticker: WMT
+  sec_cik: 104169
+  wikipedia: Walmart
+  notes: Owns about 80% of Flipkart and PhonePe; $10B/yr India sourcing target.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 680985
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

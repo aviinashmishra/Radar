@@ -1,0 +1,556 @@
+# Nazar sector: Health Tech (health). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: health
+label: Health Tech
+sector: 'Health technology and care delivery, India and world: teleconsultation, e-pharmacy, diagnostics, hospital chains, fitness and wellness, health insurance tech, digital health records'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: telehealth
+  name: Teleconsultation & doctor apps
+  show: true
+  keywords: teleconsult|online doctor|video consult|telemedicine|doctor app|e-?consult|practo|apollo 24|mfine|medibuddy
+- key: epharma
+  name: E-pharmacy
+  show: true
+  keywords: e-?pharma|online pharmacy|medicine delivery|prescription|pharmeasy|1mg|netmeds|apollo pharmacy|truemeds|medicines online
+- key: diagnostics
+  name: Diagnostics
+  show: true
+  keywords: lab test|diagnostic|pathology|radiology|health check|full body|blood test|redcliffe|lal pathlabs|metropolis|thyrocare
+- key: hospitals
+  name: Hospitals & clinics
+  show: true
+  keywords: hospital|clinic|\bbeds?\b|\bicu\b|surgery|oncology|cardiac|multi-?speciality|apollo hospitals|max healthcare|fortis|medanta|narayana|manipal
+- key: fitness
+  name: Fitness & wellness
+  show: true
+  keywords: fitness|\bgym\b|wellness|nutrition|diet|yoga|weight loss|glp-?1|ozempic|mounjaro|cult\.fit|healthifyme
+- key: insurtech
+  name: Health insurance tech
+  show: true
+  keywords: health insurance|cashless|claim|\bopd\b|employee health|group health|plum|loop health|onsurity|star health|niva bupa|acko health
+- key: records
+  name: Digital health records & AI
+  show: true
+  keywords: \babha\b|health record|\behr\b|digital health mission|abdm|ai diagnosis|ai scribe|clinical ai|eka care|driefcase
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: World Health Day
+  month: 4
+  day: 7
+- name: Monsoon disease season
+  month: 7
+  day: 15
+- name: Tax-saving insurance quarter
+  month: 1
+  day: 15
+brands:
+- name: Practo
+  origin: Indian
+  tier: core
+  country: India
+  kind: Doctor discovery and teleconsultation
+  segments:
+  - telehealth
+  - records
+  website: https://www.practo.com
+  news_terms:
+  - Practo
+  aliases:
+  - Practo Plus
+  - Practo Ray
+  apps:
+  - com.practo.fabric
+  watch_pages:
+  - https://www.practo.com/
+- name: Tata 1mg
+  origin: Indian
+  tier: core
+  country: India
+  kind: E-pharmacy, diagnostics, teleconsult (Tata)
+  segments:
+  - epharma
+  - diagnostics
+  - telehealth
+  website: https://www.1mg.com
+  news_terms:
+  - Tata 1mg
+  - 1mg Tata Digital
+  aliases:
+  - 1mg Labs
+  - Tata 1mg Labs
+  apps:
+  - com.aranoah.healthkart.plus
+  watch_pages:
+  - https://www.1mg.com/
+- name: PharmEasy
+  origin: Indian
+  tier: core
+  country: India
+  kind: E-pharmacy (API Holdings)
+  segments:
+  - epharma
+  - diagnostics
+  website: https://pharmeasy.in
+  news_terms:
+  - PharmEasy
+  - API Holdings
+  aliases:
+  - API Holdings
+  - Thyrocare
+  - Docon
+  - Retailio
+  - Aknamed
+  apps:
+  - com.phonegap.rxpal
+- name: Apollo 24|7
+  origin: Indian
+  tier: core
+  country: India
+  kind: Digital health (Apollo HealthCo)
+  segments:
+  - telehealth
+  - epharma
+  - diagnostics
+  website: https://www.apollo247.com
+  news_terms:
+  - Apollo 24/7
+  - Apollo HealthCo
+  - Keimed
+  aliases:
+  - Apollo HealthCo
+  - Apollo Pharmacy
+  - Keimed
+  - Apollo 247
+  apps:
+  - com.apollo.patientapp
+  watch_pages:
+  - https://www.apollo247.com/
+- name: Netmeds
+  origin: Indian
+  tier: core
+  country: India
+  kind: E-pharmacy (Reliance)
+  segments:
+  - epharma
+  website: https://www.netmeds.com
+  news_terms:
+  - Netmeds
+  aliases:
+  - Netmeds First
+  apps:
+  - com.NetmedsMarketplace.Netmeds
+- name: Truemeds
+  origin: Indian
+  tier: core
+  country: India
+  kind: Generic-substitution e-pharmacy
+  segments:
+  - epharma
+  website: https://www.truemeds.in
+  news_terms:
+  - Truemeds
+- name: MediBuddy
+  origin: Indian
+  tier: core
+  country: India
+  kind: Corporate health benefits and teleconsult
+  segments:
+  - telehealth
+  - insurtech
+  website: https://www.medibuddy.in
+  news_terms:
+  - MediBuddy
+  apps:
+  - com.medibuddy
+- name: HealthifyMe
+  origin: Indian
+  tier: core
+  country: India
+  kind: Nutrition and fitness app
+  segments:
+  - fitness
+  website: https://www.healthifyme.com
+  news_terms:
+  - HealthifyMe
+  aliases:
+  - Ria AI coach
+  - Healthify Snap
+  apps:
+  - com.healthifyme.basic
+  watch_pages:
+  - https://www.healthifyme.com/
+- name: cult.fit
+  origin: Indian
+  tier: core
+  country: India
+  kind: Fitness chain and app
+  segments:
+  - fitness
+  website: https://www.cult.fit
+  news_terms:
+  - cult.fit
+  - Curefit
+  aliases:
+  - Curefit
+  - Cultsport
+  - Cult Transform
+  - Cult Pass
+  apps:
+  - fit.cure.android
+  watch_pages:
+  - https://www.cult.fit/
+- name: Eka Care
+  origin: Indian
+  tier: core
+  country: India
+  kind: Health records and clinic software
+  segments:
+  - records
+  - telehealth
+  website: https://www.eka.care
+  news_terms:
+  - Eka Care
+  aliases:
+  - Eka.Care
+  - Orbi Health
+- name: Plum
+  origin: Indian
+  tier: core
+  country: India
+  kind: Employee health insurance
+  segments:
+  - insurtech
+  website: https://www.plumhq.com
+  news_terms:
+  - Plum insurance startup
+  aliases:
+  - Plum Benefits
+  - PlumHQ
+  exclude:
+  - plum fruit
+  - Plum Goodness
+  - plum cake
+  - sugar plum
+  - plum pudding
+  ambiguous: true
+- name: Apollo Hospitals
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hospital chain
+  segments:
+  - hospitals
+  - diagnostics
+  - epharma
+  website: https://www.apollohospitals.com
+  news_terms:
+  - Apollo Hospitals Enterprise
+  aliases:
+  - Apollo Hospitals Enterprise
+  - Apollo Diagnostics
+  - AHLL
+  - Apollo Proton
+  exclude:
+  - Apollo 11
+  - Apollo Tyres
+  - Apollo Global
+  - Apollo moon
+  - Apollo Micro
+  watch_pages:
+  - https://www.apollohospitals.com/
+- name: Max Healthcare
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hospital chain
+  segments:
+  - hospitals
+  - diagnostics
+  website: https://www.maxhealthcare.in
+  news_terms:
+  - Max Healthcare
+  aliases:
+  - Max Lab
+  - Max@Home
+  - Max Healthcare Institute
+  exclude:
+  - Max Life
+  - Max Fashion
+  - Max Financial
+  - Max Verstappen
+- name: Fortis
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hospital chain (IHH)
+  segments:
+  - hospitals
+  - diagnostics
+  website: https://www.fortishealthcare.com
+  news_terms:
+  - Fortis Healthcare
+  aliases:
+  - Fortis Healthcare
+  - Agilus Diagnostics
+  - SRL
+  exclude:
+  - Fortis Bank
+  - Fortis Inc
+- name: Narayana Health
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hospital chain
+  segments:
+  - hospitals
+  - insurtech
+  website: https://www.narayanahealth.org
+  news_terms:
+  - Narayana Health
+  - Narayana Hrudayalaya
+  aliases:
+  - Narayana Hrudayalaya
+  - Narayana One
+  - Aditi
+- name: Medanta
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hospital chain
+  segments:
+  - hospitals
+  website: https://www.medanta.org
+  news_terms:
+  - Medanta
+  - Global Health Ltd
+  aliases:
+  - Global Health Ltd
+  - Medanta Lucknow
+  - Medanta Noida
+- name: Dr Lal PathLabs
+  origin: Indian
+  tier: core
+  country: India
+  kind: Diagnostics chain
+  segments:
+  - diagnostics
+  website: https://www.lalpathlabs.com
+  news_terms:
+  - Dr Lal PathLabs
+  aliases:
+  - Lal PathLabs
+  - Suburban Diagnostics
+  watch_pages:
+  - https://www.lalpathlabs.com/
+- name: Metropolis
+  origin: Indian
+  tier: core
+  country: India
+  kind: Diagnostics chain
+  segments:
+  - diagnostics
+  website: https://www.metropolisindia.com
+  news_terms:
+  - Metropolis Healthcare
+  aliases:
+  - Metropolis Healthcare
+  - Core Diagnostics
+  exclude:
+  - Metropolis film
+  - metropolis city
+- name: Redcliffe Labs
+  origin: Indian
+  tier: core
+  country: India
+  kind: Digital-first diagnostics
+  segments:
+  - diagnostics
+  website: https://redcliffelabs.com
+  news_terms:
+  - Redcliffe Labs
+- name: Teladoc
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Virtual care
+  segments:
+  - telehealth
+  website: https://www.teladochealth.com
+  news_terms:
+  - Teladoc Health
+  aliases:
+  - BetterHelp
+  - Livongo
+- name: Hims & Hers
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: DTC telehealth
+  segments:
+  - telehealth
+  - epharma
+  website: https://www.hims.com
+  news_terms:
+  - Hims & Hers Health
+  aliases:
+  - Hims
+  - Hers
+  - Hims & Hers
+- name: Oscar Health
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Tech-first health insurer
+  segments:
+  - insurtech
+  website: https://www.hioscar.com
+  news_terms:
+  - Oscar Health insurer
+  exclude:
+  - Oscar awards
+  - Oscars
+  - Oscar Piastri
+  - Oscar Wilde
+sector_news_terms:
+- health tech India funding
+- e-pharmacy India regulation
+- teleconsultation India
+- hospital chain India acquisition
+- diagnostics chain India
+- health insurance India claims
+- ABDM digital health
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://health.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.mobihealthnews.com/feed
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.fiercehealthcare.com/rss/xml
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://inc42.com/feed/
+  filter: sector
+reddit:
+  subreddits:
+  - india
+  - IndiaFitness
+  - medicine
+  - healthIT
+  searches:
+  - Practo
+  - Tata 1mg
+  - PharmEasy
+  - Apollo 247
+  - cult.fit
+  - HealthifyMe
+  - Netmeds
+  - MediBuddy
+price_bands:
+- 0
+- 200
+- 500
+- 1000
+- 3000
+- 10000
+- 50000
+- 10000000
+youtube_queries:
+- review
+- experience
+search_seeds:
+- '{brand} '
+- '{brand} offer'
+- online doctor consultation
+- medicine delivery app
+- full body checkup price
+vocab:
+  sector: health ?tech|healthcare|hospital|doctor|pharma|pharmacy|medicine|diagnostic|lab test|telemedicine|teleconsult|wellness|fitness|insurance claim|clinic|patient|abdm|abha|practo|1mg|pharmeasy|netmeds|apollo|medibuddy|healthifyme|cult\.fit|curefit|max
+    healthcare|fortis|medanta|narayana|manipal|lal pathlabs|metropolis|thyrocare|redcliffe|teladoc|hims|eka care|plum|onsurity
+  category: health|hospital|doctor|doctors|patient|patients|medicine|pharmacy|diagnostic|lab|test|clinic|consult|insurance|claim|fitness|wellness|\bbeds?\b|surgery|drug|app|users
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|drug regulator|cdsco|dcgi|nmc|irdai|data
+    breach|outbreak|price cap|nppa|hospital acquisition|bed capacity|glp-?1
+  core: hospital|doctor|medicine|pharmacy|diagnostic|health
+  noise: recipe|cricket|celebrity|movie|horoscope|home remedy
+  ambiguous:
+  - Plum
+  - Even
+  - Loop
+  - Cure
+  noise_note: Home remedies, celebrity fitness and generic wellness listicles score 1-3. Regulation (CDSCO, NMC, IRDAI, NPPA), acquisitions, bed and store expansion, pricing, data breaches, funding and
+    results matter most.
+voice_themes:
+- key: doctors
+  rx: doctor|consult|specialist|diagnosis|prescription|advice|time given|rushed
+- key: medicines
+  rx: medicine|delivery|late|wrong|expired|substitute|out of stock|genuine|fake
+- key: price
+  rx: price|discount|expensive|cashback|membership|cost|bill|overcharg|hidden
+- key: app
+  rx: \bapp\b|crash|bug|login|slow|upload|report download|otp
+- key: support
+  rx: support|customer care|refund|cancel|response|complaint|chat|escalat
+- key: lab
+  rx: \blab\b|sample|report|delay|phlebotomist|home collection|accuracy|wrong report
+- key: hospital
+  rx: hospital|staff|nurse|wait|billing|insurance|room|clean|\bicu\b|discharge
+- key: fitness
+  rx: coach|diet|plan|workout|weight|tracking|accuracy|trainer|centre
+world:
+  regulators:
+  - CDSCO / DCGI
+  - NMC
+  - IRDAI
+  - NPPA
+  - NHA (ABDM)
+  trackers:
+  - IQVIA
+  - Pharmarack
+  - Tracxn
+  - IRDAI monthly premium data
+  watch_events:
+  - Union Budget health outlay (1 Feb)
+  - IRDAI quarterly data
+  - Monsoon season (Jul-Sep)
+  - Hospital quarterly results
+perspective: ''

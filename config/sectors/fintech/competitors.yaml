@@ -1,0 +1,782 @@
+# Nazar sector: Fintech (fintech). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: fintech
+label: Fintech
+sector: 'Fintech, India and world: UPI and payments, lending and BNPL, broking and wealth, insurance, neobanks, payments infrastructure, crypto, remittances'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: upi
+  name: UPI & consumer payments
+  show: true
+  keywords: \bupi\b|payments? app|wallet|qr code|merchant payment|soundbox|bbps|tap to pay|credit on upi|rupay
+- key: lending
+  name: Lending & BNPL
+  show: true
+  keywords: \bloan|lending|credit line|bnpl|pay later|\bemi\b|credit card|nbfc|personal loan|co-?lending
+- key: wealth
+  name: Broking & wealth
+  show: true
+  keywords: broker|broking|trading app|mutual fund|\bsip\b|demat|stock trading|f&o|wealth|active clients|etf
+- key: insurance
+  name: Insurtech
+  show: true
+  keywords: insurance|insurtech|policy|premium|motor insurance|health insurance|term plan
+- key: neobank
+  name: Neobanks
+  show: true
+  keywords: neo-?bank|savings account|salary account|digital bank|credit card for
+- key: infra
+  name: Payments infrastructure
+  show: true
+  keywords: payment gateway|\bpos\b|acquiring|merchant acquiring|banking-as-a-service|baas|card issuing|payouts|payment aggregator|\bpa licence
+- key: crypto
+  name: Crypto & web3
+  show: true
+  keywords: crypto|bitcoin|ethereum|exchange|web3|stablecoin|vda\b|tds on crypto
+- key: remit
+  name: Cross-border & forex
+  show: true
+  keywords: remittance|cross-?border|forex|international transfer|lrs\b|forex card
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: RBI monetary policy (Feb)
+  month: 2
+  day: 7
+- name: RBI monetary policy (Apr)
+  month: 4
+  day: 9
+- name: RBI monetary policy (Jun)
+  month: 6
+  day: 6
+- name: RBI monetary policy (Aug)
+  month: 8
+  day: 6
+- name: RBI monetary policy (Oct)
+  month: 10
+  day: 1
+- name: RBI monetary policy (Dec)
+  month: 12
+  day: 5
+- name: Global Fintech Fest
+  month: 10
+  day: 7
+brands:
+- name: PhonePe
+  origin: Indian
+  tier: core
+  country: India
+  kind: Payments super-app
+  segments:
+  - upi
+  - lending
+  - wealth
+  - insurance
+  - infra
+  website: https://www.phonepe.com
+  news_terms:
+  - PhonePe
+  - PhonePe IPO
+  aliases:
+  - Indus Appstore
+  - Pincode
+  - Share.Market
+  - PhonePe Payment Gateway
+  apps:
+  - com.phonepe.app
+  watch_pages:
+  - https://www.phonepe.com/business-solutions/
+- name: Google Pay
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Payments app (Alphabet)
+  segments:
+  - upi
+  - lending
+  website: https://pay.google.com/intl/en_in/about/
+  news_terms:
+  - Google Pay India UPI
+  aliases:
+  - GPay
+  - Tez
+  apps:
+  - com.google.android.apps.nbu.paisa.user
+- name: Paytm
+  origin: Indian
+  tier: core
+  country: India
+  kind: Payments and financial services
+  segments:
+  - upi
+  - lending
+  - wealth
+  - infra
+  - insurance
+  website: https://paytm.com
+  news_terms:
+  - Paytm
+  - One97 Communications
+  aliases:
+  - One97
+  - Paytm Money
+  - Paytm Payments Bank
+  - Soundbox
+  - Paytm First Games
+  apps:
+  - net.one97.paytm
+  watch_pages:
+  - https://business.paytm.com/
+- name: Razorpay
+  origin: Indian
+  tier: core
+  country: India
+  kind: Payments infrastructure
+  segments:
+  - infra
+  - lending
+  - neobank
+  website: https://razorpay.com
+  news_terms:
+  - Razorpay
+  aliases:
+  - RazorpayX
+  - Razorpay POS
+  - Ezetap
+  - Curlec
+  watch_pages:
+  - https://razorpay.com/pricing/
+- name: CRED
+  origin: Indian
+  tier: core
+  country: India
+  kind: Credit-card payments and lending app
+  segments:
+  - upi
+  - lending
+  - wealth
+  website: https://cred.club
+  news_terms:
+  - CRED app
+  - CRED Kunal Shah
+  aliases:
+  - CRED Mint
+  - CRED Pay
+  - Dreamplug
+  - CRED Money
+  - CRED Garage
+  exclude:
+  - street cred
+  - credibility
+  apps:
+  - com.dreamplug.androidapp
+  watch_pages:
+  - https://cred.club/
+  ambiguous: true
+- name: Groww
+  origin: Indian
+  tier: core
+  country: India
+  kind: Investing and broking app
+  segments:
+  - wealth
+  - upi
+  - lending
+  website: https://groww.in
+  news_terms:
+  - Groww
+  - Billionbrains Garage
+  aliases:
+  - Billionbrains
+  - Groww Mutual Fund
+  - W by Groww
+  apps:
+  - com.nextbillion.groww
+  watch_pages:
+  - https://groww.in/pricing
+- name: Zerodha
+  origin: Indian
+  tier: core
+  country: India
+  kind: Discount broker
+  segments:
+  - wealth
+  website: https://zerodha.com
+  news_terms:
+  - Zerodha
+  - Nithin Kamath
+  aliases:
+  - Kite
+  - Coin by Zerodha
+  - Rainmatter
+  - Zerodha Fund House
+  apps:
+  - com.zerodha.kite3
+  watch_pages:
+  - https://zerodha.com/charges/
+- name: Upstox
+  origin: Indian
+  tier: core
+  country: India
+  kind: Discount broker
+  segments:
+  - wealth
+  website: https://upstox.com
+  news_terms:
+  - Upstox
+  - RKSV Securities
+  aliases:
+  - RKSV
+  - Upstox Pro
+  apps:
+  - in.upstox.app
+  watch_pages:
+  - https://upstox.com/pricing/
+- name: Angel One
+  origin: Indian
+  tier: core
+  country: India
+  kind: Full-service turned digital broker
+  segments:
+  - wealth
+  - lending
+  website: https://www.angelone.in
+  news_terms:
+  - Angel One
+  aliases:
+  - Angel Broking
+  - Angel One Super App
+  apps:
+  - com.msf.angelmobile
+  watch_pages:
+  - https://www.angelone.in/pricing
+- name: Policybazaar
+  origin: Indian
+  tier: core
+  country: India
+  kind: Insurance and credit marketplace
+  segments:
+  - insurance
+  - lending
+  website: https://www.policybazaar.com
+  news_terms:
+  - Policybazaar
+  - PB Fintech
+  aliases:
+  - PB Fintech
+  - Paisabazaar
+  - PB Partners
+  - PB Health
+  apps:
+  - com.policybazaar
+  watch_pages:
+  - https://www.policybazaar.com/
+- name: MobiKwik
+  origin: Indian
+  tier: core
+  country: India
+  kind: Payments and credit app
+  segments:
+  - upi
+  - lending
+  - wealth
+  website: https://www.mobikwik.com
+  news_terms:
+  - MobiKwik
+  - One MobiKwik Systems
+  aliases:
+  - Zaakpay
+  - Zip EMI
+  - Lens
+  apps:
+  - com.mobikwik_new
+- name: Navi
+  origin: Indian
+  tier: core
+  country: India
+  kind: Lending, UPI and asset management
+  segments:
+  - lending
+  - upi
+  - wealth
+  - insurance
+  website: https://navi.com
+  news_terms:
+  - Navi Technologies
+  - Navi Sachin Bansal
+  aliases:
+  - Navi Finserv
+  - Navi Mutual Fund
+  - Navi UPI
+  exclude:
+  - Navi Mumbai
+  - Navi Peth
+  - navigation
+  apps:
+  - com.naviapp
+  watch_pages:
+  - https://navi.com/
+  ambiguous: true
+- name: Jupiter
+  origin: Indian
+  tier: core
+  country: India
+  kind: Neobank
+  segments:
+  - neobank
+  - upi
+  - lending
+  website: https://jupiter.money
+  news_terms:
+  - Jupiter neobank
+  - Jupiter Money
+  aliases:
+  - Jupiter Money
+  - Amica Financial
+  - Jupiter Edge card
+  exclude:
+  - planet Jupiter
+  - Jupiter Wagons
+  - Jupiter Life
+  - TVS Jupiter
+  - NASA Jupiter
+  apps:
+  - money.jupiter
+  ambiguous: true
+- name: Fi Money
+  origin: Indian
+  tier: core
+  country: India
+  kind: Neobank
+  segments:
+  - neobank
+  - wealth
+  website: https://fi.money
+  news_terms:
+  - Fi Money neobank
+  aliases:
+  - epiFi
+  - Fi Money
+  exclude:
+  - wi-fi
+  - hi-fi
+  - sci-fi
+  ambiguous: true
+- name: slice
+  origin: Indian
+  tier: core
+  country: India
+  kind: Small-finance bank (merged with NESFB)
+  segments:
+  - neobank
+  - lending
+  - upi
+  website: https://sliceit.com
+  news_terms:
+  - slice fintech bank
+  - slice NESFB
+  aliases:
+  - slice bank
+  - Slice Small Finance Bank
+  - North East Small Finance Bank
+  - GaragePreneurs
+  exclude:
+  - pizza slice
+  - slice of life
+  - cake slice
+  - slice juice
+  apps:
+  - indwin.c3.shareapp
+  ambiguous: true
+- name: BharatPe
+  origin: Indian
+  tier: core
+  country: India
+  kind: Merchant payments and lending
+  segments:
+  - upi
+  - lending
+  - infra
+  website: https://bharatpe.com
+  news_terms:
+  - BharatPe
+  aliases:
+  - PostPe
+  - Trillion Loans
+  - Unity Small Finance Bank
+  - Invest BharatPe
+  watch_pages:
+  - https://bharatpe.com/
+- name: Pine Labs
+  origin: Indian
+  tier: core
+  country: India
+  kind: Merchant payments platform
+  segments:
+  - infra
+  - lending
+  website: https://www.pinelabs.com
+  news_terms:
+  - Pine Labs
+  aliases:
+  - Plural
+  - Qwikcilver
+  - Setu
+  - Fave
+  watch_pages:
+  - https://www.pinelabs.com/
+- name: Stripe
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Payments infrastructure
+  segments:
+  - infra
+  website: https://stripe.com/in
+  news_terms:
+  - Stripe payments India
+  - Stripe fintech
+  aliases:
+  - Stripe Atlas
+  - Stripe Terminal
+  - Bridge stablecoin
+  exclude:
+  - zebra stripe
+  - racing stripe
+  - stripe pattern
+  - candy stripe
+  - white stripes
+  watch_pages:
+  - https://stripe.com/in/pricing
+  ambiguous: true
+- name: Adyen
+  origin: Global
+  tier: adjacent
+  country: Netherlands
+  kind: Payments platform
+  segments:
+  - infra
+  website: https://www.adyen.com
+  news_terms:
+  - Adyen India
+  - Adyen payments
+  watch_pages:
+  - https://www.adyen.com/pricing
+- name: PayPal
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Payments
+  segments:
+  - infra
+  - remit
+  - upi
+  website: https://www.paypal.com/in
+  news_terms:
+  - PayPal India
+  - PayPal UPI
+  aliases:
+  - Venmo
+  - Braintree
+  - PayPal World
+  - PYUSD
+  apps:
+  - com.paypal.android.p2pmobile
+  watch_pages:
+  - https://newsroom.paypal-corp.com/
+- name: Block
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Payments and consumer finance
+  segments:
+  - infra
+  - upi
+  - crypto
+  website: https://block.xyz
+  news_terms:
+  - Block Jack Dorsey
+  - Cash App Square
+  aliases:
+  - Cash App
+  - Square
+  - Afterpay
+  - TIDAL
+  - Bitkey
+  exclude:
+  - blockchain
+  - block party
+  - roadblock
+  - city block
+  - block deal
+  - block trade
+  - H&R Block
+  ambiguous: true
+- name: Revolut
+  origin: Global
+  tier: adjacent
+  country: United Kingdom
+  kind: Neobank
+  segments:
+  - neobank
+  - remit
+  - crypto
+  website: https://www.revolut.com/en-IN/
+  news_terms:
+  - Revolut India
+  - Revolut bank
+  apps:
+  - com.revolut.revolut
+  watch_pages:
+  - https://www.revolut.com/en-IN/
+- name: Wise
+  origin: Global
+  tier: adjacent
+  country: United Kingdom
+  kind: Cross-border payments
+  segments:
+  - remit
+  website: https://wise.com/in
+  news_terms:
+  - Wise remittance India
+  - Wise payments
+  aliases:
+  - TransferWise
+  - Wise Platform
+  exclude:
+  - wise men
+  - otherwise
+  - likewise
+  - wise words
+  - wise guy
+  apps:
+  - com.transferwise.android
+  watch_pages:
+  - https://wise.com/in/pricing/
+  ambiguous: true
+- name: Nubank
+  origin: Global
+  tier: adjacent
+  country: Brazil
+  kind: Digital bank
+  segments:
+  - neobank
+  - lending
+  website: https://nubank.com.br
+  news_terms:
+  - Nubank
+  aliases:
+  - Nu Holdings
+  - NuBank
+  apps:
+  - com.nu.production
+- name: Coinbase
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Crypto exchange
+  segments:
+  - crypto
+  website: https://www.coinbase.com
+  news_terms:
+  - Coinbase India
+  - Coinbase crypto
+  aliases:
+  - Base chain
+  - Coinbase Prime
+  apps:
+  - com.coinbase.android
+- name: Robinhood
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Retail broker
+  segments:
+  - wealth
+  - crypto
+  website: https://robinhood.com
+  news_terms:
+  - Robinhood broker
+  apps:
+  - com.robinhood.android
+- name: Klarna
+  origin: Global
+  tier: adjacent
+  country: Sweden
+  kind: BNPL
+  segments:
+  - lending
+  website: https://www.klarna.com
+  news_terms:
+  - Klarna BNPL
+- name: Affirm
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: BNPL
+  segments:
+  - lending
+  website: https://www.affirm.com
+  news_terms:
+  - Affirm BNPL
+  exclude:
+  - affirmation
+  - affirmed
+  - reaffirm
+  ambiguous: true
+sector_news_terms:
+- UPI transactions NPCI
+- fintech funding India
+- RBI fintech
+- digital lending India
+- broking app active clients
+- payment aggregator licence
+- neobank India
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://www.finextra.com/rss/headlines.aspx
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.fintechfutures.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://bfsi.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://inc42.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://entrackr.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.medianama.com/feed/
+  filter: sector
+reddit:
+  subreddits:
+  - IndiaInvestments
+  - fintech
+  - IndianStreetBets
+  - CryptoIndia
+  - personalfinanceindia
+  searches:
+  - PhonePe
+  - Paytm
+  - CRED
+  - Groww
+  - Zerodha
+  - Razorpay
+  - Jupiter money
+  - slice card
+price_bands:
+- 0
+- 100
+- 500
+- 1000
+- 5000
+- 20000
+- 100000
+- 100000000
+youtube_queries:
+- review
+- explained
+search_seeds:
+- '{brand} '
+- '{brand} charges'
+- best upi app
+- best trading app
+- instant loan app
+- credit card for
+vocab:
+  sector: fintech|\bupi\b|payments?|wallet|lending|loan|bnpl|broking|broker|demat|mutual fund|insurtech|neo-?bank|payment gateway|npci|\brbi\b|sebi|irdai|crypto|remittance|paytm|phonepe|google pay|gpay|razorpay|\bcred\b|groww|zerodha|upstox|angel
+    one|policybazaar|mobikwik|navi|jupiter|\bfi\b money|slice|bharatpe|pine labs|stripe|adyen|paypal|block\b|square|revolut|nubank|affirm|robinhood|coinbase|wise\b|klarna|ant group|visa|mastercard
+  category: fintech|\bupi\b|payment|wallet|loan|lending|credit|card|bank|broking|trading|demat|mutual fund|insurance|crypto|\bnbfc\b|merchant|\bqr\b|cashback|\brbi\b|npci|sebi|kyc|fraud|settlement|transaction|app|users|gmv|tpv
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|rbi (bars|bans|fines|penal|approves|licen)|licence|license|data
+    breach|outage|fraud|npci cap|mdr|interchange|zero fee
+  core: \bupi\b|payment|loan|broking|trading|credit
+  noise: recipe|cricket score|movie|song|astrolog|stock tip|multibagger|pump|airdrop giveaway
+  ambiguous:
+  - Jupiter
+  - Slice
+  - Fi
+  - CRED
+  - Navi
+  - Block
+  - Wise
+  - Affirm
+  - Stripe
+  - Square
+  noise_note: Stock tips, crypto pump posts and generic personal-finance explainers score 1-3. RBI/NPCI/SEBI actions, outages, fraud, fee changes, licences, funding and results matter most.
+voice_themes:
+- key: reliability
+  rx: failed|pending|stuck|declined|server|\bdown\b|outage|error|glitch|crash|not working
+- key: security
+  rx: fraud|scam|unauthori|\botp\b|hack|security|phishing|blocked|kyc|freeze|frozen
+- key: fees
+  rx: \bfee\b|fees|charge|brokerage|interest|hidden|penalty|convenience fee|annual fee|mdr
+- key: support
+  rx: support|customer care|chat|\bbot\b|response|ticket|helpline|resolution|escalat
+- key: ux
+  rx: \bapp\b|\bui\b|interface|slow|lag|login|design|easy|smooth|clean
+- key: rewards
+  rx: cashback|reward|coin|points|offer|scratch card|voucher|gift
+- key: credit
+  rx: credit limit|loan|approval|rejected|cibil|score|\bemi\b|repayment|interest rate|sanction
+- key: payouts
+  rx: settlement|payout|withdraw|refund|transfer|days|t\+1|bank account|not credited
+world:
+  regulators:
+  - RBI
+  - NPCI
+  - SEBI
+  - IRDAI
+  - FIU-IND
+  trackers:
+  - NPCI monthly UPI data
+  - SEBI/NSE active clients
+  - Tracxn
+  - Inc42 funding reports
+  watch_events:
+  - NPCI UPI data (1st of month)
+  - RBI MPC (bi-monthly)
+  - Global Fintech Fest (Oct)
+  - Budget (1 Feb)
+perspective: ''

@@ -13,7 +13,7 @@ const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>[...r.querySelect
 const base=()=>(location.hash.replace(/^#\/?/,"").split("/")[0]||"today");
 
 /* ---------- 1. folding long lists ---------- */
-const FOLDS=[["#acts",".act",6,"actions"],["#sigs",".act",5,"signals"],["#stories",".story",10,"stories"],["#rows",".fr",50,"changes"],["#t-tl",".fr",40,"events"],
+const FOLDS=[["#acts",".act",6,"actions"],["#sigs",".act",5,"signals"],["#stories",".story",10,"stories"],["#rows",".fr",50,"changes"],["#t-tl",".fr",40,"events"],["#segpulse",".fr",15,"events"],
              ["#t-nw .card",".story",8,"stories"],["h2 + .grid.g2",".card",8,"brands"],["#vlist",".xq",40,"items"],["#t-rv .card",".xq",8,"quotes"],
              [".grid",".card:has(> .answer)",2,"older briefs"]];
 /* long written text (briefs, reports, AI reads) clamps to a readable height with "read more" */

@@ -52,6 +52,11 @@ def run_tier(tier: str) -> dict:
             log.info("collector %s starting", name)
             counts[name] = m.run()
             log.info("collector %s -> %s new events", name, counts[name])
+            # a first sweep of a new sector lands thousands of headlines before the tier ends: score as we go so the
+            # dashboard shows moves within minutes instead of after the whole tier (same total work, earlier)
+            if (db.q1("SELECT COUNT(*) c FROM events WHERE enriched=0") or {}).get("c", 0) >= 100:
+                while enrich.enrich_pending():
+                    pass
         post = post_process()
         db.kv_set(f"last_run:{tier}", {"at": db.now(), "counts": counts, **post, "seconds": round(time.time() - t0)})
         return {"tier": tier, "counts": counts, **post, "seconds": round(time.time() - t0)}

@@ -38,7 +38,7 @@ THEMES = [
     ("water",     r"water|sweat|swim|shower|ip6|ip67|ip68|resist"),
     ("features",  r"feature|function|mode|gesture|voice assist|alexa|siri|nfc|payment|call(ing)? feature|menstr|stress|hrv|recovery|readiness"),
 ]
-_THEME_RX = [(t, re.compile(rx, re.I)) for t, rx in THEMES]
+_THEME_RX = [(t, re.compile(rx, re.I)) for t, rx in (settings.voice_themes or THEMES)]  # a sector can bring its own themes
 POS = re.compile(r"\b(love|loved|loving|great|awesome|excellent|amazing|perfect|best|good|nice|superb|fantastic|brilliant|happy|satisfied|"
                  r"recommend|worth|impressed|accurate|smooth|fast|premium|solid|comfortable|value for money|mast|badhiya|bad(h)?iya|"
                  r"achha|accha|acha|zabardast|kamaal|paisa vasool|shandaar|op\b|🔥|❤|👍|😍)\b|🔥|❤|👍|😍", re.I)
@@ -193,9 +193,10 @@ def appstore_reviews(app_id: int, page: int = 1) -> list[dict]:
 
 
 def run_appstore() -> int:
+    from . import resolve
     n = 0
     for b in settings.brands:
-        for app_id in (settings.company(b.name).get("ios") or []):
+        for app_id in resolve.ids(b.name)["ios"]:
             for page in (1, 2):
                 try:
                     revs = appstore_reviews(int(app_id), page)
@@ -244,9 +245,10 @@ def play_reviews(package: str, count: int = 40, token: str | None = None) -> tup
 
 
 def run_play() -> int:
+    from . import resolve
     n = 0
     for b in settings.brands:
-        for pkg in b.apps:
+        for pkg in resolve.ids(b.name)["apps"]:
             try:
                 revs, _ = play_reviews(pkg)
             except Exception as e:  # noqa: BLE001

@@ -1,6 +1,7 @@
 """One-command launcher: `python run.py`
 
-Starts the radar server, waits until it answers, then opens the dashboard in your browser.
+Starts Nazar (every sector radar in one process, hub on top), waits until it answers, then opens it in your browser.
+`python run.py --radar` starts only the Pebble IoT radar (the original single-sector server).
 Picks the next free port if 8080 is busy. Works from any folder.
 """
 from __future__ import annotations
@@ -37,7 +38,9 @@ def free_port(start: int) -> int:
     return start
 
 
-PORT = int(os.environ.get("RADAR_PORT") or free_port(8080))
+RADAR_ONLY = "--radar" in sys.argv
+PORT = int(os.environ.get("NAZAR_PORT") or os.environ.get("RADAR_PORT") or free_port(8080))
+os.environ["NAZAR_PORT"] = str(PORT)
 URL = f"http://127.0.0.1:{PORT}"
 
 
@@ -46,10 +49,11 @@ def open_when_ready() -> None:
     for _ in range(120):
         time.sleep(1)
         try:
-            with urllib.request.urlopen(f"{URL}/api/health", timeout=2) as r:
+            with urllib.request.urlopen(f"{URL}/{'api' if RADAR_ONLY else 'nazar/api'}/health", timeout=2) as r:
                 if r.status == 200:
                     print(f"\nDashboard: {URL}\n")
-                    webbrowser.open(URL)
+                    if not os.environ.get("NAZAR_RESTARTED"):
+                        webbrowser.open(URL)
                     return
         except Exception:  # noqa: BLE001
             continue
@@ -59,9 +63,9 @@ def open_when_ready() -> None:
 if __name__ == "__main__":
     import uvicorn
     threading.Thread(target=open_when_ready, daemon=True).start()
-    print(f"Starting Pebble Competitor Radar on {URL} (Ctrl+C to stop)")
+    print(f"Starting {'Pebble Competitor Radar' if RADAR_ONLY else 'Nazar (all sectors)'} on {URL} (Ctrl+C to stop)")
     try:
-        uvicorn.run("radar.server:app", host="127.0.0.1", port=PORT, log_level="info")
+        uvicorn.run("radar.server:app" if RADAR_ONLY else "nazar.server:app", host="127.0.0.1", port=PORT, log_level="info")
     except Exception as e:  # noqa: BLE001
         print(f"\nFAILED: {e}")
         input("Press Enter to close...")

@@ -1,0 +1,131 @@
+# Nazar sector: Fintech. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- NPCI monthly UPI statistics
+- NSE / SEBI active-client data
+- RBI payments system reports
+- Company filings and press
+segments:
+  upi:
+    name: UPI (annual value)
+    units_m: 220000
+    growth_pct: 35
+    asp_inr: 1200
+    value_cr: 26400000
+    trend: About 20 billion transactions a month; duopoly of PhonePe and Google Pay, Paytm third, Navi and CRED rising.
+    confidence: estimate
+    shares_pct:
+      PhonePe: 46
+      Google Pay: 36
+      Paytm: 7
+      Navi: 3
+      CRED: 2
+      MobiKwik: 1
+  lending:
+    name: Digital lending (disbursed)
+    units_m: 120
+    growth_pct: 25
+    asp_inr: 12500
+    value_cr: 150000
+    trend: RBI tightened unsecured credit in 2024-25; fintechs shifted to co-lending and secured products.
+    confidence: estimate
+    shares_pct:
+      Paytm: 6
+      Navi: 7
+      CRED: 4
+      MobiKwik: 3
+      slice: 3
+      PhonePe: 3
+      BharatPe: 2
+  wealth:
+    name: Retail broking revenue
+    units_m: 50
+    growth_pct: 15
+    asp_inr: 8000
+    value_cr: 40000
+    trend: Groww passed Zerodha on active clients; SEBI's F&O curbs cut industry volumes.
+    confidence: estimate
+    shares_pct:
+      Groww: 26
+      Zerodha: 16
+      Angel One: 15
+      Upstox: 6
+      Paytm: 2
+      PhonePe: 1
+  insurance:
+    name: Insurtech premium (online)
+    units_m: 40
+    growth_pct: 30
+    asp_inr: 7500
+    value_cr: 30000
+    trend: Policybazaar dominant; digital insurers (Acko, Digit) and PhonePe pushing embedded insurance.
+    confidence: estimate
+    shares_pct:
+      Policybazaar: 65
+      PhonePe: 5
+      Paytm: 3
+      Navi: 2
+  neobank:
+    name: Neobanks (revenue)
+    units_m: 15
+    growth_pct: 40
+    asp_inr: 3300
+    value_cr: 5000
+    trend: slice became a bank; Jupiter and Fi chase lending and wealth revenue.
+    confidence: estimate
+    shares_pct:
+      Jupiter: 20
+      Fi Money: 20
+      slice: 20
+      Revolut: 2
+  infra:
+    name: Payment aggregator TPV
+    units_m: 15000
+    growth_pct: 25
+    asp_inr: 1300
+    value_cr: 2000000
+    trend: Razorpay, PayU and Cashfree hold online; Pine Labs and Paytm hold POS; Stripe and Adyen are invite-only.
+    confidence: estimate
+    shares_pct:
+      Razorpay: 25
+      Paytm: 15
+      PhonePe: 10
+      Pine Labs: 8
+      BharatPe: 3
+      Stripe: 3
+      Adyen: 2
+      PayPal: 2
+  crypto:
+    name: Crypto trading (revenue)
+    units_m: 20
+    growth_pct: 10
+    asp_inr: 10000
+    value_cr: 20000
+    trend: 30% tax and 1% TDS pushed volume offshore; global exchanges re-registering with FIU-IND.
+    confidence: estimate
+    shares_pct:
+      Coinbase: 3
+      Block: 1
+      Robinhood: 1
+  remit:
+    name: Cross-border & forex (flows)
+    units_m: 60
+    growth_pct: 15
+    asp_inr: 25000
+    value_cr: 150000
+    trend: India is the largest remittance receiver; outbound LRS flows grow with education and travel.
+    confidence: estimate
+    shares_pct:
+      Wise: 8
+      PayPal: 5
+      Revolut: 1
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

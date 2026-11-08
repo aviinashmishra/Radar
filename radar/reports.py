@@ -80,9 +80,10 @@ def gather(kind: str, period: str | None = None) -> dict:
          "signals": signals, "benchmark": _try(analytics.benchmark, []), "whitespace_gaps": [k for k, v in (_try(analytics.whitespace, {"cells": {}})["cells"]).items() if v.get("gap")][:10],
          "winners": _try(lambda: analytics.winners(10), []), "channels": _try(lambda: ch.matrix(7 if kind == "daily" else 30), None),
          "parity": _try(ch.parity, []), "voice": _try(lambda: vz.summary(max(7, days)), None), "regions": _try(lambda: rg.overview(max(30, days)), None)}
-    g["news"] = _try(lambda: __import__("radar.newsintel", fromlist=["overview"]).overview(max(7, min(days, 90))), None)
-    g["finance"] = _try(lambda: __import__("radar.finance", fromlist=["peers"]).peers(), None)
-    mk = _try(lambda: __import__("radar.market", fromlist=["sizes"]), None)
+    from . import newsintel, finance, market as mk_mod
+    g["news"] = _try(lambda: newsintel.overview(max(7, min(days, 90))), None)
+    g["finance"] = _try(lambda: finance.peers(), None)
+    mk = mk_mod
     g["market"] = _try(lambda: mk.sizes(), None) if mk else None
     g["pressure"] = _try(lambda: mk.pressure(max(7, min(days, 90))), None) if mk else None
     g["share_of_signal"] = _try(lambda: mk.share_of_signal(max(7, min(days, 90))), None) if mk else None
@@ -246,7 +247,7 @@ def build(kind: str, period: str | None = None, push: bool = False, ai: bool = T
     if kind not in KINDS:
         raise ValueError(f"kind must be one of {KINDS}")
     g = gather(kind, period)
-    body = render(g)
+    body = settings.localize(render(g)) or ""
     summary = exec_summary(g, body) if ai else None
     if summary:
         body = body.replace("\n\n## 1. Sales", f"\n\n## Executive summary\n{summary.strip()}\n\n## 1. Sales", 1)

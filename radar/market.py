@@ -52,7 +52,7 @@ def segment_of(event: dict) -> str | None:
 
 
 def monthly_segment_revenue(segment: str) -> float:
-    p = _m().get("pebble") or {}
+    p = settings.self_market
     mix = (p.get("segment_mix_pct") or {}).get(segment, 0)
     return float(p.get("revenue_cr") or 0) * CR * mix / 100 / 12
 
@@ -158,7 +158,7 @@ def sizes() -> dict:
         else:
             live[seg]["prices"].append(p["price"])
             live[seg]["brands"].add(p["brand"])
-    pebble = _m().get("pebble") or {}
+    pebble = settings.self_market
     out = []
     for key, s in (_m().get("segments") or {}).items():
         prices = sorted(live[key]["prices"])
@@ -242,7 +242,7 @@ def pressure(days: int = 30) -> dict:
     names = {sg["key"]: sg["name"] for sg in settings.segments}
     # many small moves on the same SKUs add up past what a segment earns: sums are capped at the segment's monthly
     # revenue (risk) and at the segment's monthly market value times the capture rate (upside)
-    total_month = float((_m().get("pebble") or {}).get("revenue_cr") or 0) * CR / 12
+    total_month = float(settings.self_market.get("revenue_cr") or 0) * CR / 12
     cap_share = _a("max_share_at_risk", 0.4)
     for s, v in by_seg.items():
         v["risk"] = min(v["risk"], monthly_segment_revenue(s) * cap_share * 2)

@@ -1,0 +1,565 @@
+# Nazar sector: Travel Tech (travel). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: travel
+label: Travel Tech
+sector: 'Travel technology and mobility, India and world: online travel agencies, airlines, hotels and stays, rail and bus ticketing, experiences, corporate travel'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: flights
+  name: Flights & airlines
+  show: true
+  keywords: flight|airline|airfare|aviation|aircraft|airport|\ba320\b|boeing|airbus|pilot|cabin crew|indigo|air india|akasa
+- key: hotels
+  name: Hotels & stays
+  show: true
+  keywords: hotel|stay|rooms?\b|homestay|hostel|resort|villa|property|check-?in|oyo|airbnb|treebo|fabhotels
+- key: ota
+  name: Online travel agencies
+  show: true
+  keywords: \bota\b|online travel|travel booking|travel app|travel portal|makemytrip|goibibo|cleartrip|easemytrip|yatra|ixigo|booking\.com|agoda|expedia
+- key: rail
+  name: Rail
+  show: true
+  keywords: train|railway|\brail\b|irctc|tatkal|\bpnr\b|vande bharat|confirmtkt|railyatri
+- key: bus
+  name: Bus
+  show: true
+  keywords: bus ticket|intercity bus|\bbuses\b|redbus|abhibus|sleeper bus|volvo bus
+- key: experiences
+  name: Holidays & experiences
+  show: true
+  keywords: holiday package|tour|package|visa|cruise|experience|things to do|pilgrim|wedding travel|thrillophilia|klook
+- key: corporate
+  name: Corporate travel
+  show: true
+  keywords: corporate travel|business travel|expense management|travel management|\btmc\b|mybiz|itilite
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: Summer holiday season
+  month: 4
+  day: 15
+- name: Monsoon off-season
+  month: 7
+  day: 1
+- name: Winter travel peak
+  month: 12
+  day: 10
+brands:
+- name: MakeMyTrip
+  origin: Indian
+  tier: core
+  country: India
+  kind: OTA
+  segments:
+  - ota
+  - flights
+  - hotels
+  - bus
+  website: https://www.makemytrip.com
+  news_terms:
+  - MakeMyTrip
+  - Goibibo
+  aliases:
+  - Goibibo
+  - redBus
+  - MyBiz
+  - MMT
+  - MakeMyTrip Foundation
+  apps:
+  - com.makemytrip
+  - com.goibibo
+  watch_pages:
+  - https://www.makemytrip.com/about-us/
+- name: ixigo
+  origin: Indian
+  tier: core
+  country: India
+  kind: OTA (rail-first)
+  segments:
+  - ota
+  - rail
+  - flights
+  - bus
+  website: https://www.ixigo.com
+  news_terms:
+  - ixigo
+  - Le Travenues
+  aliases:
+  - ConfirmTkt
+  - AbhiBus
+  - Le Travenues
+  - ixigo trains
+  apps:
+  - com.ixigo.train.ixitrain
+  - com.ixigo
+  watch_pages:
+  - https://www.ixigo.com/about/press
+- name: EaseMyTrip
+  origin: Indian
+  tier: core
+  country: India
+  kind: OTA
+  segments:
+  - ota
+  - flights
+  - hotels
+  website: https://www.easemytrip.com
+  news_terms:
+  - EaseMyTrip
+  - Easy Trip Planners
+  aliases:
+  - Easy Trip Planners
+  - EMT
+  apps:
+  - com.easemytrip.android
+  watch_pages:
+  - https://www.easemytrip.com/
+- name: Yatra
+  origin: Indian
+  tier: core
+  country: India
+  kind: OTA (corporate-heavy)
+  segments:
+  - ota
+  - corporate
+  - flights
+  website: https://www.yatra.com
+  news_terms:
+  - Yatra Online
+  aliases:
+  - Yatra Online
+  - Yatra for Business
+  exclude:
+  - Yatra 2 movie
+  - pad yatra
+  - rath yatra
+  - Bharat Jodo Yatra
+  - Amarnath Yatra
+  - Char Dham Yatra
+  - Jagannath
+  ambiguous: true
+- name: Cleartrip
+  origin: Indian
+  tier: core
+  country: India
+  kind: OTA (Flipkart)
+  segments:
+  - ota
+  - flights
+  - hotels
+  website: https://www.cleartrip.com
+  news_terms:
+  - Cleartrip
+  aliases:
+  - Cleartrip for Work
+  - Flipkart travel
+  apps:
+  - com.cleartrip.android
+  watch_pages:
+  - https://www.cleartrip.com/
+  ambiguous: true
+- name: OYO
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hotel aggregator / franchisor
+  segments:
+  - hotels
+  website: https://www.oyorooms.com
+  news_terms:
+  - OYO Rooms
+  - Oravel Stays
+  - OYO IPO
+  aliases:
+  - Oravel Stays
+  - OYO Rooms
+  - PRISM Hospitality
+  - Sunday Hotels
+  - G6 Hospitality
+  - Motel 6
+  - Townhouse
+  apps:
+  - com.oyo.consumer
+  watch_pages:
+  - https://www.oyorooms.com/
+- name: IRCTC
+  origin: Indian
+  tier: core
+  country: India
+  kind: Rail ticketing, catering, tourism (PSU)
+  segments:
+  - rail
+  - experiences
+  website: https://www.irctc.co.in
+  news_terms:
+  - IRCTC
+  aliases:
+  - IRCTC Rail Connect
+  - Tatkal
+  - IRCTC Tourism
+  - Rail Neer
+  - Bharat Gaurav
+  apps:
+  - cris.org.in.prs.ima
+- name: IndiGo
+  origin: Indian
+  tier: core
+  country: India
+  kind: Airline
+  segments:
+  - flights
+  website: https://www.goindigo.in
+  news_terms:
+  - IndiGo airline
+  - InterGlobe Aviation
+  aliases:
+  - InterGlobe Aviation
+  - IndiGo Stretch
+  - 6E
+  - BluChip
+  exclude:
+  - indigo dye
+  - indigo colour
+  - Indigo Paints
+  - Indigo Airlines USA
+  apps:
+  - in.goindigo.android
+  watch_pages:
+  - https://www.goindigo.in/
+- name: Air India
+  origin: Indian
+  tier: core
+  country: India
+  kind: Airline (Tata)
+  segments:
+  - flights
+  website: https://www.airindia.com
+  news_terms:
+  - Air India
+  - Air India Express
+  aliases:
+  - Air India Express
+  - Vistara
+  - Maharaja Club
+  - Tata SIA
+  watch_pages:
+  - https://www.airindia.com/
+- name: Akasa Air
+  origin: Indian
+  tier: core
+  country: India
+  kind: Airline
+  segments:
+  - flights
+  website: https://www.akasaair.com
+  news_terms:
+  - Akasa Air
+  aliases:
+  - SNV Aviation
+  - QP airline
+  watch_pages:
+  - https://www.akasaair.com/
+- name: redBus
+  origin: Indian
+  tier: core
+  country: India
+  kind: Bus ticketing (MakeMyTrip)
+  segments:
+  - bus
+  website: https://www.redbus.in
+  news_terms:
+  - redBus
+  aliases:
+  - redRail
+  - Primo
+  - redBus Pay
+  apps:
+  - in.redbus.android
+- name: Booking.com
+  origin: Global
+  tier: adjacent
+  country: Netherlands
+  kind: OTA group
+  segments:
+  - ota
+  - hotels
+  - flights
+  website: https://www.booking.com
+  news_terms:
+  - Booking Holdings
+  - Booking.com India
+  aliases:
+  - Booking Holdings
+  - Agoda
+  - Priceline
+  - Kayak
+  - OpenTable
+  - Genius
+  apps:
+  - com.booking
+  watch_pages:
+  - https://news.booking.com/
+- name: Agoda
+  origin: Global
+  tier: adjacent
+  country: Singapore
+  kind: OTA (Booking Holdings)
+  segments:
+  - ota
+  - hotels
+  website: https://www.agoda.com
+  news_terms:
+  - Agoda India
+  apps:
+  - com.agoda.mobile.consumer
+  watch_pages:
+  - https://www.agoda.com/press
+- name: Expedia
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: OTA group
+  segments:
+  - ota
+  - hotels
+  - flights
+  website: https://www.expedia.co.in
+  news_terms:
+  - Expedia Group
+  - Hotels.com India
+  aliases:
+  - Hotels.com
+  - Vrbo
+  - Trivago
+  - Expedia Group
+  - One Key
+- name: Airbnb
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Stays and experiences marketplace
+  segments:
+  - hotels
+  - experiences
+  website: https://www.airbnb.co.in
+  news_terms:
+  - Airbnb India
+  aliases:
+  - Airbnb Experiences
+  - Airbnb Services
+  apps:
+  - com.airbnb.android
+  watch_pages:
+  - https://news.airbnb.com/
+- name: Trip.com
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: OTA group
+  segments:
+  - ota
+  - flights
+  - hotels
+  website: https://www.trip.com
+  news_terms:
+  - Trip.com Group
+  - Trip.com India
+  aliases:
+  - Ctrip
+  - Skyscanner
+  - Trip.com Group
+  - Qunar
+  watch_pages:
+  - https://www.trip.com/
+- name: Skyscanner
+  origin: Global
+  tier: adjacent
+  country: United Kingdom
+  kind: Metasearch (Trip.com)
+  segments:
+  - flights
+  - ota
+  website: https://www.skyscanner.co.in
+  news_terms:
+  - Skyscanner India
+- name: Hopper
+  origin: Global
+  tier: adjacent
+  country: Canada
+  kind: Fintech-led travel app
+  segments:
+  - ota
+  - flights
+  website: https://hopper.com
+  news_terms:
+  - Hopper travel app
+  aliases:
+  - Hopper Technology Solutions
+  - Price Freeze
+  - HTS
+  exclude:
+  - grasshopper
+  - Dennis Hopper
+  - bar hopper
+  - hopper car
+  - hopper window
+  - Grace Hopper
+  ambiguous: true
+- name: Thrillophilia
+  origin: Indian
+  tier: core
+  country: India
+  kind: Experiences and tours marketplace
+  segments:
+  - experiences
+  website: https://www.thrillophilia.com
+  news_terms:
+  - Thrillophilia
+  watch_pages:
+  - https://www.thrillophilia.com/
+- name: Treebo
+  origin: Indian
+  tier: core
+  country: India
+  kind: Budget hotel brand
+  segments:
+  - hotels
+  website: https://www.treebo.com
+  news_terms:
+  - Treebo Hotels
+  aliases:
+  - Treebo Hotels
+  - Hotel Superhero
+sector_news_terms:
+- online travel India booking
+- airline India fares
+- hotel bookings India
+- IRCTC ticketing
+- travel tech funding India
+- DGCA airlines
+- tourism India arrivals
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://skift.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.phocuswire.com/rss
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://travel.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+reddit:
+  subreddits:
+  - IndiaTravel
+  - indianrailways
+  - Flights
+  - travel
+  searches:
+  - MakeMyTrip
+  - ixigo
+  - IndiGo
+  - Air India
+  - OYO
+  - Cleartrip
+  - EaseMyTrip
+  - Airbnb India
+price_bands:
+- 0
+- 1000
+- 3000
+- 6000
+- 12000
+- 25000
+- 60000
+- 10000000
+youtube_queries:
+- review
+- experience
+search_seeds:
+- '{brand} '
+- '{brand} offer'
+- cheap flights
+- hotel booking app
+- train ticket booking
+vocab:
+  sector: travel|airline|flight|airfare|hotel|\bota\b|booking|tourism|tourist|holiday|visa|railway|train|irctc|\bbus\b|aviation|airport|makemytrip|goibibo|ixigo|yatra|easemytrip|cleartrip|oyo|indigo|air
+    india|akasa|spicejet|redbus|airbnb|booking\.com|agoda|expedia|trip\.com|skyscanner|hopper
+  category: travel|flight|airline|hotel|booking|trip|tourism|holiday|fare|ticket|airport|train|rail|\bbus\b|stay|room|visa|tour|passenger|route|aircraft|pnr
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|new route|fleet
+    order|grounded|strike|fare cap|dgca|crash|cancell|merger|loyalty|airport slot
+  core: flight|hotel|booking|train|airline|ota
+  noise: recipe|cricket|movie|film|song|lyrics|game|jersey
+  ambiguous:
+  - Yatra
+  - Hopper
+  - Cleartrip
+  noise_note: Celebrity travel, generic destination listicles and weather stories score 1-3. Fares, fleet, routes, bookings, regulation (DGCA, GST on hotels), funding and results matter most.
+voice_themes:
+- key: price
+  rx: price|fare|cheap|expensive|hidden charge|convenience fee|discount|coupon|surge
+- key: refund
+  rx: refund|cancel|rebook|credit shell|money back|days|not received
+- key: support
+  rx: support|customer care|chat|call|response|helpline|agent|escalat
+- key: app
+  rx: \bapp\b|crash|login|otp|bug|slow|glitch|website|payment failed
+- key: booking
+  rx: booking|confirm|pnr|ticket|seat|voucher|failed|not confirmed|waitlist
+- key: stay
+  rx: hotel|room|clean|hygiene|staff|check-?in|property|photos|misleading|bed
+- key: flight
+  rx: flight|delay|baggage|airline|cabin|crew|food|legroom|on time
+- key: loyalty
+  rx: rewards|points|loyalty|wallet|cashback|membership|gold|black
+world:
+  regulators:
+  - DGCA
+  - Ministry of Tourism
+  - Railway Board
+  trackers:
+  - DGCA monthly traffic
+  - AAI
+  - Hotelivate
+  - STR
+  watch_events:
+  - Summer schedule (last Sunday of March)
+  - Winter schedule (last Sunday of October)
+  - Union Budget (1 Feb)
+perspective: ''

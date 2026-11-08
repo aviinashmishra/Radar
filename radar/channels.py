@@ -2,6 +2,7 @@
 one brand's shelves, price parity between a brand's own store and the marketplaces, and the quick-commerce city map."""
 from __future__ import annotations
 import json
+import threading
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from . import db
@@ -96,33 +97,60 @@ def _same_model(a: str, b: str) -> bool:
     return bool(na & nb)
 
 
-def parity(name: str | None = None, max_age_s: int = 600) -> list[dict]:
+def _parity_compute() -> None:
+    """The fuzzy match of every marketplace listing against every store SKU takes ~20 s on a full database, so it runs
+    here, off the request thread; parity() serves the last result and refreshes it in the background."""
+    from .collectors.channels import _match_own
+    rows = []
+    store_brands = [r["brand"] for r in db.q("SELECT DISTINCT brand FROM products WHERE price>0")]
+    for b in store_brands:
+        bb = settings.brand(b)
+        prods = db.q("SELECT product_id, title, price, available, handle FROM products WHERE brand=? AND price>0", (b,))
+        if not prods:
+            continue
+        for li in db.q("SELECT channel, city, item_key, title, price, mrp, available, rating, rating_count, url, last_seen FROM channel_listings "
+                       "WHERE brand=? AND price>0 AND last_seen>=? ORDER BY channel, COALESCE(rating_count,0) DESC", (b, _since(10))):
+            m = _match_own(li["title"], prods)
+            if not m or not _same_model(li["title"], m["title"]):
+                continue
+            gap = round((li["price"] - m["price"]) / m["price"] * 100, 1)
+            rows.append({"brand": b, "self": b == _me(), "channel": li["channel"], "city": li["city"], "title": li["title"], "marketplace_price": li["price"],
+                         "mrp": li["mrp"], "store_price": m["price"], "store_title": m["title"], "gap_pct": gap, "available": li["available"],
+                         "rating": li["rating"], "rating_count": li["rating_count"], "url": li["url"],
+                         "store_url": bb.product_url(m["handle"]) if bb and m.get("handle") else None, "when": li["last_seen"][:10]})
+    rows.sort(key=lambda r: (not r["self"], r["gap_pct"]))
+    _PARITY_CACHE.update(at=datetime.now(timezone.utc), rows=rows)
+
+
+_PARITY_LOCK = threading.Lock()
+_PARITY_THREAD: threading.Thread | None = None
+
+
+def _parity_refresh() -> threading.Thread:
+    global _PARITY_THREAD
+    with _PARITY_LOCK:
+        if _PARITY_THREAD is None or not _PARITY_THREAD.is_alive():
+            _PARITY_THREAD = threading.Thread(target=_parity_compute, daemon=True, name="radar-parity")
+            _PARITY_THREAD.start()
+        return _PARITY_THREAD
+
+
+def parity(name: str | None = None, max_age_s: int = 600, wait_s: float = 3.0) -> list[dict]:
     """Marketplace price vs the brand's own store for every current listing that fuzzy-matches a store SKU (live, not event-driven).
-    gap_pct < 0: the marketplace sells it cheaper than the brand's D2C store (channel conflict); > 0: the store is the cheapest place."""
+    gap_pct < 0: the marketplace sells it cheaper than the brand's D2C store (channel conflict); > 0: the store is the cheapest place.
+    Served from a cache that a background thread refreshes; the very first call waits up to `wait_s` for it."""
     now = datetime.now(timezone.utc)
     if _PARITY_CACHE["at"] is None or (now - _PARITY_CACHE["at"]).total_seconds() > max_age_s:
-        from .collectors.channels import _match_own
-        rows = []
-        store_brands = [r["brand"] for r in db.q("SELECT DISTINCT brand FROM products WHERE price>0")]
-        for b in store_brands:
-            bb = settings.brand(b)
-            prods = db.q("SELECT product_id, title, price, available, handle FROM products WHERE brand=? AND price>0", (b,))
-            if not prods:
-                continue
-            for li in db.q("SELECT channel, city, item_key, title, price, mrp, available, rating, rating_count, url, last_seen FROM channel_listings "
-                           "WHERE brand=? AND price>0 AND last_seen>=? ORDER BY channel, COALESCE(rating_count,0) DESC", (b, _since(10))):
-                m = _match_own(li["title"], prods)
-                if not m or not _same_model(li["title"], m["title"]):
-                    continue
-                gap = round((li["price"] - m["price"]) / m["price"] * 100, 1)
-                rows.append({"brand": b, "self": b == _me(), "channel": li["channel"], "city": li["city"], "title": li["title"], "marketplace_price": li["price"],
-                             "mrp": li["mrp"], "store_price": m["price"], "store_title": m["title"], "gap_pct": gap, "available": li["available"],
-                             "rating": li["rating"], "rating_count": li["rating_count"], "url": li["url"],
-                             "store_url": bb.product_url(m["handle"]) if bb and m.get("handle") else None, "when": li["last_seen"][:10]})
-        rows.sort(key=lambda r: (not r["self"], r["gap_pct"]))
-        _PARITY_CACHE.update(at=now, rows=rows)
+        t = _parity_refresh()
+        if _PARITY_CACHE["at"] is None and wait_s:
+            t.join(wait_s)
     rows = _PARITY_CACHE["rows"]
     return [r for r in rows if r["brand"] == name] if name else rows
+
+
+def warm() -> None:
+    """Called once after the server starts so the first Channels / Pricing page is already answered."""
+    _parity_refresh()
 
 
 def qc_map() -> dict:

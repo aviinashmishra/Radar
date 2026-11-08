@@ -47,26 +47,27 @@ def rebuild(top_k: int = 3) -> int:
         if r["brand"] != me and r["category"] not in skip:
             rivals[r["category"]].append(r)
     ts = db.now()
-    n = 0
+    # score first, write last: the scoring is a minute of CPU on a full catalogue and must not hold the database lock
+    # (the dashboard and the other sectors keep answering while it runs)
+    out = []
+    for m in mine:
+        cands = sorted(((score(m, r), r) for r in rivals.get(m["category"], [])), key=lambda x: -x[0])
+        # best match per rival brand, then top_k overall
+        seen_brand, picked = set(), []
+        for s, r in cands:
+            if s < 35 or r["brand"] in seen_brand:
+                continue
+            seen_brand.add(r["brand"])
+            picked.append((s, r))
+            if len(picked) >= top_k:
+                break
+        out.extend((m["product_id"], r["brand"], r["product_id"], s, m["title"], r["title"], m["category"], m["price"], r["price"], ts)
+                   for s, r in picked)
     with db.tx() as c:
         c.execute("DELETE FROM product_matches")
-        for m in mine:
-            cands = sorted(((score(m, r), r) for r in rivals.get(m["category"], [])), key=lambda x: -x[0])
-            # best match per rival brand, then top_k overall
-            seen_brand, picked = set(), []
-            for s, r in cands:
-                if s < 35 or r["brand"] in seen_brand:
-                    continue
-                seen_brand.add(r["brand"])
-                picked.append((s, r))
-                if len(picked) >= top_k:
-                    break
-            for s, r in picked:
-                c.execute("INSERT OR REPLACE INTO product_matches(self_id,brand,product_id,score,self_title,rival_title,category,"
-                          "self_price,rival_price,computed_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
-                          (m["product_id"], r["brand"], r["product_id"], s, m["title"], r["title"], m["category"], m["price"], r["price"], ts))
-                n += 1
-    return n
+        c.executemany("INSERT OR REPLACE INTO product_matches(self_id,brand,product_id,score,self_title,rival_title,category,"
+                      "self_price,rival_price,computed_at) VALUES(?,?,?,?,?,?,?,?,?,?)", out)
+    return len(out)
 
 
 def matches() -> list[dict]:

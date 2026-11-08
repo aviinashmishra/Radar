@@ -12,6 +12,7 @@ from urllib.parse import quote
 from .. import db
 from ..config import settings
 from .base import get, tracked, log
+from . import resolve
 
 API = "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/{a}/daily/{d0}/{d1}"
 UA = {"User-Agent": "PebbleRadar/1.0 (competitive research; public data only)"}
@@ -34,8 +35,9 @@ def fetch(article: str, days: int = 45) -> list[dict]:
 @tracked("attention")
 def run() -> int:
     n = 0
-    for brand, c in settings.companies.items():
-        article = c.get("wikipedia")
+    for b in settings.brands:
+        brand = b.name
+        article = resolve.ids(brand).get("wikipedia")  # companies.yaml title, or the one resolve.py found / validated
         if not article:
             continue
         try:

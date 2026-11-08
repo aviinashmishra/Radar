@@ -1,0 +1,742 @@
+# Nazar sector: AI & SaaS (ai). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: ai
+label: AI & SaaS
+sector: 'Artificial intelligence and enterprise software, India and world: frontier model labs, consumer AI apps, Indian and sovereign AI, AI infrastructure, SaaS, IT services, AI policy'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: frontier
+  name: Frontier model labs
+  show: true
+  keywords: frontier model|foundation model|\bllm\b|\bgpt|claude|gemini|llama|grok|mistral|deepseek|qwen|reasoning model|o[1-9]\b|model release|benchmark
+- key: apps
+  name: Consumer & workplace AI apps
+  show: true
+  keywords: chatbot|assistant|copilot|\bagent(s|ic)?\b|ai search|perplexity|chatgpt|ai app|voice mode|deep research
+- key: india
+  name: Indian & sovereign AI
+  show: true
+  keywords: indic|sovereign ai|india ?ai mission|bharatgen|sarvam|krutrim|hindi model|regional language|indian llm|ai compute india
+- key: infra
+  name: AI infrastructure
+  show: true
+  keywords: \bgpu|data cent(er|re)|chip|compute|inference|\btpu\b|h100|h200|blackwell|rubin|cuda|hyperscaler|cloud capex
+- key: saas
+  name: SaaS & enterprise software
+  show: true
+  keywords: \bsaas\b|\bcrm\b|enterprise software|subscription|\barr\b|seat|zoho|freshworks|salesforce|servicenow|workday|agentforce
+- key: policy
+  name: AI policy & safety
+  show: true
+  keywords: regulat|ai act|copyright|safety|deepfake|watermark|governance|ai bill|export control|antitrust|dpdp
+- key: services
+  name: IT services & GCCs
+  show: true
+  keywords: it services|outsourcing|deal win|\btcv\b|headcount|layoff|\bgcc\b|global capability|infosys|tcs|wipro|hcltech|accenture|cognizant
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: Nvidia GTC
+  month: 3
+  day: 17
+- name: Google I/O
+  month: 5
+  day: 20
+- name: Microsoft Build
+  month: 5
+  day: 19
+- name: WWDC
+  month: 6
+  day: 9
+- name: OpenAI DevDay
+  month: 10
+  day: 6
+- name: India AI Impact Summit
+  month: 2
+  day: 19
+- name: AWS re:Invent
+  month: 12
+  day: 1
+brands:
+- name: OpenAI
+  origin: Global
+  tier: core
+  country: United States
+  kind: Frontier AI lab
+  segments:
+  - frontier
+  - apps
+  - infra
+  website: https://openai.com
+  news_terms:
+  - OpenAI
+  - ChatGPT
+  - Sam Altman OpenAI
+  aliases:
+  - ChatGPT
+  - GPT-5
+  - GPT-4o
+  - Sora
+  - Stargate
+  - Codex
+  - OpenAI o3
+  - ChatGPT Go
+  apps:
+  - com.openai.chatgpt
+  watch_pages:
+  - https://openai.com/news/
+- name: Anthropic
+  origin: Global
+  tier: core
+  country: United States
+  kind: Frontier AI lab
+  segments:
+  - frontier
+  - apps
+  website: https://www.anthropic.com
+  news_terms:
+  - Anthropic
+  - Claude AI Anthropic
+  aliases:
+  - Claude
+  - Claude Code
+  - Claude Opus
+  - Claude Sonnet
+  - Claude Haiku
+  - Claude Mythos
+  - Claude Fable
+  - Model Context Protocol
+  apps:
+  - com.anthropic.claude
+  watch_pages:
+  - https://www.anthropic.com/news
+- name: Google
+  origin: Global
+  tier: core
+  country: United States
+  kind: Frontier AI lab and cloud (Alphabet)
+  segments:
+  - frontier
+  - apps
+  - infra
+  - india
+  website: https://deepmind.google
+  news_terms:
+  - Google Gemini
+  - Google DeepMind
+  - Google AI India
+  aliases:
+  - Gemini
+  - DeepMind
+  - Google DeepMind
+  - AI Overviews
+  - Veo
+  - Nano Banana
+  - TPU
+  - Google Cloud
+  - Alphabet
+  exclude:
+  - Google Pixel review
+  - Google Maps traffic
+  apps:
+  - com.google.android.apps.bard
+  watch_pages:
+  - https://deepmind.google/discover/blog/
+- name: Microsoft
+  origin: Global
+  tier: core
+  country: United States
+  kind: Cloud and AI platform
+  segments:
+  - apps
+  - infra
+  - saas
+  - india
+  website: https://www.microsoft.com/ai
+  news_terms:
+  - Microsoft AI
+  - Microsoft Copilot
+  - Azure AI India
+  aliases:
+  - Copilot
+  - Azure
+  - Azure OpenAI
+  - MAI
+  - GitHub Copilot
+  - Satya Nadella
+  apps:
+  - com.microsoft.copilot
+  watch_pages:
+  - https://blogs.microsoft.com/ai/
+- name: Meta
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Open-weights AI and social platforms
+  segments:
+  - frontier
+  - apps
+  - infra
+  website: https://ai.meta.com
+  news_terms:
+  - Meta AI Llama
+  - Meta Superintelligence Labs
+  aliases:
+  - Llama
+  - Meta AI
+  - Superintelligence Labs
+  - Meta Platforms
+  exclude:
+  - meta description
+  - meta tag
+  - metaverse real estate
+  - meta-analysis
+  watch_pages:
+  - https://ai.meta.com/blog/
+  ambiguous: true
+- name: Nvidia
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: AI chips
+  segments:
+  - infra
+  website: https://www.nvidia.com
+  news_terms:
+  - Nvidia
+  - Jensen Huang India
+  aliases:
+  - Blackwell
+  - Rubin
+  - H100
+  - H200
+  - GB200
+  - CUDA
+  - Nvidia AI Summit
+  watch_pages:
+  - https://nvidianews.nvidia.com/
+- name: xAI
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Frontier AI lab
+  segments:
+  - frontier
+  - apps
+  - infra
+  website: https://x.ai
+  news_terms:
+  - xAI Grok
+  - Elon Musk xAI
+  aliases:
+  - Grok
+  - Grok 4
+  - Colossus
+  - Grok Imagine
+  apps:
+  - ai.x.grok
+  watch_pages:
+  - https://x.ai/news
+- name: Mistral AI
+  origin: Global
+  tier: adjacent
+  country: France
+  kind: Frontier AI lab
+  segments:
+  - frontier
+  website: https://mistral.ai
+  news_terms:
+  - Mistral AI
+  aliases:
+  - Le Chat
+  - Mistral Large
+  - Mistral Medium
+  - Codestral
+  - Magistral
+  exclude:
+  - mistral wind
+  - Mistral Air
+  - Frédéric Mistral
+  - Mistral Prime
+  watch_pages:
+  - https://mistral.ai/news
+  ambiguous: true
+- name: Perplexity
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: AI search
+  segments:
+  - apps
+  website: https://www.perplexity.ai
+  news_terms:
+  - Perplexity AI
+  aliases:
+  - Comet browser
+  - Perplexity Pro
+  - Perplexity Airtel
+  apps:
+  - ai.perplexity.app.android
+  watch_pages:
+  - https://www.perplexity.ai/hub
+- name: DeepSeek
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: Open-weights AI lab
+  segments:
+  - frontier
+  website: https://www.deepseek.com
+  news_terms:
+  - DeepSeek AI
+  aliases:
+  - DeepSeek-R1
+  - DeepSeek V3
+  - DeepSeek-V3.2
+- name: Sarvam AI
+  origin: Indian
+  tier: core
+  country: India
+  kind: Indian foundation-model lab
+  segments:
+  - india
+  - frontier
+  website: https://www.sarvam.ai
+  news_terms:
+  - Sarvam AI
+  aliases:
+  - Sarvam-M
+  - Sarvam 1
+  - Sarvam 105B
+  - Bulbul
+  - Saaras
+  - Samvaad
+  watch_pages:
+  - https://www.sarvam.ai/
+- name: Krutrim
+  origin: Indian
+  tier: core
+  country: India
+  kind: Indian AI lab and cloud (Ola)
+  segments:
+  - india
+  - infra
+  - frontier
+  website: https://www.olakrutrim.com
+  news_terms:
+  - Krutrim AI
+  - Ola Krutrim
+  aliases:
+  - Krutrim 2
+  - Krutrim Cloud
+  - Kruti
+  - Bodhi chip
+  exclude:
+  - Krutrim Battery
+  watch_pages:
+  - https://www.olakrutrim.com/
+- name: BharatGen
+  origin: Indian
+  tier: core
+  country: India
+  kind: Government-backed sovereign AI consortium
+  segments:
+  - india
+  - frontier
+  website: https://bharatgen.tech
+  news_terms:
+  - BharatGen
+  - Param-1 BharatGen
+  aliases:
+  - Param-1
+  - Param1
+  - BharatGen Param
+- name: Zoho
+  origin: Indian
+  tier: core
+  country: India
+  kind: SaaS suite
+  segments:
+  - saas
+  - india
+  - apps
+  website: https://www.zoho.com
+  news_terms:
+  - Zoho
+  - Sridhar Vembu Zoho
+  - Zoho Zia
+  aliases:
+  - Zia
+  - Zoho One
+  - Zoho CRM
+  - Arattai
+  - Zoho Workplace
+  - Ulaa
+  watch_pages:
+  - https://www.zoho.com/
+- name: Freshworks
+  origin: Indian
+  tier: core
+  country: India
+  kind: SaaS (customer and IT service)
+  segments:
+  - saas
+  website: https://www.freshworks.com
+  news_terms:
+  - Freshworks
+  aliases:
+  - Freddy AI
+  - Freshdesk
+  - Freshservice
+  - Device42
+  watch_pages:
+  - https://www.freshworks.com/company/newsroom/
+- name: Salesforce
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Enterprise SaaS
+  segments:
+  - saas
+  - apps
+  website: https://www.salesforce.com
+  news_terms:
+  - Salesforce Agentforce
+  - Salesforce India
+  aliases:
+  - Agentforce
+  - Slack
+  - Tableau
+  - MuleSoft
+  - Informatica
+  watch_pages:
+  - https://www.salesforce.com/news/
+- name: Infosys
+  origin: Indian
+  tier: core
+  country: India
+  kind: IT services
+  segments:
+  - services
+  - india
+  website: https://www.infosys.com
+  news_terms:
+  - Infosys
+  - Infosys Topaz
+  aliases:
+  - Topaz
+  - Infosys Finacle
+  - Infosys BPM
+  watch_pages:
+  - https://www.infosys.com/newsroom.html
+- name: TCS
+  origin: Indian
+  tier: core
+  country: India
+  kind: IT services
+  segments:
+  - services
+  - india
+  - infra
+  website: https://www.tcs.com
+  news_terms:
+  - Tata Consultancy Services
+  - TCS layoffs
+  - TCS AI
+  aliases:
+  - Tata Consultancy Services
+  - TCS BaNCS
+  - TCS HyperVault
+  - TCS Pace
+  exclude:
+  - TCS on remittance
+  - tax collected at source
+  - TCS tax
+  watch_pages:
+  - https://www.tcs.com/who-we-are/newsroom
+- name: Wipro
+  origin: Indian
+  tier: core
+  country: India
+  kind: IT services
+  segments:
+  - services
+  website: https://www.wipro.com
+  news_terms:
+  - Wipro IT services
+  aliases:
+  - Wipro ai360
+  - Wipro Enterprises
+  exclude:
+  - Wipro Consumer
+  - Wipro Lighting
+  - Santoor
+- name: HCLTech
+  origin: Indian
+  tier: core
+  country: India
+  kind: IT services
+  segments:
+  - services
+  website: https://www.hcltech.com
+  news_terms:
+  - HCLTech
+  aliases:
+  - HCL Technologies
+  - HCLSoftware
+  - AI Force
+- name: Cohere
+  origin: Global
+  tier: adjacent
+  country: Canada
+  kind: Enterprise AI lab
+  segments:
+  - frontier
+  - saas
+  website: https://cohere.com
+  news_terms:
+  - Cohere AI
+  aliases:
+  - Command A
+  - Command R
+  - Aya
+  - North
+  exclude:
+  - coherent
+  - coherence
+  watch_pages:
+  - https://cohere.com/blog
+  ambiguous: true
+- name: Hugging Face
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Open-source AI hub
+  segments:
+  - frontier
+  - infra
+  website: https://huggingface.co
+  news_terms:
+  - Hugging Face
+  aliases:
+  - SmolLM
+  - Transformers library
+  - HF Spaces
+  watch_pages:
+  - https://huggingface.co/blog
+- name: Databricks
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Data and AI platform
+  segments:
+  - infra
+  - saas
+  website: https://www.databricks.com
+  news_terms:
+  - Databricks
+  aliases:
+  - Mosaic AI
+  - Lakebase
+  - DBRX
+  - Agent Bricks
+  watch_pages:
+  - https://www.databricks.com/blog
+- name: Palantir
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: AI and data platform
+  segments:
+  - saas
+  - policy
+  website: https://www.palantir.com
+  news_terms:
+  - Palantir AIP
+  aliases:
+  - AIP
+  - Foundry
+  - Gotham
+  watch_pages:
+  - https://www.palantir.com/newsroom/
+- name: Cursor
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: AI coding editor (Anysphere)
+  segments:
+  - apps
+  - saas
+  website: https://cursor.com
+  news_terms:
+  - Cursor Anysphere AI coding
+  aliases:
+  - Anysphere
+  - Cursor AI
+  - Cursor 2
+  exclude:
+  - mouse cursor
+  - cursor blink
+  - database cursor
+  - cursor position
+  ambiguous: true
+sector_news_terms:
+- AI model launch
+- OpenAI Anthropic Google AI
+- India AI Mission GPU
+- Indian AI startup funding
+- AI regulation India
+- GCC India hiring
+- SaaS India ARR
+feeds:
+- brand: OpenAI
+  kind: press
+  url: https://openai.com/news/rss.xml
+- brand: Google
+  kind: press
+  url: https://blog.google/technology/ai/rss/
+- brand: Microsoft
+  kind: press
+  url: https://blogs.microsoft.com/ai/feed/
+- brand: Nvidia
+  kind: press
+  url: https://blogs.nvidia.com/feed/
+- brand: Hugging Face
+  kind: press
+  url: https://huggingface.co/blog/feed.xml
+- brand: Sector
+  kind: industry
+  url: https://www.technologyreview.com/topic/artificial-intelligence/feed
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://analyticsindiamag.com/feed/
+  filter: sector
+reddit:
+  subreddits:
+  - artificial
+  - LocalLLaMA
+  - OpenAI
+  - ClaudeAI
+  - singularity
+  - developersIndia
+  searches:
+  - ChatGPT
+  - Claude Anthropic
+  - Gemini Google
+  - Sarvam AI
+  - Krutrim
+  - Perplexity
+  - Mistral
+  - Zoho
+price_bands:
+- 0
+- 500
+- 2000
+- 5000
+- 20000
+- 100000
+- 1000000
+- 10000000000
+youtube_queries:
+- review
+- explained
+search_seeds:
+- '{brand} '
+- '{brand} pricing'
+- best ai chatbot
+- ai for coding
+- indian ai model
+vocab:
+  sector: \bai\b|artificial intelligence|\bllm|language model|chatbot|gpt|copilot|agentic|\bagents?\b|machine learning|\bgpu|data cent(er|re)|saas|enterprise software|it services|openai|anthropic|claude|gemini|deepmind|microsoft|meta
+    ai|llama|nvidia|mistral|perplexity|xai|grok|deepseek|sarvam|krutrim|bharatgen|zoho|freshworks|salesforce|infosys|tcs|wipro|hcltech|cohere|hugging face|databricks|palantir|scale ai|cursor|anysphere
+  category: \bai\b|model|models|chatbot|assistant|agent|agents|\bgpu|chip|compute|cloud|software|saas|enterprise|developer|api|token|benchmark|startup|startups|funding|valuation|data cent(er|re)|open[-
+    ]source|it services|deal|headcount|hiring|layoff
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|new model|gpt-?\d|claude
+    \d|gemini \d|open[- ]source|outage|data breach|lawsuit|copyright|export control|gpu cluster|capex|price cut|free tier|agent
+  core: \bai\b|model|agent|gpu|saas
+  noise: ai-generated image of|horoscope|crypto airdrop|movie|song
+  ambiguous:
+  - Cursor
+  - Scale
+  - Mistral
+  - Cohere
+  - Meta
+  noise_note: AI-art spam, prompt listicles and celebrity deepfake gossip score 1-3. Model releases, pricing and free-tier changes, outages, enterprise deals, GPU and data-centre capex, India sovereign-AI
+    moves, regulation, funding and results matter most.
+voice_themes:
+- key: accuracy
+  rx: accurate|wrong|hallucinat|mistake|outdated|made up|reliable|correct|dumb|smart
+- key: speed
+  rx: fast|slow|lag|timeout|latency|loading|responsive
+- key: limits
+  rx: limit|quota|rate limit|usage|cap\b|messages|context|window|cut off
+- key: price
+  rx: price|subscription|plus|pro\b|expensive|worth|free tier|credits|cheap|pricing
+- key: safety
+  rx: refuse|refusal|censor|safety|bias|guardrail|moderation|restricted|woke|nanny
+- key: features
+  rx: feature|voice|image|code|coding|search|memory|file|agent|canvas|deep research|artifacts|projects
+- key: ux
+  rx: \bapp\b|\bui\b|crash|login|bug|interface|design|smooth|clunky
+- key: privacy
+  rx: privacy|data|training|leak|security|gdpr|consent|delete
+- key: india
+  rx: hindi|indic|regional|india|rupee|upi|pricing in india|local
+world:
+  regulators:
+  - MeitY (IndiaAI Mission, DPDP)
+  - EU AI Office
+  - US BIS (export controls)
+  - CCI
+  trackers:
+  - LMArena
+  - Artificial Analysis
+  - Epoch AI
+  - Tracxn
+  - Nasscom
+  watch_events:
+  - Nvidia GTC (Mar)
+  - Google I/O (May)
+  - WWDC (Jun)
+  - OpenAI DevDay (Oct)
+  - India AI Impact Summit (Feb 2026)
+  - IT services quarterly results
+perspective: ''

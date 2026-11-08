@@ -409,7 +409,7 @@ def market_conclusion(days: int, demand: list[dict], by_segment: list[dict], row
         d = _pct(mine_neg, len(mine)) - _pct(neg, n)
         parts.append(f"Pebble: {len(mine)} items, {_pct(mine_neg, len(mine))}% negative, " +
                      (f"{abs(d)} points better than the field." if d < -2 else f"{d} points worse than the field." if d > 2 else "in line with the field."))
-    else:
+    elif settings.self_brand:   # a neutral sector has no home brand, so there is nothing missing to report
         parts.append("No Pebble items in the window yet: Pebble's own store, Play and App Store reviews land here on the next daily run.")
     return " ".join(parts)
 

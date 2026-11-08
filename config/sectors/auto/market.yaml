@@ -1,0 +1,125 @@
+# Nazar sector: Automotive & EV. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- SIAM and FADA monthly dispatch and retail data (press coverage)
+- Vahan registrations
+- Company filings and press statements
+- JATO Dynamics / analyst coverage
+segments:
+  ev2w:
+    name: Electric two-wheelers
+    units_m: 1.15
+    growth_pct: 33
+    asp_inr: 110000
+    value_cr: 12650
+    trend: Subsidy cuts slowed 2024 growth; TVS and Bajaj overtook Ola in 2025 while Ather grew with the Rizta.
+    confidence: estimate
+    shares_pct:
+      TVS Motor: 22
+      Bajaj Auto: 21
+      Ola Electric: 19
+      Ather Energy: 14
+      Hero MotoCorp: 7
+  ev4w:
+    name: Electric cars
+    units_m: 0.11
+    growth_pct: 20
+    asp_inr: 1500000
+    value_cr: 16500
+    trend: Tata leads but is losing share to MG Windsor and Mahindra's BE 6 / XEV 9e; Tesla and VinFast arrived in 2025.
+    confidence: estimate
+    shares_pct:
+      Tata Motors: 48
+      JSW MG Motor: 27
+      Mahindra: 12
+      Hyundai India: 3
+      BYD: 3
+      Kia India: 1
+  suv:
+    name: SUVs & crossovers
+    units_m: 2.4
+    growth_pct: 12
+    asp_inr: 1400000
+    value_cr: 336000
+    trend: SUVs are over half of passenger-vehicle sales; compact SUVs decide the volume race.
+    confidence: estimate
+    shares_pct:
+      Maruti Suzuki: 25
+      Mahindra: 20
+      Tata Motors: 17
+      Hyundai India: 14
+      Toyota: 7
+      Kia India: 6
+  hatch:
+    name: Hatchbacks & sedans
+    units_m: 1.2
+    growth_pct: -8
+    asp_inr: 650000
+    value_cr: 78000
+    trend: Entry cars keep shrinking; GST cut (Sept 2025) gave small cars their first lift in years.
+    confidence: estimate
+    shares_pct:
+      Maruti Suzuki: 62
+      Hyundai India: 15
+      Tata Motors: 14
+  premium:
+    name: Premium & luxury
+    units_m: 0.05
+    growth_pct: 12
+    asp_inr: 7500000
+    value_cr: 37500
+    trend: Record luxury volumes; EVs are a fifth of luxury sales.
+    confidence: estimate
+    shares_pct:
+      Mercedes-Benz: 38
+      BMW: 30
+      Volkswagen Group: 15
+      Toyota: 5
+  cv:
+    name: Commercial vehicles & tractors
+    units_m: 0.95
+    growth_pct: 2
+    asp_inr: 2500000
+    value_cr: 237500
+    trend: Flat trucks, strong buses and three-wheelers; electric buses and e-rickshaws are the growth pockets.
+    confidence: estimate
+    shares_pct:
+      Tata Motors: 37
+      Mahindra: 25
+      Bajaj Auto: 8
+      Royal Enfield: 2
+  mobility:
+    name: Ride-hailing & mobility (GMV)
+    units_m: 2500
+    growth_pct: 15
+    asp_inr: 100
+    value_cr: 25000
+    trend: Bike taxis moved the volume to Rapido; cabs shifted to driver subscriptions; robotaxi talk, no robotaxis.
+    confidence: estimate
+    shares_pct:
+      Uber: 38
+      Ola Cabs: 28
+      Rapido: 30
+  charging:
+    name: Public charging & cells
+    units_m: 0.03
+    growth_pct: 60
+    asp_inr: 800000
+    value_cr: 2400
+    trend: About 26,000 public chargers; cell gigafactories (Ola, Reliance, Agratas) are the capital story.
+    confidence: estimate
+    shares_pct:
+      Tata Motors: 20
+      Ola Electric: 10
+      Ather Energy: 10
+      Tesla: 2
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

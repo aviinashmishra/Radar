@@ -14,17 +14,19 @@ from .config import Brand, settings
 # Bump when the rules change: maintenance.py then re-checks stored events against the new rules.
 VERSION = 3
 
-SECTOR_RX = re.compile(r"smart ?watch|wearable|earbud|ear ?phone|headphone|neckband|\btws\b|audio|speaker|soundbar|charger|"
+_V = settings.vocab or {}
+SECTOR_RX = re.compile(_V["sector"], re.I) if _V.get("sector") else re.compile(r"smart ?watch|wearable|earbud|ear ?phone|headphone|neckband|\btws\b|audio|speaker|soundbar|charger|"
                        r"power ?bank|gadget|electronics|smart ?ring|fitness band|bluetooth|\banc\b|launch|unveil|d2c|"
                        r"e-?commerce|shopify|amazon|flipkart|idc|counterpoint|funding|acqui|ipo|nexxbase|imagine marketing|"
                        r"srk powertech|boat|noise colorfit|fire-?boltt|boult|ptron|zebronics|portronics|ambrane|gizmore|"
                        r"crossbeats|corseca|blaupunkt|fastrack|mivi|cultsport|beatxp|pebble", re.I)
-CATEGORY_RX = re.compile(r"smart ?watch|wearable|earbud|ear ?phone|headphone|neckband|\btws\b|speaker|soundbar|charger|power ?bank|"
+CATEGORY_RX = re.compile(_V["category"], re.I) if _V.get("category") else re.compile(r"smart ?watch|wearable|earbud|ear ?phone|headphone|neckband|\btws\b|speaker|soundbar|charger|power ?bank|"
                          r"smart ?ring|\brings?\b|fitness|\bbands?\b|tracker|bluetooth|gadget|electronics|\baudio\b|health|sleep|"
                          r"heart rate|\bhrv\b|spo2|\bd2c\b|\bwatch(es)?\b|\bbuds\b|\bpods\b|\banc\b", re.I)
 BUSINESS_RX = re.compile(r"funding|raises|\bipo\b|\bacqui|\bvaluation|revenue|market share|\bidc\b|counterpoint|investor|layoff", re.I)
 PRODUCT_TALK_RX = re.compile(r"price|specs|features|battery|review|unbox|\bai\b|₹|\brs\.? ?\d", re.I)
 AMBIGUOUS = {"noise", "hammer", "pebble", "urban", "luna", "polar", "boat", "titan", "fire", "ring", "whoop"}  # everyday words
+AMBIGUOUS |= {w.lower() for w in (_V.get("ambiguous") or [])} | {b.name.lower() for b in settings.brands if b.ambiguous}
 GENERIC_HEAD = {"just", "imagine", "google", "the", "galaxy"}                                              # not the brand
 COLLOCATIONS = re.compile(r"noise[- ]?(cancel\w*|reduc\w*|isolat\w*)|white noise|active noise", re.I)
 CONNECTOR = r"(?:vs\.?|versus|or|and|with|&|x|\||-|:)"
@@ -116,7 +118,7 @@ def relevant(text: str, brand: Brand | None, term: str = "", *, summary: str = "
 def signature() -> str:
     """Rules version + the yaml that tunes them: maintenance re-checks stored events when either changes."""
     import hashlib
-    cfg = [(b.name, b.tier, b.aliases, b.exclude, b.search_terms) for b in settings.brands]
+    cfg = [(b.name, b.tier, b.aliases, b.exclude, b.search_terms, b.ambiguous) for b in settings.brands] + [sorted(_V.items())]
     return f"{VERSION}:{hashlib.sha1(repr(cfg).encode()).hexdigest()[:10]}"
 
 

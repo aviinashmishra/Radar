@@ -52,8 +52,9 @@ def fetch_ios(app_id: int) -> dict | None:
 
 def run_ios() -> int:
     n = 0
+    from . import resolve
     for b in settings.brands:
-        for app_id in (settings.company(b.name).get("ios") or []):
+        for app_id in resolve.ids(b.name)["ios"]:
             try:
                 cur = fetch_ios(int(app_id))
             except Exception as e:  # noqa: BLE001
@@ -88,9 +89,10 @@ def run_ios() -> int:
 
 @tracked("appstore")
 def run() -> int:
+    from . import resolve
     n = run_ios()
     for b in settings.brands:
-        for pkg in b.apps:
+        for pkg in resolve.ids(b.name)["apps"]:
             try:
                 cur = fetch(pkg)
             except Exception as e:  # noqa: BLE001

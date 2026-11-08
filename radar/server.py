@@ -20,7 +20,7 @@ from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, Response, FileResponse
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
-from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig, newsintel, finance, market
+from . import db, analytics, chat, brief, runner, matcher, exports, bot, cloud, signals as sig, newsintel, finance, market, channels, regions, perspective
 from .config import settings, ROOT
 
 log = logging.getLogger("radar.server")
@@ -34,14 +34,25 @@ async def lifespan(_app: FastAPI):
     """Start the scheduler (and the Telegram bot when configured) with the server; stop them with it."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     db.connect()
+    perspective.apply_saved()  # whose seat the dashboard writes from (stored in the db; default neutral)
     # in cloud mode GitHub Actions runs the collectors and Telegram calls /api/telegram/webhook instead
     if os.environ.get("RADAR_NO_SCHEDULER") != "1" and not cloud.HOSTED:
         threading.Thread(target=runner.loop, args=(_stop,), daemon=True, name="radar-scheduler").start()
         log.info("embedded scheduler started")
     if settings.telegram_token and not cloud.HOSTED:
         threading.Thread(target=bot.loop, args=(_stop,), daemon=True, name="radar-telegram").start()
+    # the marketplace-vs-store price match is slow on a full database: compute it once now, off the request path
+    threading.Timer(20, _warm_caches).start()
     yield
     _stop.set()
+
+
+def _warm_caches() -> None:
+    from . import channels
+    try:
+        channels.warm()
+    except Exception as e:  # noqa: BLE001
+        log.warning("parity warm-up failed: %s", e)
 
 
 app = FastAPI(title="Pebble Competitor Radar", version="1.2", lifespan=lifespan)
@@ -133,7 +144,8 @@ def stats():
     me = settings.self_brand.name if settings.self_brand else ""
     return {
         "brands": [{"name": b.name, "self": b.self_brand, "shopify": b.shopify} for b in settings.brands],
-        "self": me, "sector": settings.sector, "currency": settings.currency,
+        "self": me, "own_data": settings.own_data, "sector": settings.sector, "currency": settings.currency,
+        "sector_key": settings.sector_key, "sector_label": settings.sector_label, "me": settings.me, "perspective": settings.perspective,
         "ai": settings.ai_enabled, "provider": settings.ai_provider, "model": settings.ai_model,
         "telegram": bool(settings.telegram_token and settings.telegram_chat), "threshold": settings.alert_threshold,
         "products": db.q1("SELECT COUNT(*) c FROM products")["c"],
@@ -337,8 +349,8 @@ def brand_page(name: str):
             "pressure": [p for p in market.pressure(30)["by_brand"] if p["brand"] == name][:1],
             "attention": db.q("SELECT day, views FROM attention WHERE brand=? AND day>=date('now','-30 days') ORDER BY day", (name,)),
             "voice": _voice_view(name),
-            "shelf": _safe(lambda: __import__("radar.channels", fromlist=["brand"]).brand(name), None),
-            "regions": _safe(lambda: __import__("radar.regions", fromlist=["brand_states"]).brand_states(name), None)}
+            "shelf": _safe(lambda: channels.brand(name), None),
+            "regions": _safe(lambda: regions.brand_states(name), None)}
 
 
 def _safe(fn, default):
@@ -409,6 +421,27 @@ def briefs():
 
 class ChatIn(BaseModel):
     question: str
+
+
+class PerspectiveIn(BaseModel):
+    brand: str = ""   # a brand of this sector, or "" for the neutral view
+
+
+@app.get("/api/perspective")
+def perspective_get():
+    """Whose seat the dashboard is written from, and the brands it could be written for."""
+    return perspective.state()
+
+
+@app.post("/api/perspective")
+def perspective_set(body: PerspectiveIn):
+    """Switch the seat (persisted in this sector's database); the page reloads itself afterwards."""
+    if cloud.HOSTED and (msg := cloud.public_lock()):
+        raise HTTPException(403, msg)
+    try:
+        return perspective.set(body.brand)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
 
 
 @app.post("/api/chat")
@@ -589,14 +622,21 @@ def today():
     for r in db.q("SELECT * FROM events WHERE enriched>0 AND importance>=6 AND COALESCE(status,'open')='open' AND kind<>'baseline' "
                   "AND created_at>=datetime('now','-3 days') ORDER BY importance DESC, id DESC LIMIT 60"):
         k = (r["brand"], r["kind"])
-        if per.get(k, 0) >= 2:
+        if per.get(k, 0) >= (1 if r["kind"] in ("search_trend", "social", "video", "page_change", "homepage_change") else 2):
             continue
         per[k] = per.get(k, 0) + 1
         actions.append(_ev(r))
         if len(actions) >= 8:
             break
-    signals_open = [dict(s, data=json.loads(s["data"] or "{}")) for s in
-                    db.q("SELECT * FROM signals WHERE COALESCE(status,'open')='open' AND created_at>=datetime('now','-7 days') ORDER BY importance DESC, id DESC LIMIT 10")]
+    signals_open, seen_sig = [], set()
+    for s in db.q("SELECT * FROM signals WHERE COALESCE(status,'open')='open' AND created_at>=datetime('now','-7 days') ORDER BY importance DESC, id DESC LIMIT 40"):
+        key = (s["brand"], (s["title"] or "").strip().lower())
+        if key in seen_sig:   # the same rule firing again on the same brand is one card, not three
+            continue
+        seen_sig.add(key)
+        signals_open.append(dict(s, data=json.loads(s["data"] or "{}")))
+        if len(signals_open) >= 10:
+            break
     by_brand = {}
     for r in db.q("SELECT brand, kind, COUNT(*) c, MAX(importance) m FROM events WHERE created_at>=datetime('now','-1 day') "
                   "AND kind<>'baseline' GROUP BY brand, kind"):
@@ -706,6 +746,16 @@ def segment_api(key: str):
 @app.get("/api/watchlist")
 def watchlist_api():
     return analytics.watchlist_overview()
+
+
+@app.get("/api/ids")
+def ids_api():
+    """How many brands have resolved identifiers (app ids, Wikipedia title, SEC CIK, ticker); from collectors/resolve.py when present."""
+    try:
+        from .collectors import resolve  # type: ignore[attr-defined]
+        return resolve.coverage()
+    except Exception:  # noqa: BLE001
+        return {}
 
 
 @app.get("/api/health")

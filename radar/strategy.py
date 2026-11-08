@@ -58,7 +58,8 @@ def scorecard() -> list[dict]:
             cat, band = k.split("|")
             gaps_by_cat[cat].append(band)
     watch = _try(analytics.watchlist_overview, [])
-    chm = _try(lambda: __import__("radar.channels", fromlist=["matrix"]).matrix(), {"brands": []})
+    from . import channels as _ch
+    chm = _try(lambda: _ch.matrix(), {"brands": []})
     pebble_ch = next((r for r in chm["brands"] if r["self"]), None)
     rows = []
     for s in sizes:

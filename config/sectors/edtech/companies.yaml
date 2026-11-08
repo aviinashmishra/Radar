@@ -1,0 +1,268 @@
+# Nazar sector: Edtech. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: Physics Wallah
+  entity: Physicswallah Ltd.
+  hq: Noida, India
+  founded: 2020
+  ownership: listed
+  ticker: PWL.NS  # NSE symbol since the Nov 2025 listing
+  wikipedia: Physics Wallah
+  investors:
+  - WestBridge
+  - GSV
+  - Hornbill
+  - Lightspeed
+  notes: Low-price leader that went offline (Vidyapeeth); listed Nov 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 2887
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 243
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Unacademy
+  entity: Sorting Hat Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2015
+  ownership: private
+  wikipedia: Unacademy
+  investors:
+  - SoftBank
+  - Peak XV
+  - General Atlantic
+  - Temasek
+  notes: Cut burn sharply; sale talks (upGrad, Allen) through 2025.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 988
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 631
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: BYJU'S
+  entity: Think & Learn Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2011
+  ownership: private
+  wikipedia: Byju's
+  investors:
+  - Prosus
+  - General Atlantic
+  - Peak XV
+  - Chan Zuckerberg
+  notes: In insolvency (NCLT) since 2024; once $22B valued.
+  financials:
+  - metric: revenue
+    period: FY22
+    value: 5298
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_loss
+    period: FY22
+    value: 8245
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Vedantu
+  entity: Vedantu Innovations Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2014
+  ownership: private
+  wikipedia: Vedantu
+  investors:
+  - Tiger Global
+  - GGV
+  - Coatue
+  - Westbridge
+  notes: Turned EBITDA-positive in FY25 after deep cuts.
+- brand: upGrad
+  entity: upGrad Education Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2015
+  ownership: private
+  wikipedia: UpGrad
+  investors:
+  - Temasek
+  - IFC
+  - Bodhi Tree
+  - Ronnie Screwvala
+  notes: Acquisitive; IPO planned; study-abroad is the growth engine.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 1487
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 560
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Allen
+  entity: Allen Career Institute Pvt. Ltd.
+  hq: Kota, India
+  founded: 1988
+  ownership: private
+  investors:
+  - Bodhi Tree (James Murdoch)
+  notes: Kota's largest coaching chain; Bodhi Tree invested $600M in 2022.
+- brand: Aakash
+  entity: Aakash Educational Services Ltd.
+  hq: New Delhi, India
+  founded: 1988
+  ownership: private
+  investors:
+  - Manipal Education & Medical Group
+  - Blackstone (former)
+  notes: Taken from BYJU'S by Manipal in 2024; IPO planned.
+- brand: Cuemath
+  entity: Cuelearn Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2013
+  ownership: private
+  investors:
+  - Alpha Wave
+  - Lightrock
+  - Peak XV
+- brand: Scaler
+  entity: InterviewBit Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2019
+  ownership: private
+  investors:
+  - Lightrock
+  - Peak XV
+  - Tiger Global
+  notes: Pay-after-placement coding programmes; opened a residential school of technology.
+- brand: Simplilearn
+  entity: Simplilearn Solutions Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2010
+  ownership: private
+  wikipedia: Simplilearn
+  investors:
+  - Blackstone
+  - GSV
+  - Kalaari
+  notes: Profitable; US-heavy revenue.
+- brand: Emeritus
+  entity: Eruditus Learning Solutions Pte. Ltd.
+  hq: Singapore / Mumbai
+  founded: 2010
+  ownership: private
+  wikipedia: Eruditus
+  investors:
+  - SoftBank
+  - Accel
+  - TPG
+  - CPPIB
+  notes: University-partnered executive programmes; redomiciling to India.
+- brand: Coursera
+  entity: Coursera, Inc.
+  hq: Mountain View, United States
+  founded: 2012
+  ownership: listed
+  ticker: COUR
+  sec_cik: 1651562
+  wikipedia: Coursera
+  notes: India is its second-largest market by learners; merging with Udemy (announced 2025).
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 695
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Udemy
+  entity: Udemy, Inc.
+  hq: San Francisco, United States
+  founded: 2010
+  ownership: listed
+  ticker: UDMY
+  sec_cik: 1607939
+  wikipedia: Udemy
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 787
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Duolingo
+  entity: Duolingo, Inc.
+  hq: Pittsburgh, United States
+  founded: 2011
+  ownership: listed
+  ticker: DUOL
+  sec_cik: 1562088
+  wikipedia: Duolingo
+  notes: India is a top-5 market; Hindi-base courses and the English Test drive growth.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 748
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Chegg
+  entity: Chegg, Inc.
+  hq: Santa Clara, United States
+  founded: 2005
+  ownership: listed
+  ticker: CHGG
+  sec_cik: 1364954
+  wikipedia: Chegg
+  notes: Hit hardest by AI chatbots; India is its biggest operations base.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 618
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Khan Academy
+  entity: Khan Academy, Inc.
+  hq: Mountain View, United States
+  founded: 2008
+  ownership: private
+  wikipedia: Khan Academy
+  notes: Khanmigo AI tutor; free Hindi and regional content in India.
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

@@ -1,0 +1,386 @@
+# Nazar sector: Energy & Clean Tech. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: Tata Power
+  entity: The Tata Power Company Ltd.
+  hq: Mumbai, India
+  founded: 1915
+  ownership: listed
+  ticker: TATAPOWER.NS
+  wikipedia: Tata Power
+  notes: 4.3 GW cell and module plant in Tamil Nadu; largest public EV-charging network.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 65478
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 3926
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Adani Green
+  entity: Adani Green Energy Ltd.
+  hq: Ahmedabad, India
+  founded: 2015
+  ownership: listed
+  ticker: ADANIGREEN.NS
+  wikipedia: Adani Green Energy
+  investors:
+  - TotalEnergies (19.75%)
+  - GQG
+  notes: 30 GW Khavda park under construction; India's largest renewable developer.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 11212
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1738
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Waaree Energies
+  entity: Waaree Energies Ltd.
+  hq: Mumbai, India
+  founded: 1990
+  ownership: listed
+  ticker: WAAREEENER.NS
+  wikipedia: Waaree Energies
+  notes: India's largest module maker; US plant in Texas; listed Oct 2024.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 14444
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1928
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Premier Energies
+  entity: Premier Energies Ltd.
+  hq: Hyderabad, India
+  founded: 1995
+  ownership: listed
+  ticker: PREMIERENE.NS
+  notes: Second-largest Indian cell maker; listed Sept 2024.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 6519
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 937
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Suzlon
+  entity: Suzlon Energy Ltd.
+  hq: Pune, India
+  founded: 1995
+  ownership: listed
+  ticker: SUZLON.NS
+  wikipedia: Suzlon
+  notes: Order book above 5 GW; India's largest wind OEM.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 10890
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 2072
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Inox Wind
+  entity: Inox Wind Ltd.
+  hq: Noida, India
+  founded: 2009
+  ownership: listed
+  ticker: INOXWIND.NS
+  wikipedia: Inox Wind
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 3700
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 438
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: ReNew
+  entity: ReNew Energy Global plc
+  hq: Gurugram, India
+  founded: 2011
+  ownership: listed
+  ticker: RNW
+  sec_cik: 1848763
+  wikipedia: ReNew Power
+  notes: Nasdaq-listed; taking itself private (2025); module and cell plants.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 10907
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: NTPC
+  entity: NTPC Ltd.
+  hq: New Delhi, India
+  founded: 1975
+  ownership: listed
+  ticker: NTPC.NS
+  wikipedia: NTPC Limited
+  notes: India's largest generator; NTPC Green listed Nov 2024; 60 GW renewable target.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 188138
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 23953
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Reliance New Energy
+  entity: Reliance Industries Ltd.
+  hq: Mumbai, India
+  founded: 1966
+  ownership: listed
+  ticker: RELIANCE.NS
+  wikipedia: Reliance Industries
+  notes: Five giga factories at Jamnagar; India's largest refiner.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 1071174
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_profit
+    period: FY25
+    value: 81309
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Exide
+  entity: Exide Industries Ltd.
+  hq: Kolkata, India
+  founded: 1947
+  ownership: listed
+  ticker: EXIDEIND.NS
+  wikipedia: Exide Industries
+  notes: 12 GWh lithium cell plant in Bengaluru with SVOLT technology.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 17000
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Amara Raja
+  entity: Amara Raja Energy & Mobility Ltd.
+  hq: Tirupati, India
+  founded: 1985
+  ownership: listed
+  ticker: ARE&M.NS
+  wikipedia: Amara Raja Energy & Mobility
+  notes: 16 GWh giga corridor in Telangana; Gotion technology.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 12900
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Ola Electric
+  entity: Ola Electric Mobility Ltd.
+  hq: Bengaluru, India
+  founded: 2017
+  ownership: listed
+  ticker: OLAELEC.NS
+  wikipedia: Ola Electric
+  notes: First Indian-made 4680 cells in its scooters (2025); PLI ACC beneficiary.
+- brand: Statiq
+  entity: Statiq Mobility Pvt. Ltd.
+  hq: Gurugram, India
+  founded: 2019
+  ownership: private
+  investors:
+  - Shell Ventures
+  - Y Combinator
+  notes: Largest private charge-point operator by count.
+- brand: ChargeZone
+  entity: ChargeZone (Tech Mahindra-backed)
+  hq: Vadodara, India
+  founded: 2018
+  ownership: private
+  investors:
+  - Macquarie
+  - British International Investment
+  notes: Highway fast-charging corridors; bus depots.
+- brand: Servotech
+  entity: Servotech Renewable Power System Ltd.
+  hq: New Delhi, India
+  founded: 2004
+  ownership: listed
+  ticker: SERVOTECH.NS
+  notes: Charger OEM for oil-company networks.
+- brand: Indian Oil
+  entity: Indian Oil Corporation Ltd.
+  hq: New Delhi, India
+  founded: 1959
+  ownership: listed
+  ticker: IOC.NS
+  wikipedia: Indian Oil Corporation
+  notes: Largest fuel retailer; 10,000+ charging points at pumps; green hydrogen at Panipat.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 759000
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 12963
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Tesla Energy
+  entity: Tesla, Inc.
+  hq: Austin, United States
+  founded: 2003
+  ownership: listed
+  ticker: TSLA
+  sec_cik: 1318605
+  wikipedia: Tesla Energy
+  notes: Megapack deployments outgrow cars; LFP cell plant in Nevada.
+- brand: BYD
+  entity: BYD Company Ltd.
+  hq: Shenzhen, China
+  founded: 1995
+  ownership: listed
+  ticker: 1211.HK
+  wikipedia: BYD Company
+  notes: Second-largest cell maker; 1 MW flash charging (2025).
+- brand: CATL
+  entity: Contemporary Amperex Technology Co. Ltd.
+  hq: Ningde, China
+  founded: 2011
+  ownership: listed
+  ticker: 300750.SZ
+  wikipedia: Contemporary Amperex Technology
+  notes: World's largest cell maker (about 38% share); Hong Kong listing 2025.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 362013
+    currency: CNY
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: First Solar
+  entity: First Solar, Inc.
+  hq: Tempe, United States
+  founded: 1999
+  ownership: listed
+  ticker: FSLR
+  sec_cik: 1274494
+  wikipedia: First Solar
+  notes: 3.3 GW plant in Tamil Nadu; the US anti-China solar champion.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 4206
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Enphase
+  entity: Enphase Energy, Inc.
+  hq: Fremont, United States
+  founded: 2006
+  ownership: listed
+  ticker: ENPH
+  sec_cik: 1463101
+  wikipedia: Enphase Energy
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 1330
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Ørsted
+  entity: Ørsted A/S
+  hq: Fredericia, Denmark
+  founded: 1972
+  ownership: listed
+  ticker: ORSTED.CO
+  wikipedia: Ørsted (company)
+  notes: Offshore wind bellwether; US project write-downs in 2025.
+- brand: Vestas
+  entity: Vestas Wind Systems A/S
+  hq: Aarhus, Denmark
+  founded: 1945
+  ownership: listed
+  ticker: VWS.CO
+  wikipedia: Vestas
+  notes: Largest Western turbine OEM; blade and nacelle plants in India.
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

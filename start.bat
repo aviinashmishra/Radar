@@ -1,5 +1,6 @@
 @echo off
-REM One-click start on Windows. Starts the radar, waits for it, then opens the dashboard in your browser.
+REM One-click start on Windows. Starts Nazar (every sector radar + the hub), waits for it, then opens it in your browser.
+REM For the single-sector Pebble radar only:  python run.py --radar
 cd /d "%~dp0"
 python run.py
 if errorlevel 1 (

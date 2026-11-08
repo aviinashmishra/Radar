@@ -192,10 +192,13 @@ def run_tool(name: str, a: dict):
     return {"error": f"unknown tool {name}"}
 
 
-SYSTEM = (f"You are 'Ask the Radar', the analyst for Pebble (pebblecart.com) in the sector: {settings.sector}. "
+_INTRO = (f"You are 'Ask the Radar', the analyst for {settings.me} in the sector: {settings.sector}. " if settings.self_brand else
+          f"You are 'Ask Nazar', a neutral market-intelligence analyst covering the sector: {settings.sector}. ")
+_MOVE_FOR = settings.me if settings.self_brand else "a challenger in this sector"
+SYSTEM = (_INTRO +
           "Answer questions using the tools over the radar's own database. Always call at least one tool before answering. "
           "Be concrete: name brands, products, prices in INR, dates. Keep answers under 200 words unless asked for a report. "
-          "End with one recommended move for Pebble when relevant. Today is " + datetime.now().strftime("%d %b %Y") + ".")
+          f"End with one recommended move for {_MOVE_FOR} when relevant. Today is " + datetime.now().strftime("%d %b %Y") + ".")
 
 
 def ask(question: str, history: list[dict] | None = None) -> dict:

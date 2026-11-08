@@ -1,0 +1,629 @@
+# Nazar sector: Energy & Clean Tech (energy). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: energy
+label: Energy & Clean Tech
+sector: 'Energy transition, India and world: solar manufacturing and projects, wind, battery storage and cells, EV charging, grid and power utilities, green hydrogen, oil and gas'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: solar
+  name: Solar
+  show: true
+  keywords: solar|module|\bpv\b|rooftop|cell plant|wafer|polysilicon|pm surya ghar|alcm|dcr
+- key: wind
+  name: Wind
+  show: true
+  keywords: \bwind\b|turbine|offshore wind|onshore|hybrid project|wtg
+- key: storage
+  name: Batteries & storage
+  show: true
+  keywords: battery|\bbess\b|\bcells?\b|gigafactory|lithium|sodium-?ion|energy storage|\bacc\b pli|cell manufacturing
+- key: charging
+  name: EV charging
+  show: true
+  keywords: charging station|ev charg|charge point|battery swap|fast charger|charging network
+- key: grid
+  name: Grid & utilities
+  show: true
+  keywords: \bgrid\b|transmission|discom|tariff|power purchase|\bppa\b|auction|seci|thermal|coal|power demand|peak demand|smart meter
+- key: hydrogen
+  name: Green hydrogen & fuels
+  show: true
+  keywords: hydrogen|electrolyser|electrolyzer|ammonia|green fuel|biofuel|ethanol blending|\bsaf\b
+- key: oilgas
+  name: Oil & gas
+  show: true
+  keywords: \boil\b|\bgas\b|refinery|\blng\b|\bcng\b|petrol|diesel|fuel price|crude|opec|city gas
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: Peak summer power demand
+  month: 5
+  day: 20
+- name: RE-Invest / Renewable Energy summit
+  month: 9
+  day: 16
+- name: COP climate summit
+  month: 11
+  day: 10
+brands:
+- name: Tata Power
+  origin: Indian
+  tier: core
+  country: India
+  kind: Integrated utility, solar manufacturing, EV charging
+  segments:
+  - grid
+  - solar
+  - charging
+  - storage
+  website: https://www.tatapower.com
+  news_terms:
+  - Tata Power
+  - Tata Power Solar
+  - Tata Power EZ Charge
+  aliases:
+  - Tata Power Renewable
+  - TP Solar
+  - EZ Charge
+  - Tata Power-DDL
+  - Tata Power Solar Systems
+  exclude:
+  - Tata Motors
+  - Tata Steel
+  - Tata Consultancy
+  watch_pages:
+  - https://www.tatapower.com/media/press-releases
+- name: Adani Green
+  origin: Indian
+  tier: core
+  country: India
+  kind: Renewable IPP (Adani)
+  segments:
+  - solar
+  - wind
+  - grid
+  - storage
+  website: https://www.adanigreenenergy.com
+  news_terms:
+  - Adani Green Energy
+  - Adani Khavda
+  aliases:
+  - Khavda
+  - Adani Green Energy
+  - AGEL
+  - Adani Solar
+  - Adani New Industries
+  exclude:
+  - Adani Ports
+  - Adani Wilmar
+  - Adani Enterprises coal
+  watch_pages:
+  - https://www.adanigreenenergy.com/newsroom
+- name: Waaree Energies
+  origin: Indian
+  tier: core
+  country: India
+  kind: Solar module and cell manufacturer
+  segments:
+  - solar
+  - storage
+  website: https://waaree.com
+  news_terms:
+  - Waaree Energies
+  aliases:
+  - Waaree Renewable
+  - Waaree Solar Americas
+  - Enel Green Power India (acquired)
+  watch_pages:
+  - https://waaree.com/
+- name: Premier Energies
+  origin: Indian
+  tier: core
+  country: India
+  kind: Solar cell and module manufacturer
+  segments:
+  - solar
+  website: https://premierenergies.com
+  news_terms:
+  - Premier Energies solar
+  aliases:
+  - Premier Energies
+  - Premier Photovoltaic
+  exclude:
+  - Premier League
+  - Premier Inn
+  - Premier Padmini
+  - Premier Explosives
+  watch_pages:
+  - https://premierenergies.com/
+  ambiguous: true
+- name: Suzlon
+  origin: Indian
+  tier: core
+  country: India
+  kind: Wind turbine manufacturer
+  segments:
+  - wind
+  website: https://www.suzlon.com
+  news_terms:
+  - Suzlon Energy
+  aliases:
+  - Suzlon Energy
+  - S144 turbine
+  - S144
+  watch_pages:
+  - https://www.suzlon.com/
+- name: Inox Wind
+  origin: Indian
+  tier: core
+  country: India
+  kind: Wind turbine manufacturer
+  segments:
+  - wind
+  website: https://www.inoxwind.com
+  news_terms:
+  - Inox Wind
+  aliases:
+  - Inox Wind
+  - Inox Green
+  - Inox Clean Energy
+  exclude:
+  - Inox movies
+  - Inox Leisure
+  - INOX cinema
+  - Inox Air Products
+  ambiguous: true
+- name: ReNew
+  origin: Indian
+  tier: core
+  country: India
+  kind: Renewable IPP
+  segments:
+  - solar
+  - wind
+  - storage
+  - hydrogen
+  website: https://renew.com
+  news_terms:
+  - ReNew Energy Global
+  - ReNew Power
+  aliases:
+  - ReNew Power
+  - ReNew Energy Global
+  - ReNew Photovoltaics
+  exclude:
+  - renew passport
+  - renew licence
+  - renew subscription
+  - renewal
+  watch_pages:
+  - https://renew.com/
+  ambiguous: true
+- name: NTPC
+  origin: Indian
+  tier: core
+  country: India
+  kind: Power utility (PSU)
+  segments:
+  - grid
+  - solar
+  - hydrogen
+  - storage
+  website: https://ntpc.co.in
+  news_terms:
+  - NTPC
+  - NTPC Green Energy
+  aliases:
+  - NTPC Green
+  - NGEL
+  - NTPC Renewable
+  - NTPC nuclear
+  watch_pages:
+  - https://ntpc.co.in/
+- name: Reliance New Energy
+  origin: Indian
+  tier: core
+  country: India
+  kind: 'Giga-complex: solar, cells, hydrogen (Reliance)'
+  segments:
+  - solar
+  - storage
+  - hydrogen
+  - oilgas
+  website: https://www.ril.com/businesses/new-energy
+  news_terms:
+  - Reliance New Energy
+  - Reliance giga factory Jamnagar
+  - Reliance solar
+  aliases:
+  - Jamnagar giga complex
+  - Reliance Industries
+  - RIL solar
+  - Reliance battery
+  - Reliance green hydrogen
+  exclude:
+  - Reliance Jio
+  - Reliance Retail
+  - Reliance Capital
+  - Reliance Infra
+  watch_pages:
+  - https://www.ril.com/businesses/new-energy
+- name: Exide
+  origin: Indian
+  tier: core
+  country: India
+  kind: Batteries and lithium cells
+  segments:
+  - storage
+  website: https://www.exideindustries.com
+  news_terms:
+  - Exide Industries
+  - Exide Energy Solutions
+  aliases:
+  - Exide Industries
+  - Exide Energy Solutions
+  - Exide lithium
+  exclude:
+  - Exide Life
+  - Exide Technologies US
+  watch_pages:
+  - https://www.exideindustries.com/
+  ambiguous: true
+- name: Amara Raja
+  origin: Indian
+  tier: core
+  country: India
+  kind: Batteries and lithium cells
+  segments:
+  - storage
+  - charging
+  website: https://www.amararaja.com
+  news_terms:
+  - Amara Raja Energy & Mobility
+  - Amara Raja gigafactory
+  aliases:
+  - Amara Raja Energy
+  - Amaron
+  - Amara Raja Giga Corridor
+  watch_pages:
+  - https://www.amararaja.com/
+- name: Ola Electric
+  origin: Indian
+  tier: core
+  country: India
+  kind: Cell gigafactory (Ola)
+  segments:
+  - storage
+  - charging
+  website: https://www.olaelectric.com
+  news_terms:
+  - Ola Electric gigafactory
+  - Ola 4680 cell
+  aliases:
+  - Bharat Cell
+  - Ola Gigafactory
+  - Krishnagiri
+  exclude:
+  - Ola Cabs
+  - Ola Krutrim
+- name: Statiq
+  origin: Indian
+  tier: core
+  country: India
+  kind: EV charging network
+  segments:
+  - charging
+  website: https://www.statiq.in
+  news_terms:
+  - Statiq EV charging
+  aliases:
+  - Statiq app
+  - Statiq chargers
+  exclude:
+  - static
+  ambiguous: true
+- name: ChargeZone
+  origin: Indian
+  tier: core
+  country: India
+  kind: EV charging network
+  segments:
+  - charging
+  website: https://chargezone.com
+  news_terms:
+  - ChargeZone
+- name: Servotech
+  origin: Indian
+  tier: core
+  country: India
+  kind: EV charger manufacturer and solar EPC
+  segments:
+  - charging
+  - solar
+  website: https://www.servotech.in
+  news_terms:
+  - Servotech Renewable Power
+  - Servotech EV charger
+  aliases:
+  - Servotech Renewable Power Systems
+- name: Indian Oil
+  origin: Indian
+  tier: core
+  country: India
+  kind: Oil, gas and fuel retail (PSU)
+  segments:
+  - oilgas
+  - charging
+  - hydrogen
+  website: https://iocl.com
+  news_terms:
+  - Indian Oil Corporation
+  - IOC EV charging
+  aliases:
+  - IOCL
+  - IndianOil
+  - Indane
+  - XP100
+  watch_pages:
+  - https://iocl.com/
+- name: Tesla Energy
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Storage (Tesla)
+  segments:
+  - storage
+  - charging
+  website: https://www.tesla.com/energy
+  news_terms:
+  - Tesla Megapack
+  - Tesla Energy storage
+  aliases:
+  - Megapack
+  - Powerwall
+  - Supercharger
+  watch_pages:
+  - https://www.tesla.com/energy
+- name: BYD
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: Batteries and EVs
+  segments:
+  - storage
+  - charging
+  website: https://www.byd.com
+  news_terms:
+  - BYD battery
+  - BYD Blade Battery
+  - BYD storage
+  aliases:
+  - Blade Battery
+  - FinDreams
+  - BYD Energy Storage
+  - Flash Charging
+- name: CATL
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: Battery cell manufacturer
+  segments:
+  - storage
+  website: https://www.catl.com
+  news_terms:
+  - CATL battery
+  aliases:
+  - Contemporary Amperex
+  - Shenxing
+  - Qilin
+  - Naxtra sodium-ion
+  watch_pages:
+  - https://www.catl.com/en/news/
+- name: First Solar
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Solar module manufacturer
+  segments:
+  - solar
+  website: https://www.firstsolar.com
+  news_terms:
+  - First Solar
+  aliases:
+  - First Solar Tamil Nadu
+  - CdTe
+  watch_pages:
+  - https://investor.firstsolar.com/news/
+- name: Enphase
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Solar microinverters and storage
+  segments:
+  - solar
+  - storage
+  website: https://enphase.com
+  news_terms:
+  - Enphase Energy
+  aliases:
+  - IQ8
+  - IQ Battery
+  watch_pages:
+  - https://newsroom.enphase.com/
+- name: Ørsted
+  origin: Global
+  tier: adjacent
+  country: Denmark
+  kind: Offshore wind developer
+  segments:
+  - wind
+  website: https://orsted.com
+  news_terms:
+  - Orsted offshore wind
+  - Ørsted
+  aliases:
+  - Orsted
+  watch_pages:
+  - https://orsted.com/en/media
+- name: Vestas
+  origin: Global
+  tier: adjacent
+  country: Denmark
+  kind: Wind turbine manufacturer
+  segments:
+  - wind
+  website: https://www.vestas.com
+  news_terms:
+  - Vestas wind turbines
+  - Vestas India
+  watch_pages:
+  - https://www.vestas.com/en/media/company-news
+sector_news_terms:
+- solar manufacturing India
+- renewable energy India capacity
+- battery storage India tender
+- EV charging India
+- green hydrogen India
+- power demand India
+- solar module price
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://www.mercomindia.com/feed
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://energy.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.pv-magazine.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.saurenergy.com/feed
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://electrek.co/feed/
+  filter: sector
+reddit:
+  subreddits:
+  - solar
+  - energy
+  - IndiaInvestments
+  - electricvehicles
+  searches:
+  - Waaree
+  - Adani Green
+  - Tata Power solar
+  - Suzlon
+  - rooftop solar India
+  - Exide lithium
+  - Ola gigafactory
+  - green hydrogen India
+price_bands:
+- 0
+- 10000
+- 50000
+- 100000
+- 500000
+- 2000000
+- 10000000
+- 100000000000
+youtube_queries:
+- review
+- plant
+search_seeds:
+- '{brand} '
+- '{brand} share'
+- rooftop solar price
+- best ev charger
+- solar panel subsidy
+vocab:
+  sector: solar|\bwind\b|renewable|battery|\bbess\b|storage|gigafactory|lithium|ev charg|charging station|\bgrid\b|discom|power (demand|plant|purchase)|transmission|hydrogen|electrolys|refinery|\blng\b|crude|opec|tata
+    power|adani (green|energy|power)|waaree|premier energies|suzlon|inox wind|exide|amara raja|ntpc|reliance (new energy|industries)|renew|ioc|indian oil|bpcl|hpcl|ongc|catl|byd|tesla energy|first solar|enphase|ørsted|orsted|vestas|statiq|chargezone|servotech|exicom
+  category: solar|wind|renewable|battery|storage|energy|power|\bgrid\b|\bmw\b|\bgw\b|gwh|mwh|tariff|tender|auction|ppa|plant|module|cell|charger|charging|hydrogen|refinery|fuel|oil|gas|capacity|project|discom
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|tender|auction|\bppa\b|commission(ed|ing)|capacity
+    addition|alcm|anti-?dumping|duty|dcr|pm surya ghar|pli|gigafactory|outage|blackout|fire|tariff hike|fuel price
+  core: solar|wind|battery|charging|grid|hydrogen
+  noise: solar eclipse|wind chimes|solar system planets|energy drink|energy healing|chakra
+  ambiguous:
+  - Premier
+  - Inox
+  - Renew
+  - Exide
+  - Statiq
+  noise_note: Astronomy, energy drinks and wellness stories score 1-3. Capacity additions, tenders and PPAs, module and cell prices, duties and PLI policy, gigafactories, charging networks, fuel prices,
+    funding and results matter most.
+voice_themes:
+- key: cost
+  rx: cost|price|tariff|subsidy|payback|savings|bill|expensive|quote
+- key: performance
+  rx: generation|output|units|efficiency|degradation|performance|capacity|kwh
+- key: install
+  rx: install|installer|delay|net meter|approval|discom|wiring|quality|roof
+- key: reliability
+  rx: fail|fault|inverter|breakdown|outage|warranty|replace|fire|trip
+- key: service
+  rx: service|support|maintenance|\bamc\b|response|customer care|complaint
+- key: charging
+  rx: charger|charging|station|queue|broken|\bapp\b|payment|speed|kw
+- key: policy
+  rx: policy|pm surya ghar|subsidy|scheme|dcr|alcm|duty|tender|portal
+- key: battery
+  rx: battery|backup|storage|cycle|life|swap|degrad
+world:
+  regulators:
+  - MNRE
+  - Ministry of Power
+  - CERC / SERCs
+  - SECI
+  - PNGRB
+  trackers:
+  - CEA monthly capacity
+  - MNRE dashboards
+  - Mercom
+  - JMK Research
+  - BNEF
+  - IEA
+  watch_events:
+  - Union Budget (1 Feb)
+  - Peak demand season (May-Jun)
+  - RE-Invest (Sep)
+  - COP (Nov)
+  - Quarterly results of utilities and module makers
+perspective: ''

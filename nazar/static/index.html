@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nazar</title>
+<meta name="description" content="Nazar: one eye on every market. Live competitive intelligence across sectors, India and world.">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/nazar/static/theme.css">
+<style>
+/* Hub-specific rules; tokens, the ambient colour field and shared glass components come from theme.css. */
+body{overflow-x:hidden}
+.serif{font-family:var(--serif);font-weight:400;letter-spacing:0}
+/* header: a floating glass capsule */
+.top{position:sticky;top:10px;z-index:40;display:flex;align-items:center;gap:14px;padding:8px 10px 8px 16px;margin:10px 16px 0;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.5);backdrop-filter:blur(var(--glass-blur)) saturate(1.5);transition:box-shadow .3s var(--ease)}
+html[data-scrolled="1"] .top{box-shadow:var(--shadow-lift)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.02em} .logo:hover{text-decoration:none}
+.logo svg{width:30px;height:30px;filter:drop-shadow(0 4px 10px rgba(15,42,92,.35))}
+.logo .hi{font-family:var(--serif);font-weight:400;font-size:13px;color:var(--muted);margin-left:2px}
+nav.topnav{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;padding:2px} nav.topnav::-webkit-scrollbar{display:none}
+nav.topnav a{padding:7px 14px;border-radius:999px;color:var(--ink-2);white-space:nowrap;font-weight:600;font-size:13px;transition:background .15s,color .15s} nav.topnav a:hover{background:var(--glass-2);text-decoration:none;color:var(--ink)} nav.topnav a.on{background:var(--ink);color:var(--bg);box-shadow:0 8px 18px -10px var(--ink)}
+.search{display:flex;align-items:center;gap:8px;border-radius:999px;padding:8px 14px;min-width:250px;color:var(--muted);cursor:text;font-size:13px;box-shadow:none} .search:hover{background:var(--glass-strong)} .search kbd{margin-left:auto}
+.theme{display:inline-flex;border-radius:999px;padding:3px;gap:2px;box-shadow:none} .theme button{border:0;border-radius:999px;padding:5px 9px;background:transparent;color:var(--muted);font-size:12px;box-shadow:none} .theme button:hover{transform:none;background:var(--glass-2)} .theme button.on{background:var(--glass-strong);color:var(--ink);box-shadow:var(--shadow-sm)}
+.clock{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;white-space:nowrap}
+.buildbar{position:relative;z-index:2;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 18px;margin:10px 16px 0;border-radius:18px;background:color-mix(in srgb,var(--warn) 14%,var(--glass));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--glass-line));font-size:13px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.buildbar:empty{display:none}
+/* tape */
+.tape{position:relative;z-index:1;overflow:hidden;margin:10px 16px 0;border-radius:999px;border:1px solid var(--glass-line);background:var(--glass-2);height:36px;display:flex;align-items:center;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.tape:hover .track{animation-play-state:paused}
+.track{display:flex;gap:28px;width:max-content;animation:tape 90s linear infinite;padding:0 20px;height:36px;align-items:center;white-space:nowrap;font-size:12.5px}
+@keyframes tape{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk{display:inline-flex;align-items:center;gap:7px;color:var(--ink-2)} .tk:hover{text-decoration:none;color:var(--ink)} .tk b{color:var(--ink);font-weight:600} .tk i{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--c,var(--accent));box-shadow:0 0 0 2px color-mix(in srgb,var(--c,var(--accent)) 22%,transparent)}
+.tape.empty .track{animation:none;color:var(--muted)}
+main{position:relative;z-index:1;padding:24px 24px 80px;max-width:1440px;margin:0 auto}
+.hd{display:flex;align-items:flex-end;gap:16px;margin:4px 0 20px;flex-wrap:wrap} .hd h1{font-size:34px;font-family:var(--serif);font-weight:400;letter-spacing:-.005em} .hd h1 em{font-style:italic;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent} .hd .sub{color:var(--muted);font-size:13px;padding-bottom:7px}
+.hero{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)} .gauto{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))} .g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1100px){.hero,.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.hero,.g2,.g3,main .grid{grid-template-columns:1fr!important} main{padding:14px} .top{padding:8px 12px;flex-wrap:wrap;gap:8px;border-radius:26px;margin:8px 10px 0;top:8px} nav.topnav{order:3;flex-basis:100%} .search{min-width:0;flex:1} .logo .hi,.clock,.theme{display:none} .tape,.buildbar{margin:8px 10px 0}}
+.kpi .v{font-size:25px}
+th{cursor:pointer;user-select:none}
+td{vertical-align:middle}
+.flag{font-size:12px}
+/* sector cards: a soft sector-coloured bloom in the corner instead of a hard top stripe */
+.sc{position:relative;overflow:hidden;cursor:pointer;display:grid;gap:10px;align-content:start;transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s,background-position .4s var(--ease);background:radial-gradient(190px circle at calc(100% + 30px) -30px,color-mix(in srgb,var(--c) 40%,transparent),transparent 68%) no-repeat,var(--glass)} .sc:hover{background-position:-20px 20px,0 0}
+.sc:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 45%,var(--glass-line));box-shadow:var(--shadow-lift)}
+.sc .ic{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:19px;background:color-mix(in srgb,var(--c) 16%,var(--glass-strong));color:var(--c);border:1px solid color-mix(in srgb,var(--c) 35%,transparent);flex:none;box-shadow:0 8px 18px -12px var(--c)}
+.sc .n{font-weight:700;font-size:15px;letter-spacing:-.01em} .sc .tg{color:var(--muted);font-size:12px;line-height:1.4}
+.sc .st{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap} .sc .st b{display:block;color:var(--ink);font-size:16px;font-weight:700;letter-spacing:-.02em}
+.sc .top{position:static;display:block;background:none;border:0;padding:0;margin:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:12.5px;color:var(--ink-2)}
+/* cross-sector feed rows carry a sector colour bar */
+.fr{grid-template-columns:4px 64px 30px 1fr auto} .fr .bar{width:4px;align-self:stretch;border-radius:999px;background:var(--c);display:block;margin:0}
+.fr .x{padding-left:108px}
+@media(max-width:600px){.fr{grid-template-columns:4px auto auto 1fr} .fr .x{padding-left:6px}}
+.newpill{top:78px}
+/* iris */
+.iris{display:block;width:100%;max-width:560px;margin:0 auto;filter:drop-shadow(0 18px 30px rgba(16,24,40,.18))} .iris path.w{cursor:pointer;transition:opacity .15s} .iris path.w:hover{opacity:1!important} .iris text{fill:var(--ink-2);font-size:11px;font-weight:600} .iris .ctr{fill:var(--ink);font-size:28px;font-weight:700;letter-spacing:-.02em} .iris .ctr2{fill:var(--muted);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.heat td.c{cursor:pointer}
+.mini>div{position:absolute;top:0;bottom:0;width:3px;background:var(--accent);border-radius:2px}
+.idx{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px} .idx .card{padding:13px 16px;border-radius:20px} .idx .n{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600} .idx .v{font-size:21px;font-weight:700;margin-top:2px;letter-spacing:-.02em}
+.ucard{display:grid;gap:8px;cursor:pointer;align-content:start} .ucard:hover{transform:translateY(-2px)} .ucard .n{font-weight:700;font-size:15px;letter-spacing:-.01em} .ucard .meta{font-size:12px;color:var(--muted)} .ucard .st{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap} .ucard .st b{color:var(--ink);font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.ws{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ws .w{border:1px solid var(--glass-line);border-radius:16px;padding:11px 13px;background:var(--glass-2)} .ws .w .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-weight:600}
+.leader{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px} .leader:last-child{border-bottom:0}
+.story{cursor:pointer} .story:hover .t{color:var(--accent)}
+.tabs{position:static}
+#view{animation:fade .3s var(--ease)} @keyframes fade{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.track,#view{animation:none}}
+footer{position:relative;z-index:1;color:var(--muted);font-size:12px;text-align:center;padding:30px 20px 40px}
+@media(max-width:500px){#mt td>div.muted.xs{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#/"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0f2a5c"/><circle cx="32" cy="32" r="21" fill="#ffffff"/><circle cx="32" cy="32" r="13" fill="#2a78d6"/><circle cx="32" cy="32" r="6" fill="#0b0b0b"/><circle cx="28" cy="27" r="2.2" fill="#fff"/></svg>Nazar</a>
+  <nav class="topnav" id="tabs" aria-label="Pages">
+    <a href="#/">Eye</a><a href="#/pulse">Pulse</a><a href="#/markets">Markets</a><a href="#/universe">Universe</a><a href="#/themes">Themes</a><a href="#/lens">India · World</a><a href="#/sectors">Sectors</a>
+  </nav>
+  <div class="search" id="searchbtn" role="button" tabindex="0"><span>Search companies, moves, or ask Nazar…</span><kbd>Ctrl K</kbd></div>
+  <span class="clock" id="clock"></span>
+  <div class="theme" id="theme" aria-label="Theme"><button data-t="light" title="Light">☀</button><button data-t="dark" title="Dark">☾</button><button data-t="auto" title="Follow system">A</button></div>
+</header>
+<div id="buildbar"></div>
+<div class="tape empty" id="tape"><div class="track">loading the market tape…</div></div>
+<main><div id="view"></div></main>
+<footer>Nazar reads public sources only: stores, news feeds, app stores, filings, Wikipedia, Google Trends, Yahoo Finance, Reddit, YouTube. Estimates are marked as estimates. <span id="foot"></span></footer>
+
+<div class="tip" id="tip"></div>
+<div class="ov" id="ov"><div class="pal">
+  <div class="in"><input id="palq" placeholder="Jump to a company or a sector, or ask a question (Enter asks)"><select id="palsec" title="Which sector's analyst answers the question"></select></div>
+  <div class="res" id="palres"></div><div class="ans" id="palans" style="display:none"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- utilities ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>n==null?"–":Number(n).toLocaleString("en-IN",{maximumFractionDigits:0});
+const fmt2=n=>n==null?"–":Number(n).toLocaleString("en-IN",{maximumFractionDigits:2});
+const pc=v=>v==null?"–":(v>0?"+":"")+Number(v).toFixed(Math.abs(v)<10?2:1)+"%";
+const cls=v=>v>0?"up":v<0?"down":"muted";
+const ago=iso=>{if(!iso)return"";const d=(Date.now()-new Date(/[Z+]/.test(iso)?iso:iso+"Z"))/1000;if(d<60)return"now";if(d<3600)return Math.floor(d/60)+"m";if(d<86400)return Math.floor(d/3600)+"h";return Math.floor(d/86400)+"d";};
+const impc=i=>i>=9?"i9":i>=7?"i7":i>=5?"i5":"";
+const pill=i=>`<span class="pill ${impc(i)}">${i??"–"}</span>`;
+const kind=k=>String(k||"").replace(/_/g," ");
+const flag=o=>o==="Indian"?'<span class="flag" title="Indian">🇮🇳</span>':'<span class="flag" title="Global">🌍</span>';
+const money=(r)=>{if(!r)return"–";const v=r.value;if(r.currency==="INR")return v>=1e5?`₹${(v/1e5).toFixed(1)} L cr`:`₹${fmt(v)} cr`;const sym={USD:"$",EUR:"€",GBP:"£",CNY:"¥",JPY:"¥"}[r.currency]||r.currency+" ";return v>=1000?`${sym}${(v/1000).toFixed(1)} B`:`${sym}${fmt(v)} M`;};
+let NAV=0;class Stale extends Error{}addEventListener("unhandledrejection",e=>{if(e.reason instanceof Stale)e.preventDefault();});
+const api=async(p,o)=>{const n=NAV;const r=await fetch(p,o);if(!r.ok)throw new Error(p+" "+r.status);const j=await r.json();if(!o&&n!==NAV)throw new Stale();return j;};
+const post=(p,b)=>api(p,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b||{})});
+const toast=m=>{const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",Math.max(2200,m.length*45));};
+let SECTORS=[];const secOf=k=>SECTORS.find(s=>s.key===k)||{};
+const secChip=(s,on)=>`<span class="chip ${on?"on":""}" style="--c:${esc(s.color)}"><i></i>${esc(s.short||s.label)}</span>`;
+const openBrand=(sector,name)=>{location.href=`/s/${encodeURIComponent(sector)}#/brand/${encodeURIComponent(name)}`;};
+const openSector=(sector,route)=>{location.href=`/s/${encodeURIComponent(sector)}#/${route||"today"}`;};
+
+/* ---------- theme (shared key with the sector dashboards) ---------- */
+const mq=matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(t){document.documentElement.dataset.theme=t;document.documentElement.dataset.dark=mq.matches?"1":"0";$$("#theme button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));try{localStorage.setItem("theme",t)}catch(e){}}
+mq.addEventListener("change",()=>applyTheme(document.documentElement.dataset.theme));
+$$("#theme button").forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
+let saved="auto";try{saved=localStorage.getItem("theme")||"auto"}catch(e){} applyTheme(saved);
+setInterval(()=>{$("#clock").textContent=new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Kolkata"})+" IST";},1000);
+
+/* ---------- charts ---------- */
+function spark(series,w=110,h=26,color="var(--accent)"){if(!series||!series.length)return"";const mx=Math.max(1,...series),mn=Math.min(...series),n=series.length;const y=v=>h-2-((v-mn)/(mx-mn||1))*(h-6);const pts=series.map((v,i)=>`${(i/(n-1||1))*(w-4)+2},${y(v)}`).join(" ");return`<svg width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${w-2}" cy="${y(series[n-1])}" r="2.6" fill="${color}"/></svg>`;}
+function bars(rows,o={}){const mx=o.max||Math.max(1,...rows.map(r=>r.v));return rows.map(r=>`<div class="bar"><span title="${esc(r.l)}">${esc(String(r.l).slice(0,20))}</span><div class="tr"><div class="f" style="width:${Math.min(100,r.v/mx*100)}%;background:${r.c||"var(--accent)"}"></div></div><span class="v num">${o.fv?o.fv(r.v):fmt(r.v)}</span></div>`).join("")||'<div class="empty">nothing yet</div>';}
+function iris(secs){const W=560,H=520,cx=W/2,cy=H/2-6,R=196,r1=88,gap=0.045;const n=secs.length||1;const mx=Math.max(1,...secs.map(s=>s.events_24h||0));const tot=secs.reduce((a,s)=>a+(s.events_24h||0),0);
+  const P=(a,r)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];const arc=(a0,a1,ro,ri)=>{const [x1,y1]=P(a0,ro),[x2,y2]=P(a1,ro),[x3,y3]=P(a1,ri),[x4,y4]=P(a0,ri);const L=a1-a0>Math.PI?1:0;return`M${x1.toFixed(1)},${y1.toFixed(1)}A${ro},${ro},0,${L},1,${x2.toFixed(1)},${y2.toFixed(1)}L${x3.toFixed(1)},${y3.toFixed(1)}A${ri},${ri},0,${L},0,${x4.toFixed(1)},${y4.toFixed(1)}Z`;};
+  let g=`<svg class="iris" viewBox="0 0 ${W} ${H}" role="img" aria-label="Nazar iris: activity per sector in the last 24 hours">`;
+  [r1,(r1+R)/2,R].forEach(r=>g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line)" stroke-dasharray="2 4"/>`);
+  secs.forEach((s,i)=>{const a0=-Math.PI/2+i*2*Math.PI/n+gap,a1=-Math.PI/2+(i+1)*2*Math.PI/n-gap;const heat=(s.events_24h||0)/mx;const op=0.18+heat*0.62;
+    const tip=`${s.label}\n${fmt(s.events_24h)} events · 24h · ${fmt(s.events_7d)} · 7d\n${s.top?`Top: ${s.top.brand}: ${s.top.title.slice(0,90)}`:"warming up"}`;
+    g+=`<path class="w" d="${arc(a0,a1,R,r1)}" fill="${s.color}" fill-opacity="${op.toFixed(2)}" stroke="${s.color}" stroke-opacity=".5" data-go="${esc(s.key)}" data-tip="${esc(tip)}"/>`;
+    /* hottest brands as dots: nearer the pupil = hotter */
+    (s.hot||[]).slice(0,3).forEach((h,j)=>{const a=a0+(a1-a0)*(0.25+j*0.25);const mxh=Math.max(1,...(s.hot||[]).map(x=>x.c));const r=R-14-(h.c/mxh)*(R-r1-30);const [x,y]=P(a,r);g+=`<g data-go="${esc(s.key)}" data-brand="${esc(h.brand)}" data-tip="${esc(h.brand)} · ${h.c} events this week · ${esc(s.label)}" style="cursor:pointer"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(4+Math.min(6,h.c/4)).toFixed(1)}" fill="${s.color}" stroke="var(--surface)" stroke-width="1.5"/></g>`;});
+    const am=(a0+a1)/2,[lx,ly]=P(am,R+18);const anchor=Math.cos(am)>0.2?"start":Math.cos(am)<-0.2?"end":"middle";
+    g+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="${anchor}" data-go="${esc(s.key)}" style="cursor:pointer">${esc(s.short||s.label)}</text>`;});
+  g+=`<circle cx="${cx}" cy="${cy}" r="${r1-12}" fill="var(--surface)" stroke="var(--line)"/><circle cx="${cx}" cy="${cy}" r="${r1-30}" fill="color-mix(in srgb,var(--accent) 12%,transparent)"/>`;
+  g+=`<text x="${cx}" y="${cy+8}" text-anchor="middle" class="ctr">${fmt(tot)}</text><text x="${cx}" y="${cy+26}" text-anchor="middle" class="ctr2">moves · 24h</text></svg>`;return g;}
+
+/* ---------- tooltip ---------- */
+const tip=$("#tip");document.addEventListener("mousemove",e=>{const el=e.target.closest("[data-tip]");if(!el){tip.style.display="none";return;}tip.textContent=el.dataset.tip;tip.style.display="block";const x=Math.min(innerWidth-330,e.clientX+14),y=Math.min(innerHeight-120,e.clientY+14);tip.style.left=x+"px";tip.style.top=y+"px";});
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g&&!e.target.closest("a,button")){if(g.dataset.brand)openBrand(g.dataset.go,g.dataset.brand);else openSector(g.dataset.go);}});
+
+/* ---------- tape ---------- */
+async function tapeLoad(){try{const t=await api("/nazar/api/tape",{});const items=[];(t.indices||[]).forEach(i=>items.push(`<span class="tk"><b>${esc(i.name)}</b> ${fmt2(i.close)} <span class="${cls(i.change_pct)}">${pc(i.change_pct)}</span></span>`));
+  const q=(t.quotes||[]);const movers=[...q].sort((a,b)=>Math.abs(b.change_pct||0)-Math.abs(a.change_pct||0)).slice(0,28);movers.forEach(x=>items.push(`<a class="tk" href="/s/${esc(x.sector)}#/brand/${encodeURIComponent(x.brand)}" style="--c:${esc(x.color)}"><i></i><b>${esc(x.brand)}</b> <span class="muted xs">${esc(x.ticker)}</span> ${fmt2(x.close)} <span class="${cls(x.change_pct)}">${pc(x.change_pct)}</span></a>`));
+  const el=$("#tape");if(!items.length){el.classList.add("empty");el.innerHTML='<div class="track">Market tape: share prices arrive after each sector\'s first sweep (a few minutes).</div>';return;}el.classList.remove("empty");el.innerHTML=`<div class="track">${items.join("")}${items.join("")}</div>`;}catch(e){}}
+tapeLoad();setInterval(tapeLoad,5*60*1000);
+
+/* ---------- router ---------- */
+const route=()=>(location.hash.replace(/^#\/?/,"")||"eye").split("/")[0]||"eye";
+const param=()=>decodeURIComponent((location.hash.replace(/^#\/?/,"").split("/")[1]||""));
+addEventListener("hashchange",render);
+async function render(){const r=route();NAV++;$$("#tabs a").forEach(a=>a.classList.toggle("on",(a.getAttribute("href")==="#/"+(r==="eye"?"":r))));const v=$("#view");v.innerHTML='<div class="skel"><div class="sk" style="height:70px"></div><div class="sk" style="height:360px"></div></div>';
+  try{if(!SECTORS.length)SECTORS=await api("/nazar/api/sectors",{});$("#palsec").innerHTML=SECTORS.map(s=>`<option value="${esc(s.key)}">${esc(s.short||s.label)}</option>`).join("");
+    await ({eye:vEye,pulse:vPulse,markets:vMarkets,universe:vUniverse,themes:vThemes,lens:vLens,sectors:vSectors}[r]||vEye)(v);}
+  catch(e){if(e instanceof Stale)return;v.innerHTML=`<div class="card"><b>Could not load.</b><div class="muted small">${esc(e.message)}</div></div>`;}}
+function head(t,s){return`<div class="hd"><h1>${t}</h1><div class="sub">${s||""}</div></div>`;}
+
+/* ---------- Eye ---------- */
+async function vEye(v){SECTORS=await api("/nazar/api/sectors");const S=SECTORS;const sum=k=>S.reduce((a,s)=>a+(s[k]||0),0);const brands=sum("brands"),listed=sum("listed");
+  const hot=S.filter(s=>s.top).sort((a,b)=>(b.top.importance-a.top.importance)||(b.top.created_at>a.top.created_at?1:-1));
+  const warming=S.filter(s=>!s.events_total||s.events_total<5).length;
+  v.innerHTML=`${head(`One eye on <em>every market</em>`,`${S.length} sectors · ${fmt(brands)} companies · ${listed} listed · ${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}`)}
+  <div class="kpis">
+    <div class="kpi"><div class="l">Moves · 24h</div><div class="v num">${fmt(sum("events_24h"))}</div><div class="s">${fmt(sum("events_7d"))} this week</div></div>
+    <div class="kpi"><div class="l">News · 7d</div><div class="v num">${fmt(sum("news_7d"))}</div><div class="s">headlines matched to companies</div></div>
+    <div class="kpi"><div class="l">Signals · 7d</div><div class="v num">${fmt(sum("signals_7d"))}</div><div class="s">cross-event rules fired</div></div>
+    <div class="kpi"><div class="l">Companies</div><div class="v num">${fmt(brands)}</div><div class="s">${fmt(sum("indian"))} Indian · ${fmt(sum("global"))} global</div></div>
+    <div class="kpi"><div class="l">Listed</div><div class="v num">${listed}</div><div class="s">${fmt(sum("quotes"))} with a live quote</div></div>
+    <div class="kpi"><div class="l">Buyer voice</div><div class="v num">${fmt(sum("voice"))}</div><div class="s">reviews and comments read</div></div>
+  </div>
+  <div class="grid hero">
+    <div class="card"><h2>The iris <span class="hint">brighter = busier · dots = hottest companies · click to enter</span></h2>${iris(S)}</div>
+    <div class="card"><h2>What Nazar sees now <span class="hint">top move per sector · 3 days</span></h2>
+      ${hot.length?hot.map(s=>`<div class="story" data-go="${esc(s.key)}" data-brand="${esc(s.top.brand)}"><div class="meta">${secChip(s)}${pill(s.top.importance)}<b>${esc(s.top.brand)}</b><span>${esc(kind(s.top.kind))}</span><span style="margin-left:auto">${ago(s.top.created_at)}</span></div><div class="t">${esc(s.top.title)}</div>${s.top.so_what?`<div class="why">${esc(s.top.so_what)}</div>`:""}</div>`).join(""):
+        `<div class="empty">Nazar is warming up: the first sweep of each sector is running. Scored moves appear here within minutes; the full first pass takes a couple of hours.</div>`}
+      ${warming?`<div class="muted xs" style="margin-top:10px">${warming} sector${warming>1?"s are":" is"} still on its first sweep.</div>`:""}
+    </div>
+  </div>
+  <h2 class="serif" style="font-size:22px;margin:26px 0 12px">Sectors</h2>
+  <div class="grid gauto">${S.map(sectorCard).join("")}</div>`;}
+function sectorCard(s){const sched={running:"live",external:"live (shared radar)",off:"paused",crashed:"stopped"}[s.scheduler]||s.scheduler;
+  return`<div class="card sc" style="--c:${esc(s.color)}" data-go="${esc(s.key)}">
+    <div class="row"><div class="ic">${esc(s.icon)}</div><div class="grow"><div class="n">${esc(s.label)}</div><div class="tg">${esc(s.tagline)}</div></div>${spark(s.spark,90,26,s.color)}</div>
+    <div class="st"><span><b>${fmt(s.events_24h)}</b>moves 24h</span><span><b>${fmt(s.news_7d)}</b>news 7d</span><span><b>${fmt(s.brands)}</b>companies</span><span><b>${s.listed}</b>listed</span>${s.pressure&&s.pressure.risk?`<span><b>₹${fmt(s.pressure.risk/1e5)} L</b>at risk / month</span>`:""}</div>
+    <div>${(s.hot||[]).map(h=>`<span class="chip" data-go="${esc(s.key)}" data-brand="${esc(h.brand)}">${esc(h.brand)} <span class="muted">${h.c}</span></span>`).join("")||'<span class="muted xs">no scored moves yet</span>'}</div>
+    ${s.top?`<div class="top">${pill(s.top.importance)} <b>${esc(s.top.brand)}</b> · ${esc(s.top.title.slice(0,110))}</div>`:""}
+    <div class="row xs muted"><span>● ${sched}</span><span>${s.last_run?`swept ${ago(s.last_run)} ago`:"first sweep running"}</span><span class="grow"></span><a href="/s/${esc(s.key)}" class="ink2">Open dashboard →</a></div>
+  </div>`;}
+
+/* ---------- Pulse ---------- */
+const KINDS=["news","press","stock_move","financial_fact","financial_result","attention_spike","trending_now","new_product","price_drop","price_rise","sale_started","stock_out","app_update","app_rating_change","video","social","search_trend","page_change","homepage_change","hiring","voice_wave","praise_wave","channel_undercut","qc_expansion"];
+let PULSE_SEEN=new Set(),PULSE_NEW=[],pulseTimer=null;
+async function vPulse(v){const F=JSON.parse(sessionStorage.getItem("nzpulse")||"{}");F.sectors=F.sectors||[];
+  v.innerHTML=`${head(`The <em>pulse</em>`,"every scored move across every sector, newest first · refreshes itself")}
+  <div class="card"><div class="filters" id="pf">${SECTORS.map(s=>`<span class="chip btn ${F.sectors.includes(s.key)?"on":""}" data-s="${esc(s.key)}" style="--c:${esc(s.color)}"><i></i>${esc(s.short)}</span>`).join("")}
+    <select id="pi">${[3,5,7,9].map(i=>`<option value="${i}" ${(F.imp||5)==i?"selected":""}>importance ${i}+</option>`).join("")}</select>
+    <select id="pk"><option value="">all kinds</option>${KINDS.map(k=>`<option value="${k}" ${F.kind===k?"selected":""}>${kind(k)}</option>`).join("")}</select>
+    <select id="pd">${[1,3,7,30].map(d=>`<option value="${d}" ${(F.days||7)==d?"selected":""}>${d} day${d>1?"s":""}</option>`).join("")}</select>
+    <input id="pq" placeholder="search…" value="${esc(F.q||"")}" style="flex:1;min-width:140px"><button class="primary" id="pa">Apply</button></div>
+    <div id="newpill" class="newpill"></div><div id="rows"></div></div>`;
+  const read=()=>({sectors:$$("#pf .chip.on").map(c=>c.dataset.s),imp:$("#pi").value,kind:$("#pk").value,days:$("#pd").value,q:$("#pq").value});
+  const load=async()=>{const f=read();sessionStorage.setItem("nzpulse",JSON.stringify(f));let rows=[];
+    if(f.sectors.length){for(const s of f.sectors)rows=rows.concat(await api(`/nazar/api/pulse?${new URLSearchParams({min_importance:f.imp,kind:f.kind,q:f.q,days:f.days,limit:120,sector:s})}`));rows.sort((a,b)=>a.created_at<b.created_at?1:-1);}
+    else rows=await api(`/nazar/api/pulse?${new URLSearchParams({min_importance:f.imp,kind:f.kind,q:f.q,days:f.days,limit:200})}`);
+    PULSE_SEEN=new Set(rows.map(r=>r.sector+":"+r.id));PULSE_NEW=[];$("#newpill").style.display="none";
+    $("#rows").innerHTML=rows.map(feedRow).join("")||'<div class="empty">No moves match. Lower the importance or widen the days: new sectors fill up as their first sweep lands.</div>';};
+  $("#pf").onclick=e=>{const c=e.target.closest(".chip");if(c){c.classList.toggle("on");load();}};$("#pa").onclick=load;$("#pq").onkeydown=e=>{if(e.key==="Enter")load();};["#pi","#pk","#pd"].forEach(s=>$(s).onchange=load);
+  $("#rows").onclick=e=>{const r=e.target.closest(".fr");if(!r||e.target.closest("a"))return;r.classList.toggle("open");};
+  $("#newpill").onclick=()=>{const r=$("#rows");PULSE_NEW.reverse().forEach(e=>r.insertAdjacentHTML("afterbegin",feedRow(e)));PULSE_NEW=[];$("#newpill").style.display="none";};
+  await load();
+  clearInterval(pulseTimer);pulseTimer=setInterval(async()=>{if(route()!=="pulse"){clearInterval(pulseTimer);return;}try{const f=read();const fresh=await api(`/nazar/api/pulse?${new URLSearchParams({min_importance:f.imp,kind:f.kind,q:f.q,days:1,limit:60})}`);
+    const nw=fresh.filter(r=>!PULSE_SEEN.has(r.sector+":"+r.id)&&(!f.sectors.length||f.sectors.includes(r.sector)));nw.forEach(r=>{PULSE_SEEN.add(r.sector+":"+r.id);PULSE_NEW.push(r);});
+    if(PULSE_NEW.length){const p=$("#newpill");p.style.display="block";p.textContent=`${PULSE_NEW.length} new · click to show`;}}catch(e){}},45000);}
+function feedRow(e){const imp=e.data&&e.data.impact;return`<div class="fr" style="--c:${esc(e.color)}"><span class="bar"></span><span class="ago">${ago(e.created_at)} · ${esc(e.sector_short)}</span>${pill(e.importance)}<div><span class="b">${esc(e.brand)}</span> <span class="k">${esc(kind(e.kind))}${e.data&&e.data.topic?` · ${esc(e.data.topic)}`:""}</span><div>${esc(e.title)} ${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener" class="muted xs">↗</a>`:""}</div></div><span class="k">${esc(e.source)}</span>
+  <div class="x">${e.so_what&&!e.so_what.includes(e.title.slice(0,40))?`<div>${esc(e.so_what)}</div>`:""}${imp?`<div class="muted small">Impact: ${esc(imp.label||"")}</div>`:""}${e.counter_move&&e.counter_move!=="No action"?`<div class="move">${esc(e.counter_move)}</div>`:""}${e.detail?`<div class="muted small" style="margin-top:4px">${esc(e.detail)}</div>`:""}<div class="row" style="margin-top:6px"><a class="small" href="/s/${esc(e.sector)}#/brand/${encodeURIComponent(e.brand)}">${esc(e.brand)} in ${esc(e.sector_label)} →</a></div></div></div>`;}
+
+/* ---------- Markets ---------- */
+async function vMarkets(v){const t=await api("/nazar/api/tape");const q=t.quotes||[];const F={sector:"",sort:"change"};
+  const idx=(t.indices||[]).map(i=>`<div class="card"><div class="n">${esc(i.name)}</div><div class="v num">${fmt2(i.close)}</div><div class="row small"><span class="${cls(i.change_pct)}">${pc(i.change_pct)}</span><span class="grow"></span>${spark(i.series,80,22,i.change_pct>=0?"var(--good)":"var(--bad)")}</div></div>`).join("");
+  v.innerHTML=`${head(`<em>Markets</em>`,`${q.length} listed companies across ${SECTORS.length} sectors · Yahoo Finance daily closes · ${t.updated?"updated "+ago(t.updated)+" ago":"waiting for the first quotes"}`)}
+  <div class="idx">${idx||'<div class="empty" style="grid-column:1/-1">World indices load in the background on first open; reopen in a minute.</div>'}</div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h2>Gainers <span class="hint">1 day</span></h2>${movers(q.filter(x=>(x.change_pct||0)>0).slice(0,8))}</div>
+    <div class="card"><h2>Losers <span class="hint">1 day</span></h2>${movers([...q].reverse().filter(x=>(x.change_pct||0)<0).slice(0,8))}</div>
+  </div>
+  <div class="card"><h2>Every listed company <span class="hint">click a row for its brand page</span></h2>
+    <div class="filters" id="mf"><span class="chip btn on" data-s="">all</span>${SECTORS.map(s=>`<span class="chip btn" data-s="${esc(s.key)}" style="--c:${esc(s.color)}"><i></i>${esc(s.short)}</span>`).join("")}</div>
+    <div id="mt"></div></div>`;
+  const draw=()=>{let rows=q.filter(x=>!F.sector||x.sector===F.sector);rows.sort((a,b)=>F.sort==="change"?(b.change_pct||0)-(a.change_pct||0):F.sort==="pos"?(b.pos52||0)-(a.pos52||0):a.brand.localeCompare(b.brand));
+    $("#mt").innerHTML=rows.length?`<table><tr><th data-k="name">Company</th><th>Sector</th><th>Ticker</th><th class="num">Close</th><th class="num" data-k="change">1 day</th><th data-k="pos">52-week position</th><th>30 days</th></tr>${rows.map(x=>`<tr class="go" data-go="${esc(x.sector)}" data-brand="${esc(x.brand)}"><td><b>${esc(x.brand)}</b> ${flag(x.origin)}<div class="muted xs">${esc(x.entity||x.name||"")}</div></td><td>${secChip(secOf(x.sector))}</td><td class="muted small">${esc(x.ticker)}</td><td class="num">${fmt2(x.close)} <span class="muted xs">${esc(x.currency||"")}</span></td><td class="num ${cls(x.change_pct)}">${pc(x.change_pct)}</td><td><div class="row"><div class="mini grow" title="${fmt2(x.low52)} – ${fmt2(x.high52)}"><div style="left:${x.pos52??0}%"></div></div><span class="muted xs num" style="width:34px">${x.pos52==null?"–":x.pos52+"%"}</span></div></td><td>${spark(x.series,90,22,(x.series||[]).slice(-1)[0]>=(x.series||[])[0]?"var(--good)":"var(--bad)")}</td></tr>`).join("")}</table>`:'<div class="empty">No quotes yet for this sector: they arrive with the first sweep.</div>';
+    $$("#mt th[data-k]").forEach(th=>th.onclick=()=>{F.sort=th.dataset.k;draw();});};
+  $("#mf").onclick=e=>{const c=e.target.closest(".chip");if(!c)return;$$("#mf .chip").forEach(x=>x.classList.remove("on"));c.classList.add("on");F.sector=c.dataset.s;draw();};draw();}
+function movers(rows){return rows.length?rows.map(x=>`<div class="leader" data-go="${esc(x.sector)}" data-brand="${esc(x.brand)}" style="cursor:pointer"><span class="chip" style="--c:${esc(x.color)};padding:1px 6px"><i></i></span><span><b>${esc(x.brand)}</b> <span class="muted xs">${esc(x.ticker)}</span></span><span class="num ${cls(x.change_pct)}">${pc(x.change_pct)}</span></div>`).join(""):'<div class="empty">waiting for quotes</div>';}
+
+/* ---------- Universe ---------- */
+async function vUniverse(v){const U=await api("/nazar/api/universe");const F=JSON.parse(sessionStorage.getItem("nzuni")||"{}");F.sector=F.sector||"";F.origin=F.origin||"";F.own=F.own||"";F.q=F.q||"";F.view=F.view||"cards";
+  const countries={};U.forEach(b=>{countries[b.country||"?"]=(countries[b.country||"?"]||0)+1;});
+  v.innerHTML=`${head(`The <em>universe</em>`,`${U.length} companies · ${U.filter(b=>b.origin==="Indian").length} Indian · ${U.filter(b=>b.origin!=="Indian").length} global · ${U.filter(b=>b.ticker).length} listed · ${Object.keys(countries).length} countries`)}
+  <div class="card" style="margin-bottom:16px"><div class="filters">
+    <input id="uq" placeholder="name, parent, HQ, segment, investor…" value="${esc(F.q)}" style="min-width:240px">
+    <select id="us"><option value="">all sectors</option>${SECTORS.map(s=>`<option value="${esc(s.key)}" ${F.sector===s.key?"selected":""}>${esc(s.label)}</option>`).join("")}</select>
+    <select id="uo"><option value="">India + world</option><option value="Indian" ${F.origin==="Indian"?"selected":""}>Indian</option><option value="Global" ${F.origin==="Global"?"selected":""}>Global</option></select>
+    <select id="uw"><option value="">any ownership</option>${["listed","private","subsidiary"].map(o=>`<option ${F.own===o?"selected":""}>${o}</option>`).join("")}</select>
+    <span class="grow"></span><span class="muted small" id="ucount"></span><button class="sm" id="uv">${F.view==="cards"?"Table":"Cards"}</button></div>
+    <div id="ulist"></div></div>
+  <div class="grid g2"><div class="card"><h2>Where they are from <span class="hint">headquarters</span></h2>${bars(Object.entries(countries).sort((a,b)=>b[1]-a[1]).slice(0,14).map(([l,v])=>({l,v,c:l==="India"?"#eda100":"var(--accent)"})))}</div>
+    <div class="card"><h2>Ownership</h2>${bars(["listed","private","subsidiary"].map(o=>({l:o,v:U.filter(b=>b.ownership===o).length,c:o==="listed"?"var(--good)":o==="private"?"var(--accent)":"#6250d6"})))}<div class="muted xs" style="margin-top:8px">Listed companies carry a live quote and, where filed, SEC figures. Private ones show seeded and press-reported figures, marked as such.</div></div></div>`;
+  const draw=()=>{const q=$("#uq").value.toLowerCase();F.q=q;F.sector=$("#us").value;F.origin=$("#uo").value;F.own=$("#uw").value;sessionStorage.setItem("nzuni",JSON.stringify(F));
+    const rows=U.filter(b=>(!F.sector||b.sector===F.sector)&&(!F.origin||(F.origin==="Indian"?b.origin==="Indian":b.origin!=="Indian"))&&(!F.own||b.ownership===F.own)&&(!q||[b.name,b.entity,b.hq,b.kind,b.country,...(b.segments||[]),...(b.investors||[]),b.notes].join(" ").toLowerCase().includes(q)));
+    rows.sort((a,b)=>(b.events_7d-a.events_7d)||a.name.localeCompare(b.name));$("#ucount").textContent=`${rows.length} companies`;
+    $("#ulist").innerHTML=!rows.length?'<div class="empty">No company matches.</div>':F.view==="cards"?`<div class="grid gauto">${rows.map(ucard).join("")}</div>`:
+      `<table><tr><th>Company</th><th>Sector</th><th>Type</th><th>HQ</th><th class="num">Founded</th><th>Ownership</th><th class="num">1 day</th><th class="num">Moves 7d</th><th class="num">News 7d</th><th class="num">App ★</th><th>Revenue</th></tr>${rows.map(b=>`<tr class="go" data-go="${esc(b.sector)}" data-brand="${esc(b.name)}"><td><b>${esc(b.name)}</b> ${flag(b.origin)}${b.self?' <span class="pill">you</span>':""}<div class="muted xs">${esc(b.entity||"")}</div></td><td>${secChip(secOf(b.sector))}</td><td class="small">${esc(b.kind||"")}</td><td class="small">${esc(b.hq||b.country||"")}</td><td class="num small">${b.founded||"–"}</td><td class="small">${esc(b.ownership)}${b.ticker?` <span class="muted xs">${esc(b.ticker)}</span>`:""}</td><td class="num ${b.quote?cls(b.quote.change_pct):"muted"}">${b.quote?pc(b.quote.change_pct):"–"}</td><td class="num">${b.events_7d}</td><td class="num">${b.news_7d}</td><td class="num">${b.app?b.app.rating:"–"}</td><td class="small">${money(b.revenue)}${b.revenue?` <span class="muted xs">${esc(b.revenue.period)} · ${esc(b.revenue.confidence)}</span>`:""}</td></tr>`).join("")}</table>`;};
+  ["#uq","#us","#uo","#uw"].forEach(s=>{$(s).oninput=draw;$(s).onchange=draw;});$("#uv").onclick=()=>{F.view=F.view==="cards"?"table":"cards";$("#uv").textContent=F.view==="cards"?"Table":"Cards";draw();};draw();}
+function ucard(b){const s=secOf(b.sector);return`<div class="card ucard" data-go="${esc(b.sector)}" data-brand="${esc(b.name)}">
+  <div class="row"><span class="n">${esc(b.name)}</span>${flag(b.origin)}${b.self?'<span class="pill">you</span>':""}<span class="grow"></span>${secChip(s)}</div>
+  <div class="meta">${esc([b.kind,(b.entity&&b.entity!==b.name)?b.entity:"",b.hq,b.founded?"est. "+b.founded:""].filter(Boolean).join(" · "))}</div>
+  <div>${(b.segments||[]).slice(0,4).map(x=>`<span class="chip">${esc(x)}</span>`).join("")}${b.ticker?`<span class="chip" title="${esc(b.ownership)}">${esc(b.ticker)}${b.quote?` <span class="${cls(b.quote.change_pct)}">${pc(b.quote.change_pct)}</span>`:""}</span>`:`<span class="chip muted">${esc(b.ownership)}</span>`}</div>
+  <div class="st"><span><b>${b.events_7d}</b> moves 7d</span><span><b>${b.news_7d}</b> news</span>${b.app?`<span><b>${b.app.rating}★</b> app</span>`:""}${b.attention?`<span><b>${fmt(b.attention)}</b> wiki/day</span>`:""}${b.revenue?`<span><b>${money(b.revenue)}</b> ${esc(b.revenue.period)}<span class="muted"> ${esc(b.revenue.confidence)}</span></span>`:b.valuation?`<span><b>${money(b.valuation)}</b> valuation</span>`:""}${b.skus?`<span><b>${b.skus}</b> SKUs</span>`:""}</div>
+  ${b.top?`<div class="small ink2">${pill(b.top.m)} ${esc((b.top.title||"").slice(0,100))}</div>`:b.notes?`<div class="small muted">${esc(b.notes.slice(0,140))}</div>`:""}
+</div>`;}
+
+/* ---------- Themes ---------- */
+async function vThemes(v){const days=+(param()||7);const T=await api(`/nazar/api/themes?days=${days}`);const S=T.sectors;const topics=T.topics;const mx=Math.max(1,...topics.flatMap(t=>Object.values(t.by_sector)));
+  const col=(n)=>{const a=0.12+0.78*Math.sqrt(n/mx);return`background:color-mix(in srgb,var(--accent) ${Math.round(a*100)}%,var(--surface));color:${a>0.5?"#fff":"var(--ink)"}`;};
+  v.innerHTML=`${head(`<em>Themes</em> across industries`,`what the news is about in every sector · last ${days} days · click a cell or a topic`)}
+  <div class="tabs">${[7,14,30].map(d=>`<button class="${d===days?"on":""}" onclick="location.hash='#/themes/${d}'">${d} days</button>`).join("")}</div>
+  <div class="card" style="overflow-x:auto"><h2>Topic × sector <span class="hint">headlines tagged by topic · darker = more</span></h2>
+    ${topics.length?`<table class="heat"><tr><th>Topic</th>${S.map(s=>`<th title="${esc(s.label)}">${esc(s.short)}</th>`).join("")}<th class="num">Total</th><th class="num">vs prev</th></tr>
+    ${topics.map(t=>`<tr><td><b style="cursor:pointer" data-topic="${esc(t.topic)}">${esc(t.topic.replace(/_/g," "))}</b></td>${S.map(s=>{const n=t.by_sector[s.key]||0;return n?`<td class="c" style="${col(n)}" data-topic="${esc(t.topic)}" data-sec="${esc(s.key)}" data-tip="${esc(s.label)} · ${esc(t.topic)}: ${n} headlines">${n}</td>`:'<td class="c e">·</td>';}).join("")}<td class="num"><b>${t.total}</b></td><td class="num ${t.change_pct==null?"muted":cls(t.change_pct)}">${t.change_pct==null?"new":pc(t.change_pct)}</td></tr>`).join("")}</table>`:'<div class="empty">No tagged headlines yet: topics appear as the news collectors land.</div>'}</div>
+  <div id="tdetail" style="margin-top:16px"></div>`;
+  const show=(topic,sec)=>{const t=topics.find(x=>x.topic===topic);if(!t)return;const hs=t.headlines.filter(h=>!sec||h.sector===sec);const bs=t.brands.filter(b=>!sec||b.sector===sec);
+    $("#tdetail").innerHTML=`<div class="grid g2"><div class="card"><h2>${esc(topic.replace(/_/g," "))} ${sec?`· ${esc(secOf(sec).label)}`:"· all sectors"} <span class="hint">${t.total} headlines</span></h2>${hs.length?hs.map(h=>`<div class="story" data-go="${esc(h.sector)}" data-brand="${esc(h.brand)}"><div class="meta">${secChip(secOf(h.sector))}${pill(h.importance)}<b>${esc(h.brand)}</b><span style="margin-left:auto">${ago(h.created_at)}</span></div><div class="t">${esc(h.title)} ${h.url?`<a href="${esc(h.url)}" target="_blank" rel="noopener" class="muted xs">↗</a>`:""}</div>${h.so_what?`<div class="why">${esc(h.so_what)}</div>`:""}</div>`).join(""):'<div class="empty">only low-importance headlines in this cell</div>'}</div>
+      <div class="card"><h2>Who is in the story</h2>${bars(bs.map(b=>({l:b.brand,v:b.n,c:secOf(b.sector).color})))}</div></div>`;$("#tdetail").scrollIntoView({behavior:"smooth",block:"start"});};
+  v.onclick=e=>{const c=e.target.closest("[data-topic]");if(c)show(c.dataset.topic,c.dataset.sec||"");};
+  if(topics.length)show(topics[0].topic,"");}
+
+/* ---------- India · World ---------- */
+async function vLens(v){const days=+(param()||30);const L=await api(`/nazar/api/lens?days=${days}`);const S=L.sectors;
+  const tot=S.reduce((a,s)=>({i:a.i+s.indian_events,g:a.g+s.global_events}),{i:0,g:0});
+  v.innerHTML=`${head(`<em>India</em> · World`,`who makes the moves: Indian companies vs global ones, per sector · last ${days} days`)}
+  <div class="tabs">${[7,30,90].map(d=>`<button class="${d===days?"on":""}" onclick="location.hash='#/lens/${d}'">${d} days</button>`).join("")}</div>
+  <div class="kpis"><div class="kpi"><div class="l">Indian moves</div><div class="v num">${fmt(tot.i)}</div><div class="s">${tot.i+tot.g?Math.round(100*tot.i/(tot.i+tot.g)):0}% of all scored moves</div></div><div class="kpi"><div class="l">Global moves</div><div class="v num">${fmt(tot.g)}</div><div class="s">global parents and challengers</div></div><div class="kpi"><div class="l">Countries</div><div class="v num">${L.countries.length}</div><div class="s">headquarters tracked</div></div><div class="kpi"><div class="l">Listed · private</div><div class="v num">${L.ownership.listed||0} · ${L.ownership.private||0}</div><div class="s">${L.ownership.subsidiary||0} subsidiaries</div></div></div>
+  <div class="grid g2">
+    <div class="card"><h2>Share of moves by origin <span class="hint">🇮🇳 Indian · 🌍 global · per sector</span></h2>${S.map(s=>{const t=s.indian_events+s.global_events||1;return`<div class="bar"><span>${esc(s.short)}</span><div class="tr"><div class="f" style="width:${100*s.indian_events/t}%;background:#eda100" title="Indian ${s.indian_events}"></div><div class="f" style="width:${100*s.global_events/t}%;background:${s.color}" title="Global ${s.global_events}"></div></div><span class="v num">${s.indian_events}·${s.global_events}</span></div>`;}).join("")}
+      <div class="muted xs" style="margin-top:8px">Numbers: Indian · global scored moves. Sector-wide items without a named company are left out.</div></div>
+    <div class="card"><h2>Attention leaders <span class="hint">Wikipedia views per day · 7 days</span></h2>${L.attention.length?L.attention.slice(0,16).map((a,i)=>`<div class="leader" data-go="${esc(a.sector)}" data-brand="${esc(a.brand)}" style="cursor:pointer"><span class="muted num">${i+1}</span><span><b>${esc(a.brand)}</b> ${flag(a.origin)} <span class="muted xs">${esc(a.sector_short)}</span></span><span class="num ink2">${fmt(a.v)}</span></div>`).join(""):'<div class="empty">Wikipedia attention arrives with each sector\'s first sweep.</div>'}</div>
+    <div class="card"><h2>Headquarters</h2>${bars(L.countries.slice(0,16).map(([l,v])=>({l,v,c:l==="India"?"#eda100":"var(--accent)"})))}</div>
+    <div class="card"><h2>Coverage per sector <span class="hint">companies tracked</span></h2>${S.map(s=>`<div class="bar"><span>${esc(s.short)}</span><div class="tr"><div class="f" style="width:${100*s.indian_brands/(s.indian_brands+s.global_brands)}%;background:#eda100"></div><div class="f" style="width:${100*s.global_brands/(s.indian_brands+s.global_brands)}%;background:${s.color}"></div></div><span class="v num">${s.indian_brands}·${s.global_brands}</span></div>`).join("")}</div>
+  </div>`;}
+
+/* ---------- Sectors (atlas) ---------- */
+async function vSectors(v){const S=SECTORS=await api("/nazar/api/sectors");
+  v.innerHTML=`${head(`The <em>atlas</em>`,"each sector is a complete radar: its own companies, sources, database and schedule")}
+  <div class="row wrap" style="margin-bottom:14px"><button class="primary" id="runall">Sweep every sector now</button><span class="muted small">runs the news / feeds / apps tier in each sector; stores and prices run on their own schedule</span></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">${S.map(s=>`<div class="card" style="--c:${esc(s.color)};border-top:3px solid ${esc(s.color)}">
+    <div class="row" style="margin-bottom:10px"><div class="sc" style="display:contents"><div class="ic" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,${esc(s.color)} 18%,var(--surface));border:1px solid color-mix(in srgb,${esc(s.color)} 35%,transparent)">${esc(s.icon)}</div></div><div class="grow"><div style="font-weight:600;font-size:16px">${esc(s.label)}</div><div class="muted small">${esc(s.sector)}</div></div></div>
+    <div class="row wrap small" style="gap:14px;margin-bottom:10px"><span><b>${s.brands}</b> companies</span><span><b>${s.indian}</b> 🇮🇳 · <b>${s.global}</b> 🌍</span><span><b>${s.listed}</b> listed</span><span><b>${fmt(s.events_total)}</b> moves on file</span><span><b>${fmt(s.voice)}</b> reviews</span>${s.products?`<span><b>${fmt(s.products)}</b> SKUs</span>`:""}</div>
+    <div style="margin-bottom:10px">${(s.segments||[]).map(g=>`<span class="chip">${esc(g.name)}</span>`).join("")}</div>
+    ${s.world&&(s.world.regulators||s.world.trackers||s.world.watch_events)?`<div class="ws" style="margin-bottom:12px">${s.world.regulators?`<div class="w"><div class="l">Regulators</div><div class="small">${esc(s.world.regulators.join(" · "))}</div></div>`:""}${s.world.trackers?`<div class="w"><div class="l">Who counts the market</div><div class="small">${esc(s.world.trackers.join(" · "))}</div></div>`:""}${s.world.watch_events?`<div class="w"><div class="l">Dates that move it</div><div class="small">${esc(s.world.watch_events.join(" · "))}</div></div>`:""}</div>`:""}
+    <div class="row wrap"><span class="muted xs">● ${s.scheduler}${s.last_run?` · swept ${ago(s.last_run)} ago`:" · first sweep running"}${s.self_brand?` · written for ${esc(s.self_brand)}`:" · neutral view"}</span><span class="grow"></span><button class="sm" data-run="${esc(s.key)}">Sweep</button><a href="/s/${esc(s.key)}"><button class="sm primary">Open dashboard</button></a></div>
+  </div>`).join("")}</div>`;
+  v.onclick=async e=>{const b=e.target.closest("[data-run]");if(b){b.disabled=true;const r=await post(`/nazar/api/run?sector=${b.dataset.run}&tier=medium`);toast(r.message);b.disabled=false;}};
+  $("#runall").onclick=async()=>{const r=await post("/nazar/api/run?sector=all&tier=medium");toast(r.filter(x=>x.ok).length+" sectors sweeping · "+r.filter(x=>!x.ok).map(x=>x.message).join(" "));};}
+
+/* ---------- command palette ---------- */
+const ov=$("#ov"),palq=$("#palq"),palres=$("#palres"),palans=$("#palans");
+function openPal(){ov.classList.add("on");palq.value="";palres.innerHTML=`<div class="grp">Pages</div>${[["#/","Eye"],["#/pulse","Pulse"],["#/markets","Markets"],["#/universe","Universe"],["#/themes","Themes"],["#/lens","India · World"],["#/sectors","Sectors"]].map(([h,l])=>`<div class="r" data-h="${h}">${l}<span class="k">page</span></div>`).join("")}<div class="grp">Sectors</div>${SECTORS.map(s=>`<div class="r" data-url="/s/${esc(s.key)}">${secChip(s)} ${esc(s.label)}<span class="k">open dashboard</span></div>`).join("")}`;palans.style.display="none";setTimeout(()=>palq.focus(),10);}
+function closePal(){ov.classList.remove("on");}
+$("#searchbtn").onclick=openPal;ov.onclick=e=>{if(e.target===ov)closePal();};
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPal();}if(e.key==="Escape")closePal();if(e.key==="/"&&!/input|select|textarea/i.test(e.target.tagName)){e.preventDefault();openPal();}});
+let palT;palq.oninput=()=>{clearTimeout(palT);const q=palq.value.trim();if(!q){openPal();palq.focus();return;}palT=setTimeout(async()=>{try{const r=await api(`/nazar/api/search?q=${encodeURIComponent(q)}`,{});let h="";
+  if(r.brands.length)h+=`<div class="grp">Companies</div>`+r.brands.slice(0,8).map(b=>`<div class="r" data-url="/s/${esc(b.sector)}#/brand/${encodeURIComponent(b.name)}">${secChip(secOf(b.sector))}<b>${esc(b.name)}</b> ${flag(b.origin)} <span class="muted small">${esc(b.kind||b.entity||"")}</span><span class="k">brand page</span></div>`).join("");
+  if(r.events.length)h+=`<div class="grp">Moves</div>`+r.events.slice(0,10).map(e=>`<div class="r" data-url="/s/${esc(e.sector)}#/brand/${encodeURIComponent(e.brand)}">${pill(e.importance)}<span>${esc(e.title.slice(0,90))}</span><span class="k">${esc(e.brand)} · ${ago(e.created_at)}</span></div>`).join("");
+  h+=`<div class="r" data-ask="1">Ask ${esc(secOf($("#palsec").value).short||"Nazar")}: “${esc(q)}”<span class="k">Enter</span></div>`;palres.innerHTML=h;}catch(e){}},200);};
+palres.onclick=e=>{const r=e.target.closest(".r");if(!r)return;if(r.dataset.h){location.hash=r.dataset.h;closePal();}else if(r.dataset.url){location.href=r.dataset.url;}else if(r.dataset.ask)ask();};
+palq.onkeydown=e=>{if(e.key==="Enter"){const first=palres.querySelector(".r[data-url],.r[data-h]");if(palq.value.trim().split(" ").length<3&&first){first.click();}else ask();}};
+async function ask(){const q=palq.value.trim();if(!q)return;palans.style.display="block";palans.textContent="Thinking…";try{const r=await post("/nazar/api/ask",{question:q,sector:$("#palsec").value});palans.textContent=(r.answer||JSON.stringify(r)).trim()+(r.mode==="fallback"||r.mode==="search"?"\n\n(keyword answer: add an AI key in .env for a reasoned one)":"");}catch(e){palans.textContent="Could not ask: "+e.message;}}
+
+/* the Python on disk is newer than this process (a collector or the hub itself was updated): offer a one-click restart */
+async function buildCheck(){try{const h=await api("/nazar/api/health",{});const el=$("#buildbar");if(!h.build||!h.build.stale){el.innerHTML="";return;}
+  el.innerHTML=`<div class="buildbar"><span><b>Nazar was updated</b> <span class="muted">the running process is older than the files on disk</span></span><span class="grow"></span><button class="sm primary" id="nzrestart">Restart Nazar</button></div>`;
+  $("#nzrestart").onclick=async()=>{const b=$("#nzrestart");b.disabled=true;b.textContent="Restarting…";let r;try{r=await post("/nazar/api/restart");}catch(e){toast("Restart failed: "+e.message);b.disabled=false;b.textContent="Restart Nazar";return;}
+    if(!r.ok){toast(r.message||"Not restarted");b.disabled=false;b.textContent="Restart Nazar";return;}toast(r.message);const old=r.pid,t0=Date.now();
+    const tick=async()=>{try{const h2=await (await fetch("/nazar/api/health",{cache:"no-store"})).json();if(h2.pid&&h2.pid!==old){toast("Nazar is back on the new build");location.reload();return;}}catch(e){}
+      if(Date.now()-t0>120000){toast("Nazar has not come back in 2 minutes: start it by hand (python run.py)");return;}setTimeout(tick,1500);};setTimeout(tick,3000);};}catch(e){}}
+buildCheck();setInterval(buildCheck,120000);
+render();
+</script>
+<script src="/nazar/static/glass.js"></script>
+</body>
+</html>

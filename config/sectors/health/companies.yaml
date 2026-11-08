@@ -1,0 +1,408 @@
+# Nazar sector: Health Tech. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: Practo
+  entity: Practo Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2008
+  ownership: private
+  wikipedia: Practo
+  investors:
+  - Tencent
+  - Peak XV
+  - Matrix
+  - Sofina
+  notes: Largest doctor marketplace; profitable since FY24; IPO talk for 2026.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 233
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY24
+    value: 8
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Tata 1mg
+  entity: Tata 1mg Technologies Pvt. Ltd.
+  hq: Gurugram, India
+  founded: 2015
+  ownership: subsidiary
+  wikipedia: Tata 1mg
+  investors:
+  - Tata Digital
+  notes: E-pharmacy leader with labs; profitable-at-EBITDA in FY25.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 1968
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 313
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: PharmEasy
+  entity: API Holdings Ltd.
+  hq: Mumbai, India
+  founded: 2015
+  ownership: private
+  wikipedia: PharmEasy
+  investors:
+  - Prosus
+  - Temasek
+  - TPG
+  - Ranjan Pai (MEMG)
+  notes: Valuation fell from $5.6B to under $500M; owns Thyrocare.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 5664
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 2534
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Apollo 24|7
+  entity: Apollo HealthCo Ltd.
+  hq: Chennai, India
+  founded: 2020
+  ownership: subsidiary
+  investors:
+  - Apollo Hospitals
+  - Advent International
+  notes: Apollo's pharmacy and digital arm; Advent put in ₹2,475 cr; IPO planned.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 9000
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Netmeds
+  entity: Reliance Retail Ventures Ltd.
+  hq: Chennai, India
+  founded: 2015
+  ownership: subsidiary
+  wikipedia: Netmeds
+  notes: Reliance's e-pharmacy; folded into JioMart health.
+- brand: Truemeds
+  entity: Intellihealth Solutions Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2019
+  ownership: private
+  investors:
+  - Peak XV
+  - WestBridge
+  - Info Edge
+  notes: Fast-growing value e-pharmacy built on substitution.
+- brand: MediBuddy
+  entity: Bettr Health Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2000
+  ownership: private
+  investors:
+  - Quadria
+  - Lightrock
+  - TEAMFund
+  notes: Largest corporate OPD platform; profitable.
+- brand: HealthifyMe
+  entity: HealthifyMe Wellness Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2012
+  ownership: private
+  wikipedia: HealthifyMe
+  investors:
+  - LeapFrog
+  - Khosla
+  - Chiratae
+  notes: AI coaching; expanding in the US; GLP-1 companion plans.
+- brand: cult.fit
+  entity: Curefit Healthcare Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2016
+  ownership: private
+  investors:
+  - Tata Digital
+  - Zomato
+  - Accel
+  - Temasek
+  notes: Largest gym chain; IPO planned 2025-26; Cultsport sells wearables too.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 927
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 889
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Eka Care
+  entity: Orbi Health Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2020
+  ownership: private
+  investors:
+  - Hummingbird
+  - 3one4
+  - Verlinvest
+  notes: ABDM-first records and doctor tools; AI scribe.
+- brand: Plum
+  entity: Plum Benefits Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2019
+  ownership: private
+  investors:
+  - Peak XV
+  - Tiger Global
+  - Incred
+  notes: Group health for startups and SMEs; broker licence.
+- brand: Apollo Hospitals
+  entity: Apollo Hospitals Enterprise Ltd.
+  hq: Chennai, India
+  founded: 1983
+  ownership: listed
+  ticker: APOLLOHOSP.NS
+  wikipedia: Apollo Hospitals
+  notes: India's largest hospital chain; spinning off HealthCo.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 21794
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1446
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Max Healthcare
+  entity: Max Healthcare Institute Ltd.
+  hq: New Delhi, India
+  founded: 2001
+  ownership: listed
+  ticker: MAXHEALTH.NS
+  wikipedia: Max Healthcare
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 8968
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1300
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Fortis
+  entity: Fortis Healthcare Ltd.
+  hq: Gurugram, India
+  founded: 2001
+  ownership: listed
+  ticker: FORTIS.NS
+  wikipedia: Fortis Healthcare
+  investors:
+  - IHH Healthcare (majority)
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 7783
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 820
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Narayana Health
+  entity: Narayana Hrudayalaya Ltd.
+  hq: Bengaluru, India
+  founded: 2000
+  ownership: listed
+  ticker: NH.NS
+  wikipedia: Narayana Health
+  notes: Low-cost cardiac care model; launched its own health insurance (Aditi).
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 5483
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 798
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Medanta
+  entity: Global Health Ltd.
+  hq: Gurugram, India
+  founded: 2004
+  ownership: listed
+  ticker: MEDANTA.NS
+  wikipedia: Medanta
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 3767
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 525
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Dr Lal PathLabs
+  entity: Dr. Lal PathLabs Ltd.
+  hq: Gurugram, India
+  founded: 1949
+  ownership: listed
+  ticker: LALPATHLAB.NS
+  wikipedia: Dr. Lal PathLabs
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 2461
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 492
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Metropolis
+  entity: Metropolis Healthcare Ltd.
+  hq: Mumbai, India
+  founded: 1980
+  ownership: listed
+  ticker: METROPOLIS.NS
+  wikipedia: Metropolis Healthcare
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 1331
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 150
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Redcliffe Labs
+  entity: Redcliffe Lifetech Pvt. Ltd.
+  hq: Noida, India
+  founded: 2018
+  ownership: private
+  investors:
+  - LeapFrog
+  - Schroders Capital
+  - HealthQuad
+  notes: Home-collection-led chain; IPO planned.
+- brand: Teladoc
+  entity: Teladoc Health, Inc.
+  hq: Purchase, United States
+  founded: 2002
+  ownership: listed
+  ticker: TDOC
+  sec_cik: 1477449
+  wikipedia: Teladoc Health
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 2569
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Hims & Hers
+  entity: Hims & Hers Health, Inc.
+  hq: San Francisco, United States
+  founded: 2017
+  ownership: listed
+  ticker: HIMS
+  wikipedia: Hims & Hers Health
+  notes: GLP-1 compounding made it the fastest-growing US telehealth company.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 1477
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Oscar Health
+  entity: Oscar Health, Inc.
+  hq: New York, United States
+  founded: 2012
+  ownership: listed
+  ticker: OSCR
+  wikipedia: Oscar Health
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 9177
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

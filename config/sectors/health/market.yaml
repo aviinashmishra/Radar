@@ -1,0 +1,111 @@
+# Nazar sector: Health Tech. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- IQVIA / Pharmarack retail pharma data
+- IRDAI premium statistics
+- Company filings (NSE, MCA, SEC)
+- Tracxn and Inc42 funding data
+segments:
+  telehealth:
+    name: Teleconsultation & doctor apps
+    units_m: 80
+    growth_pct: 22
+    asp_inr: 1000
+    value_cr: 8000
+    trend: Hospital apps (Apollo 24|7) and corporate OPD (MediBuddy) grew faster than pure marketplaces.
+    confidence: estimate
+    shares_pct:
+      Practo: 28
+      Apollo 24|7: 25
+      Tata 1mg: 12
+      MediBuddy: 12
+      Eka Care: 3
+  epharma:
+    name: E-pharmacy
+    units_m: 300
+    growth_pct: 18
+    asp_inr: 1000
+    value_cr: 30000
+    trend: Tata 1mg and Apollo profitable-ish; PharmEasy shrank; quick commerce entered OTC medicines.
+    confidence: estimate
+    shares_pct:
+      Tata 1mg: 30
+      PharmEasy: 22
+      Apollo 24|7: 22
+      Netmeds: 9
+      Truemeds: 5
+      Amazon India: 3
+  diagnostics:
+    name: Diagnostics
+    units_m: 1000
+    growth_pct: 12
+    asp_inr: 1000
+    value_cr: 100000
+    trend: Organised chains are a fifth of a fragmented market; home collection is the online wedge.
+    confidence: estimate
+    shares_pct:
+      Dr Lal PathLabs: 3
+      Metropolis: 2
+      Apollo Hospitals: 2
+      PharmEasy: 1.5
+      Redcliffe Labs: 1
+      Tata 1mg: 1
+  hospitals:
+    name: Private hospitals (revenue)
+    units_m: 60
+    growth_pct: 12
+    asp_inr: 100000
+    value_cr: 600000
+    trend: Bed additions and PE-backed consolidation (Manipal, Max, KKR, Temasek).
+    confidence: estimate
+    shares_pct:
+      Apollo Hospitals: 3.6
+      Max Healthcare: 1.5
+      Fortis: 1.3
+      Narayana Health: 0.9
+      Medanta: 0.6
+  fitness:
+    name: Fitness & wellness (organised)
+    units_m: 20
+    growth_pct: 18
+    asp_inr: 5000
+    value_cr: 10000
+    trend: cult.fit consolidates gyms; GLP-1 drugs reshape weight-loss apps.
+    confidence: estimate
+    shares_pct:
+      cult.fit: 35
+      HealthifyMe: 15
+  insurtech:
+    name: Health insurance (premium)
+    units_m: 55
+    growth_pct: 18
+    asp_inr: 20000
+    value_cr: 110000
+    trend: Standalone health insurers gain; GST exemption on individual health policies from Sept 2025.
+    confidence: estimate
+    shares_pct:
+      Plum: 1
+      MediBuddy: 1
+      Narayana Health: 0.2
+  records:
+    name: Digital health records & clinical AI
+    units_m: 700
+    growth_pct: 50
+    asp_inr: 30
+    value_cr: 2100
+    trend: ABHA IDs passed 700 million; AI scribes and records apps compete for doctors.
+    confidence: estimate
+    shares_pct:
+      Eka Care: 20
+      Practo: 15
+      Apollo 24|7: 10
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

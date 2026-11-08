@@ -10,11 +10,13 @@ Tiers (see runner.py):
   medium (+)            : channels (Amazon.in / Flipkart listings, prices, ratings), sales (Pebble's own Shopify orders)
   slow (+)              : qcommerce (Blinkit shelves per city + retail presence from news), voice (YouTube comments,
                           App Store / Play / Amazon reviews), regions (Google Trends by state, place mentions)
+  slow (first)          : resolve (App Store ids, Play packages, Wikipedia titles, SEC CIKs for brands whose config
+                          does not name them; cached in kv, re-checked every 14 days)
 """
 from . import (shopify, watchlist, news, reddit, feeds, youtube, searchdemand, trends, pagewatch, techstack, reviews, appstore,  # noqa: F401
-               screenshots, ads, newstores, financials, attention, channels, sales, qcommerce, voice, regions)
+               screenshots, ads, newstores, financials, attention, channels, sales, qcommerce, voice, regions, resolve)
 
 FAST = [shopify]
 MEDIUM = [watchlist, news, reddit, feeds, youtube, searchdemand, trends, channels, sales]
-SLOW = [pagewatch, techstack, reviews, appstore, screenshots, ads, newstores, financials, attention, qcommerce, voice, regions]
+SLOW = [resolve, pagewatch, techstack, reviews, appstore, screenshots, ads, newstores, financials, attention, qcommerce, voice, regions]
 ALL = FAST + MEDIUM + SLOW

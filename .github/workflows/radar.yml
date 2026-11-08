@@ -1,17 +1,18 @@
-name: Pebble Competitor Radar
-# The worker half of the cloud setup. GitHub runs the collectors on a schedule; between runs the database
-# travels as radar.db.gz on the release tagged `data` (replaced each run, never committed, so the repo does
-# not grow). The Vercel dashboard reads that same file. Locally, `python run.py` does all of this by itself.
+name: Nazar radar
+# The worker half of the cloud setup, one job per sector. GitHub runs each sector's collectors on a schedule; between
+# runs every sector's database travels as its own file on the release tagged `data` (radar.db.gz for the IoT radar,
+# <sector>.db.gz for the others; replaced each run, never committed, so the repo does not grow). The Vercel dashboard
+# reads the IoT file. Locally, `python run.py` (Nazar) does all of this by itself for every sector.
 
 on:
   schedule:
-    - cron: "*/15 * * * *"    # stores, prices, stock
-    - cron: "5 */1 * * *"     # news, social, feeds
-    - cron: "30 3 * * *"      # daily: pages, reviews, apps, screenshots, ads, new domains, daily brief (09:00 IST)
+    - cron: "*/15 * * * *"    # IoT only: stores, prices, stock
+    - cron: "5 */1 * * *"     # every sector: news, feeds, social, apps
+    - cron: "30 3 * * *"      # daily: pages, reviews, apps, screenshots, ads, filings, attention, daily brief (09:00 IST)
     - cron: "30 3 * * 1"      # weekly brief, Monday 09:00 IST
   push:                       # a config or code change takes effect straight away
     branches: [main]
-    paths: ["config/**", "radar/**", "requirements*.txt", ".github/workflows/radar.yml"]
+    paths: ["config/**", "radar/**", "nazar/**", "requirements*.txt", ".github/workflows/radar.yml"]
   workflow_dispatch:          # the dashboard's Run button calls this through the GitHub API
     inputs:
       tier:
@@ -19,15 +20,23 @@ on:
         type: choice
         options: [fast, medium, slow, all]
         default: fast
-
-concurrency:
-  group: radar                # one sweep at a time; a newer queued run replaces an older queued one
-  cancel-in-progress: false
+      sector:
+        description: "Which sector (all = every sector)"
+        type: string
+        default: all
 
 jobs:
   radar:
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 3         # polite to the shared sources (Google News, Yahoo, app stores)
+      matrix:
+        sector: [iot, auto, travel, fintech, qcom, ecom, edtech, health, ai, energy]
+    concurrency:
+      group: radar-${{ matrix.sector }}   # one sweep per sector at a time; a newer queued run replaces an older queued one
+      cancel-in-progress: false
     permissions:
       contents: write         # publish the snapshot to the `data` release
       actions: write          # keep the schedule alive (GitHub pauses idle scheduled workflows after 60 days)
@@ -45,25 +54,47 @@ jobs:
       SMTP_FROM: ${{ secrets.SMTP_FROM }}
       SMTP_TO: ${{ secrets.SMTP_TO }}
       SEC_CONTACT: ${{ vars.SEC_CONTACT }}        # contact address EDGAR asks automated clients for (Settings > Variables)
-      SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}   # optional: Pebble's own orders for the sales reports
+      SHOPIFY_ADMIN_TOKEN: ${{ secrets.SHOPIFY_ADMIN_TOKEN }}   # optional: Pebble's own orders for the sales reports (IoT)
       SHOPIFY_STORE: ${{ vars.SHOPIFY_STORE }}
       RADAR_AI_PROVIDER: ${{ vars.RADAR_AI_PROVIDER || 'auto' }}
       ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD || '6' }}
       GITHUB_TOKEN: ${{ github.token }}   # radar.cloud uses it to read and write the `data` release
     steps:
+      - name: Skip sectors not asked for
+        id: want
+        env:
+          SECTOR: ${{ matrix.sector }}
+          INPUT_SECTOR: ${{ inputs.sector }}
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          want=true
+          if [ "$EVENT" = "workflow_dispatch" ] && [ -n "$INPUT_SECTOR" ] && [ "$INPUT_SECTOR" != "all" ] && [ "$INPUT_SECTOR" != "$SECTOR" ]; then want=false; fi
+          if [ "$SCHEDULE" = "*/15 * * * *" ] && [ "$SECTOR" != "iot" ]; then want=false; fi   # only the IoT sector has stores to poll every 15 min
+          echo "run=$want" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v5
+        if: steps.want.outputs.run == 'true'
       - uses: actions/setup-python@v6
+        if: steps.want.outputs.run == 'true'
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-full.txt
+        if: steps.want.outputs.run == 'true'
+
+      - name: Sector environment
+        if: steps.want.outputs.run == 'true'
+        run: python -m nazar.cloudenv ${{ matrix.sector }} >> "$GITHUB_ENV"
 
       - name: Restore the last snapshot
+        if: steps.want.outputs.run == 'true'
         id: pull
         run: python -m radar.cloud pull
 
       - name: Decide tier
+        if: steps.want.outputs.run == 'true'
         id: tier
         env:
           RESTORED: ${{ steps.pull.outputs.restored }}
@@ -77,33 +108,34 @@ jobs:
           elif [ "$SCHEDULE" = "5 */1 * * *" ]; then tier=medium
           else tier=slow; fi
           echo "tier=$tier" >> "$GITHUB_OUTPUT"
-          echo "Running the $tier tier"
+          echo "Running the $tier tier for ${{ matrix.sector }}"
 
       - name: Browser for homepage screenshots
-        if: steps.tier.outputs.tier == 'slow' || steps.tier.outputs.tier == 'all'
+        if: steps.want.outputs.run == 'true' && (steps.tier.outputs.tier == 'slow' || steps.tier.outputs.tier == 'all')
         run: python -m playwright install --with-deps chromium
 
       - name: Sweep
+        if: steps.want.outputs.run == 'true'
         run: python -m radar.runner --once --tier ${{ steps.tier.outputs.tier }}
       - name: Daily brief
-        if: github.event.schedule == '30 3 * * *'
+        if: steps.want.outputs.run == 'true' && github.event.schedule == '30 3 * * *'
         run: python -m radar.runner --brief 1
       - name: Weekly brief
-        if: github.event.schedule == '30 3 * * 1'
+        if: steps.want.outputs.run == 'true' && github.event.schedule == '30 3 * * 1'
         run: python -m radar.runner --brief 7
       - name: Reports due today (daily; weekly on Monday; monthly, sector and yearly on the 1st)
-        if: github.event.schedule == '30 3 * * *' || github.event.schedule == '30 3 * * 1'
+        if: steps.want.outputs.run == 'true' && (github.event.schedule == '30 3 * * *' || github.event.schedule == '30 3 * * 1')
         run: python -m radar.reports --due --push
 
       - name: Publish the snapshot
         # also after a failed collector: every finished step is already committed to the database
-        if: ${{ !cancelled() && steps.pull.outcome == 'success' }}
+        if: ${{ steps.want.outputs.run == 'true' && !cancelled() && steps.pull.outcome == 'success' }}
         env:
           RADAR_TIER: ${{ steps.tier.outputs.tier }}
         run: python -m radar.cloud push
 
       - name: Keep the schedule alive
-        if: github.event.schedule == '30 3 * * 1'
+        if: steps.want.outputs.run == 'true' && matrix.sector == 'iot' && github.event.schedule == '30 3 * * 1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api --method PUT "repos/${{ github.repository }}/actions/workflows/radar.yml/enable"

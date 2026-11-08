@@ -1,0 +1,114 @@
+# Nazar sector: E-commerce & D2C. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- Redseer and Datum Intelligence e-commerce GMV estimates
+- Company filings (MCA, NSE, SEC)
+- Bain and Flipkart 'How India Shops Online' reports
+segments:
+  marketplace:
+    name: E-commerce GMV (all categories)
+    units_m: 2500
+    growth_pct: 18
+    asp_inr: 2500
+    value_cr: 625000
+    trend: Flipkart and Amazon hold value; Meesho holds orders; quick commerce takes grocery and now electronics.
+    confidence: estimate
+    shares_pct:
+      Flipkart: 46
+      Amazon India: 30
+      Meesho: 12
+      JioMart: 3
+      Tata Neu: 2
+      Snapdeal: 1
+  fashion:
+    name: Online fashion
+    units_m: 900
+    growth_pct: 20
+    asp_inr: 1100
+    value_cr: 99000
+    trend: Myntra leads premium; Meesho and Shopsy own value; Ajio-Shein reset the fast-fashion price point.
+    confidence: estimate
+    shares_pct:
+      Myntra: 36
+      Flipkart: 20
+      Ajio: 14
+      Meesho: 15
+      Nykaa: 3
+      Amazon India: 8
+      Shein: 1
+  beauty:
+    name: Online beauty & personal care
+    units_m: 250
+    growth_pct: 25
+    asp_inr: 1200
+    value_cr: 30000
+    trend: Nykaa vs Tira vs Purplle; quick commerce now sells 15% of online beauty.
+    confidence: estimate
+    shares_pct:
+      Nykaa: 33
+      Amazon India: 15
+      Flipkart: 13
+      Purplle: 8
+      Myntra: 8
+      Tira: 3
+      Mamaearth: 2
+  d2c:
+    name: D2C brands (online + own stores)
+    units_m: 300
+    growth_pct: 24
+    asp_inr: 2000
+    value_cr: 60000
+    trend: 'Omnichannel is the exit: Lenskart, FirstCry and Honasa listed; most pure-online D2C stalled.'
+    confidence: estimate
+    shares_pct:
+      Lenskart: 11
+      FirstCry: 10
+      Mamaearth: 4
+      Nykaa: 3
+  social:
+    name: Social & value commerce
+    units_m: 1400
+    growth_pct: 30
+    asp_inr: 450
+    value_cr: 63000
+    trend: Meesho's zero-commission model pulled 15 million sellers; Shopsy follows.
+    confidence: estimate
+    shares_pct:
+      Meesho: 70
+      Flipkart: 20
+      Snapdeal: 3
+  cross:
+    name: Cross-border e-commerce into India
+    units_m: 40
+    growth_pct: 35
+    asp_inr: 2500
+    value_cr: 10000
+    trend: Shein back via Reliance; Temu and AliExpress blocked by FDI and customs rules.
+    confidence: estimate
+    shares_pct:
+      Shein: 40
+      Alibaba: 10
+      Amazon India: 20
+  retailtech:
+    name: Retail tech & enablement (revenue)
+    units_m: 2
+    growth_pct: 20
+    asp_inr: 100000
+    value_cr: 20000
+    trend: ONDC, Shopify India pricing, and returns/RTO tooling are the enablers' stories.
+    confidence: estimate
+    shares_pct:
+      Shopify: 10
+      Snapdeal: 3
+      Flipkart: 15
+      Amazon India: 15
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

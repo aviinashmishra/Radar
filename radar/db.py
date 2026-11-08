@@ -156,6 +156,7 @@ def add_event(brand: str, source: str, kind: str, title: str, detail: str = "", 
               data: dict | None = None, dedupe_key: str | None = None) -> int | None:
     """Insert an event. Returns new id, or None when the dedupe key already exists."""
     key = dedupe_key or f"{source}|{brand}|{kind}|{title}"[:500]
+    title, detail = settings.localize(title) or "", settings.localize(detail) or ""
     with tx() as c:
         try:
             cur = c.execute(
@@ -170,6 +171,7 @@ def add_event(brand: str, source: str, kind: str, title: str, detail: str = "", 
 
 def add_signal(kind: str, brand: str, title: str, detail: str, importance: int, data: dict | None,
                dedupe_key: str) -> int | None:
+    title, detail = settings.localize(title) or "", settings.localize(detail) or ""
     with tx() as c:
         try:
             cur = c.execute(

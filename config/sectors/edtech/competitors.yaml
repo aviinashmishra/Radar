@@ -1,0 +1,489 @@
+# Nazar sector: Edtech (edtech). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: edtech
+label: Edtech
+sector: 'Education technology, India and world: K-12, test prep, higher education and online degrees, upskilling, language learning, offline-hybrid coaching'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: k12
+  name: K-12 learning
+  show: true
+  keywords: k-?12|school|class \d{1,2}|cbse|ncert|board exam|tuition|kids learning|byju|vedantu|cuemath|toppr
+- key: testprep
+  name: Test prep
+  show: true
+  keywords: \bjee\b|\bneet\b|\bupsc\b|\bcat\b exam|\bgate\b|test prep|coaching|entrance|physics ?wallah|unacademy|allen|aakash|kota
+- key: higher
+  name: Higher education & degrees
+  show: true
+  keywords: degree|university|online degree|\bmba\b|executive education|upgrad|emeritus|coursera degree|ugc|nep 2020
+- key: skills
+  name: Upskilling & careers
+  show: true
+  keywords: coding|data science|skill|bootcamp|placement|career|certificate|scaler|simplilearn|udemy|great learning|newton school
+- key: language
+  name: Language learning
+  show: true
+  keywords: language learning|spoken english|duolingo|english speaking|ielts|toefl
+- key: offline
+  name: Offline & hybrid centres
+  show: true
+  keywords: offline cent(re|er)|classroom|hybrid|vidyapeeth|tuition centre|coaching centre|kota
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: JEE Main session 1
+  month: 1
+  day: 22
+- name: JEE Main session 2
+  month: 4
+  day: 2
+- name: NEET UG
+  month: 5
+  day: 3
+- name: Board results
+  month: 5
+  day: 13
+- name: Admissions season
+  month: 6
+  day: 15
+- name: New academic year
+  month: 4
+  day: 1
+brands:
+- name: Physics Wallah
+  origin: Indian
+  tier: core
+  country: India
+  kind: Test prep and K-12, online and offline
+  segments:
+  - testprep
+  - k12
+  - offline
+  - skills
+  website: https://www.pw.live
+  news_terms:
+  - Physics Wallah
+  - PhysicsWallah IPO
+  - Alakh Pandey
+  aliases:
+  - PW Vidyapeeth
+  - PW Skills
+  - Xylem Learning
+  - PW Gurukulam
+  - PW OnlyIAS
+  - Utkarsh Classes
+  apps:
+  - xyz.penpencil.physicswalah
+  watch_pages:
+  - https://www.pw.live/
+- name: Unacademy
+  origin: Indian
+  tier: core
+  country: India
+  kind: Test prep (online + offline)
+  segments:
+  - testprep
+  - offline
+  website: https://unacademy.com
+  news_terms:
+  - Unacademy
+  - Gaurav Munjal
+  aliases:
+  - Unacademy Centres
+  - Graphy
+  - PrepLadder
+  - Relevel
+  apps:
+  - com.unacademyapp
+  watch_pages:
+  - https://unacademy.com/
+- name: BYJU'S
+  origin: Indian
+  tier: core
+  country: India
+  kind: K-12 learning app
+  segments:
+  - k12
+  - testprep
+  website: https://byjus.com
+  news_terms:
+  - BYJU'S
+  - Byju Raveendran
+  - Think and Learn
+  aliases:
+  - Think & Learn
+  - Aakash (former)
+  - WhiteHat Jr
+  - Great Learning (former)
+  - Byju's Learning App
+  apps:
+  - com.byjus.thelearningapp
+- name: Vedantu
+  origin: Indian
+  tier: core
+  country: India
+  kind: Live online tutoring and offline
+  segments:
+  - k12
+  - testprep
+  - offline
+  website: https://www.vedantu.com
+  news_terms:
+  - Vedantu
+  aliases:
+  - Vedantu Infinity Learn
+  - Deeksha (acquired)
+  apps:
+  - com.vedantu.app
+- name: upGrad
+  origin: Indian
+  tier: core
+  country: India
+  kind: Higher education and upskilling
+  segments:
+  - higher
+  - skills
+  website: https://www.upgrad.com
+  news_terms:
+  - upGrad
+  - Ronnie Screwvala upGrad
+  aliases:
+  - upGrad Campus
+  - upGrad Abroad
+  - Harappa
+  - INSOFE
+  watch_pages:
+  - https://www.upgrad.com/
+- name: Allen
+  origin: Indian
+  tier: core
+  country: India
+  kind: Offline coaching (Kota)
+  segments:
+  - testprep
+  - offline
+  website: https://allen.in
+  news_terms:
+  - Allen Career Institute
+  - Allen Digital
+  aliases:
+  - Allen Career Institute
+  - Allen Digital
+  - Allen Online
+  exclude:
+  - Woody Allen
+  - Lily Allen
+  - Allen Solly
+  - Allen Iverson
+  - Paul Allen
+  - Allen key
+  - Allen Ginsberg
+  watch_pages:
+  - https://allen.in/
+  ambiguous: true
+- name: Aakash
+  origin: Indian
+  tier: core
+  country: India
+  kind: Offline coaching (Manipal)
+  segments:
+  - testprep
+  - offline
+  website: https://www.aakash.ac.in
+  news_terms:
+  - Aakash Educational Services
+  - Aakash Manipal
+  aliases:
+  - Aakash Institute
+  - Aakash BYJU'S
+  - AESL
+  exclude:
+  - Aakash Chopra
+  - Akash Ambani
+  - Aakash tablet
+- name: Cuemath
+  origin: Indian
+  tier: core
+  country: India
+  kind: Online math tutoring
+  segments:
+  - k12
+  website: https://www.cuemath.com
+  news_terms:
+  - Cuemath
+- name: Scaler
+  origin: Indian
+  tier: core
+  country: India
+  kind: Tech upskilling
+  segments:
+  - skills
+  - higher
+  website: https://www.scaler.com
+  news_terms:
+  - Scaler Academy
+  - InterviewBit Scaler
+  aliases:
+  - Scaler Academy
+  - Scaler School of Technology
+  - InterviewBit
+  exclude:
+  - scaler network
+  - image scaler
+  - feature scaler
+  - upscaler
+  watch_pages:
+  - https://www.scaler.com/
+  ambiguous: true
+- name: Simplilearn
+  origin: Indian
+  tier: core
+  country: India
+  kind: Professional upskilling
+  segments:
+  - skills
+  - higher
+  website: https://www.simplilearn.com
+  news_terms:
+  - Simplilearn
+  aliases:
+  - Fullstack Academy
+  - SkillUp
+  watch_pages:
+  - https://www.simplilearn.com/
+- name: Emeritus
+  origin: Indian
+  tier: core
+  country: India
+  kind: Executive education (Eruditus)
+  segments:
+  - higher
+  - skills
+  website: https://emeritus.org
+  news_terms:
+  - Eruditus Emeritus
+  aliases:
+  - Eruditus
+  - Emeritus India
+- name: Coursera
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Online learning platform
+  segments:
+  - higher
+  - skills
+  website: https://www.coursera.org
+  news_terms:
+  - Coursera India
+  aliases:
+  - Coursera Plus
+  - Coursera for Business
+  apps:
+  - org.coursera.android
+  watch_pages:
+  - https://blog.coursera.org/
+- name: Udemy
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Course marketplace
+  segments:
+  - skills
+  website: https://www.udemy.com
+  news_terms:
+  - Udemy
+  aliases:
+  - Udemy Business
+  apps:
+  - com.udemy.android
+  watch_pages:
+  - https://about.udemy.com/press/
+- name: Duolingo
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Language learning app
+  segments:
+  - language
+  - k12
+  website: https://www.duolingo.com
+  news_terms:
+  - Duolingo
+  aliases:
+  - Duolingo Max
+  - Duolingo English Test
+  - Super Duolingo
+  apps:
+  - com.duolingo
+  watch_pages:
+  - https://blog.duolingo.com/
+- name: Chegg
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Homework help
+  segments:
+  - higher
+  - skills
+  website: https://www.chegg.com
+  news_terms:
+  - Chegg
+  ambiguous: true
+- name: Khan Academy
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Non-profit learning platform
+  segments:
+  - k12
+  - skills
+  website: https://www.khanacademy.org
+  news_terms:
+  - Khan Academy Khanmigo
+  - Khan Academy India
+  aliases:
+  - Khanmigo
+  apps:
+  - org.khanacademy.android
+sector_news_terms:
+- edtech India funding
+- online coaching India JEE NEET
+- Physics Wallah Unacademy
+- edtech layoffs
+- online degree India UGC
+- coaching centre regulation
+- edtech IPO
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://www.edsurge.com/articles_rss
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://inc42.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://education.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.classcentral.com/report/feed/
+  filter: sector
+reddit:
+  subreddits:
+  - JEENEETards
+  - Indian_Academia
+  - edtech
+  - developersIndia
+  searches:
+  - Physics Wallah
+  - Unacademy
+  - BYJU'S
+  - upGrad
+  - Vedantu
+  - Coursera
+  - Duolingo
+  - Scaler
+price_bands:
+- 0
+- 500
+- 2000
+- 5000
+- 15000
+- 50000
+- 200000
+- 10000000
+youtube_queries:
+- review
+- honest
+search_seeds:
+- '{brand} '
+- '{brand} fees'
+- best online coaching for jee
+- online degree
+- learn coding
+vocab:
+  sector: edtech|ed-?tech|education|learning|coaching|\bjee\b|\bneet\b|\bupsc\b|students?|online course|degree|upskill|test prep|tuition|school|university|byju|physics ?wallah|\bpw\b|unacademy|upgrad|vedantu|cuemath|allen|aakash|coursera|duolingo|udemy|chegg|khan
+    academy|simplilearn|scaler|emeritus|great learning|toppr|doubtnut
+  category: edtech|education|learning|learner|students?|course|courses|coaching|exam|degree|university|school|teacher|tutor|batch|enrol|classroom|offline|online|skill|placement|fee|fees
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|layoff|insolvency|nclt|ugc|nep|exam
+    leak|paper leak|coaching guideline|results day|batch launch|free course|price cut
+  core: students?|course|coaching|exam|learning
+  noise: song|movie|cricket|recipe|motivational quote|meme
+  ambiguous:
+  - Allen
+  - Chegg
+  - Scaler
+  noise_note: Motivational content, memes and exam-rumour posts score 1-3. Enrolments, fees, batch and centre launches, layoffs, regulation (UGC, coaching guidelines), funding, IPOs and results matter most.
+voice_themes:
+- key: teaching
+  rx: teacher|faculty|explain|lecture|doubt|concept|live class|sir|ma'?am
+- key: content
+  rx: content|notes|material|pdf|test series|mock|question bank|video quality|syllabus
+- key: price
+  rx: \bfee|fees|price|refund|expensive|affordable|\bemi\b|loan|cost|value|worth
+- key: app
+  rx: \bapp\b|crash|bug|login|video|buffer|lag|download|website
+- key: support
+  rx: support|mentor|response|customer care|complaint|sales call|spam|calls
+- key: results
+  rx: result|rank|selection|score|placement|job|outcome|progress|improved
+- key: access
+  rx: offline|internet|regional|language|hindi|device|rural|low-?end
+- key: misselling
+  rx: mis-?selling|pressure|sales|false promise|cancel|trap|scam|fake
+world:
+  regulators:
+  - Ministry of Education
+  - UGC
+  - AICTE
+  - NTA
+  - CCPA (misleading ads)
+  trackers:
+  - Tracxn
+  - Inc42
+  - HolonIQ
+  - Class Central
+  watch_events:
+  - JEE Main (Jan/Apr)
+  - NEET (May)
+  - Board results (May)
+  - Admissions (Jun-Jul)
+  - Budget education outlay (1 Feb)
+perspective: ''

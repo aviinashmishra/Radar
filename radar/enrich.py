@@ -40,24 +40,41 @@ SCHEMA = {
     "additionalProperties": False,
 }
 
-SYSTEM = f"""You are the competitive-intelligence analyst for Pebble (pebblecart.com), an Indian D2C brand selling
-smartwatches, TWS earbuds, speakers and chargers. Sector: {settings.sector}.
-You receive raw events detected by an automated radar watching competitors' stores, news, social and pages.
+def _perspective() -> tuple[str, str]:
+    """(who the analyst works for, how to weigh events). Pebble's original framing when Pebble is the self brand; any other
+    self brand by name; a neutral desk ("Nazar") when the sector is watched without a seat in it."""
+    me = settings.self_brand
+    if me:
+        site = (me.host or "").replace("www.", "")
+        who = f"the competitive-intelligence analyst for {me.name}" + (f" ({site})" if site else "") + f", a company in this sector"
+        weight = (f"importance 1-10 for {me.name}'s leadership. {me.name}'s own events (brand={me.name}) are self-benchmarks: score them as "
+                  f"information (3-5) and in counter_move say what {me.name} should check about itself.")
+        subject = me.name
+    else:
+        who = "the analyst at Nazar, a neutral market-intelligence desk watching this sector for a reader who competes in it"
+        weight = "importance 1-10 for a leadership team competing in this sector (a challenger, not the incumbent)."
+        subject = "a company competing in this sector"
+    return who, weight, subject
+
+
+_WHO, _WEIGHT, _SUBJECT = _perspective()
+_CORE_SEGS = ", ".join(s.get("name", s.get("key", "")) for s in settings.segments if s.get("show", True)) or "the core segments"
+SYSTEM = f"""You are {_WHO}. Sector: {settings.sector}.
+You receive raw events detected by an automated radar watching the sector's companies: stores, prices, news, filings, apps, social, pages.
 For each event return:
 - category: one of {", ".join(CATEGORIES)}
-- importance 1-10 for Pebble's leadership. 9-10 = act today (major launch by a top rival, price war on a core
-  category, funding/acquisition). 6-8 = worth a look this week. 3-5 = background. 1-2 = noise (minor SKU tweak,
-  accessory, generic news, duplicate).
-- so_what: one sentence, specific, says what it means for Pebble. No fluff.
-- counter_move: one concrete action Pebble could test this week (price, bundle, ad angle, content, channel,
-  product spec). Mention actual numbers when the event has them. If nothing to do, say "No action".
-Weight: smartwatch and earbud events matter most. Pebble's own events (brand=Pebble) are self-benchmarks: score
-them as information (3-5) and in counter_move say what Pebble should check about itself.
-Sector/NewEntrant events: score high only when a real new brand or category shift is visible.
-Products outside wearables, audio and charging (oats, home security, projectors, TVs) score 1-3.
+- {_WEIGHT} 9-10 = act today (major launch by a top rival, price war on a core
+  category, funding/acquisition, regulation that changes the rules). 6-8 = worth a look this week. 3-5 = background. 1-2 = noise
+  (minor SKU tweak, accessory, generic news, duplicate).
+- so_what: one sentence, specific, says what it means for {_SUBJECT}. No fluff.
+- counter_move: one concrete action {_SUBJECT} could test this week (price, bundle, ad angle, content, channel,
+  product spec, partnership). Mention actual numbers when the event has them. If nothing to do, say "No action".
+Weight: events in the core segments ({_CORE_SEGS}) matter most.
+Sector/NewEntrant events: score high only when a real new company or category shift is visible.
+{(settings.vocab or {}).get("noise_note") or "Products and stories outside the sector's segments score 1-3."}
 Money events (financial_fact, financial_result, stock_move; news with topic financials/funding): a rival's revenue, loss,
-funding round or valuation is strategic context (6-8 for Indian D2C rivals, 4-6 for global parents whose group figures
-are not comparable). In so_what say what the scale or runway means for Pebble's pricing power."""
+funding round or valuation is strategic context (6-8 for direct rivals, 4-6 for global parents whose group figures
+are not comparable). In so_what say what the scale or runway means for pricing power in this sector."""
 
 # ---------------- heuristic fallback ----------------
 _KIND_BASE = {"new_product": 6, "sale_started": 8, "price_drop": 5, "price_rise": 3, "discount_started": 4,
@@ -89,11 +106,14 @@ _KIND_CAT = {"new_product": "product_launch", "hidden_product": "product_launch"
 _TOPIC_CAT = {"financials": "funding", "funding": "funding", "launch": "product_launch", "pricing": "pricing", "legal": "regulatory",
               "leadership": "hiring", "partnership": "partnership", "distribution": "partnership", "manufacturing": "other",
               "marketing": "marketing", "market_data": "other", "reviews": "reviews_buzz"}
-_HOT = re.compile(r"launch|unveil|introduc|debut|new .*(watch|earbud|tws|speaker)|funding|raises|acqui|\bipo\b|partner|"
-                  r"price cut|slash|\bsale\b|record|market share|\bidc\b|counterpoint|lawsuit|\bban(ned)?\b|recall", re.I)
-_CORE = re.compile(r"watch|earbud|tws|buds|band|ring", re.I)
-_NOISE = re.compile(r"cable|strap|case|cover|sticker|screen guard|adapter|gift card|refurbished|prebook pass|warranty|"
-                    r"protection plan|\bups\b|inflator|keyboard|mouse|dashcam|projector|soundbar|trimmer", re.I)
+_V = settings.vocab or {}
+_HOT = re.compile(_V["hot"], re.I) if _V.get("hot") else re.compile(
+    r"launch|unveil|introduc|debut|new .*(watch|earbud|tws|speaker)|funding|raises|acqui|\bipo\b|partner|"
+    r"price cut|slash|\bsale\b|record|market share|\bidc\b|counterpoint|lawsuit|\bban(ned)?\b|recall", re.I)
+_CORE = re.compile(_V["core"], re.I) if _V.get("core") else re.compile(r"watch|earbud|tws|buds|band|ring", re.I)
+_NOISE = re.compile(_V["noise"], re.I) if _V.get("noise") else re.compile(
+    r"cable|strap|case|cover|sticker|screen guard|adapter|gift card|refurbished|prebook pass|warranty|"
+    r"protection plan|\bups\b|inflator|keyboard|mouse|dashcam|projector|soundbar|trimmer", re.I)
 
 
 _GRIPE = re.compile(r"defect|warranty|refund|broke|worst|scam|complain|dispute|not working|stopped working|replacement", re.I)
@@ -358,7 +378,8 @@ def enrich_pending(limit: int = 200) -> int:
                 except Exception:  # noqa: BLE001 - a model misconfiguration must never block scoring
                     imp = None
                 data_sql = ""
-                params: list = [res["category"], max(1, min(10, importance)), res["so_what"][:600], res["counter_move"][:600],
+                params: list = [res["category"], max(1, min(10, importance)), (settings.localize(res["so_what"]) or "")[:600],
+                                (settings.localize(res["counter_move"]) or "")[:600],
                                 2 if llm and ev["id"] in llm else 1]
                 if imp:
                     data_sql = ", data=?"

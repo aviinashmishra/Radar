@@ -1,0 +1,113 @@
+# Nazar sector: Travel Tech. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- DGCA monthly domestic traffic
+- Ministry of Tourism statistics
+- Company filings (MMYT 20-F, NSE disclosures)
+- Industry coverage (Skift, PhocusWire, ET Travel)
+segments:
+  flights:
+    name: Domestic air travel
+    units_m: 165
+    growth_pct: 8
+    asp_inr: 6500
+    value_cr: 107000
+    trend: Record passengers; two-airline market after Vistara merged into Air India.
+    confidence: estimate
+    shares_pct:
+      IndiGo: 64
+      Air India: 27
+      Akasa Air: 5
+  hotels:
+    name: Hotels & stays (online)
+    units_m: 120
+    growth_pct: 12
+    asp_inr: 4500
+    value_cr: 54000
+    trend: Rate growth outran supply; OYO back to profit; Airbnb and Agoda pushing inventory.
+    confidence: estimate
+    shares_pct:
+      MakeMyTrip: 22
+      OYO: 15
+      Booking.com: 12
+      Agoda: 8
+      Airbnb: 6
+      EaseMyTrip: 3
+      Cleartrip: 4
+      Treebo: 1
+  ota:
+    name: Online travel gross bookings
+    units_m: 400
+    growth_pct: 18
+    asp_inr: 7500
+    value_cr: 300000
+    trend: MakeMyTrip dominant; ixigo wins tier-2 and rail; Flipkart's Cleartrip and EaseMyTrip compete on fees.
+    confidence: estimate
+    shares_pct:
+      MakeMyTrip: 48
+      ixigo: 8
+      EaseMyTrip: 9
+      Cleartrip: 8
+      Yatra: 5
+      Booking.com: 7
+      Agoda: 4
+  rail:
+    name: Online rail ticketing
+    units_m: 450
+    growth_pct: 6
+    asp_inr: 450
+    value_cr: 20250
+    trend: IRCTC is the rails; ixigo/ConfirmTkt lead third-party apps.
+    confidence: estimate
+    shares_pct:
+      IRCTC: 60
+      ixigo: 22
+      MakeMyTrip: 6
+  bus:
+    name: Online bus ticketing
+    units_m: 180
+    growth_pct: 15
+    asp_inr: 800
+    value_cr: 14400
+    trend: redBus dominant; AbhiBus (ixigo) growing in the south.
+    confidence: estimate
+    shares_pct:
+      redBus: 65
+      ixigo: 15
+      MakeMyTrip: 5
+  experiences:
+    name: Holidays & experiences
+    units_m: 40
+    growth_pct: 20
+    asp_inr: 10000
+    value_cr: 40000
+    trend: Short-haul international and pilgrimage packages drive growth.
+    confidence: estimate
+    shares_pct:
+      MakeMyTrip: 12
+      Thrillophilia: 6
+      Yatra: 3
+      Airbnb: 2
+      IRCTC: 5
+  corporate:
+    name: Corporate travel (managed)
+    units_m: 30
+    growth_pct: 14
+    asp_inr: 12000
+    value_cr: 36000
+    trend: SME travel moving online (MyBiz, Yatra for Business).
+    confidence: estimate
+    shares_pct:
+      MakeMyTrip: 20
+      Yatra: 15
+      Cleartrip: 5
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

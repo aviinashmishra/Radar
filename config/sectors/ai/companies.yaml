@@ -1,0 +1,495 @@
+# Nazar sector: AI & SaaS. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: OpenAI
+  entity: OpenAI Group PBC
+  hq: San Francisco, United States
+  founded: 2015
+  ownership: private
+  wikipedia: OpenAI
+  investors:
+  - Microsoft
+  - SoftBank
+  - Thrive
+  - Nvidia
+  - MGX
+  notes: ChatGPT has 800M+ weekly users; India is its second-largest market; ₹399 ChatGPT Go launched for India (2025); Stargate data-centre build-out.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 3700
+    currency: USD
+    unit: million
+    source: Press reporting
+    confidence: reported
+  - metric: revenue
+    period: '2025'
+    value: 13000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: valuation
+    period: '2025'
+    value: 500000
+    currency: USD
+    unit: million
+    source: Secondary sale reported Oct 2025
+    confidence: reported
+- brand: Anthropic
+  entity: Anthropic PBC
+  hq: San Francisco, United States
+  founded: 2021
+  ownership: private
+  wikipedia: Anthropic
+  investors:
+  - Amazon
+  - Google
+  - Lightspeed
+  - Menlo
+  - Spark
+  notes: Enterprise and coding leader; opened its Bengaluru office in 2025; Claude for Education and India partnerships.
+  financials:
+  - metric: revenue
+    period: '2025'
+    value: 5000
+    currency: USD
+    unit: million
+    source: Run-rate reported in the press
+    confidence: estimate
+  - metric: valuation
+    period: '2025'
+    value: 183000
+    currency: USD
+    unit: million
+    source: Series F reported Sept 2025
+    confidence: reported
+- brand: Google
+  entity: Alphabet Inc.
+  hq: Mountain View, United States
+  founded: 1998
+  ownership: listed
+  ticker: GOOGL
+  sec_cik: 1652044
+  wikipedia: Google DeepMind
+  notes: Gemini in Search, Android and Workspace; $15B Visakhapatnam AI hub announced (2025).
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 350018
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Microsoft
+  entity: Microsoft Corporation
+  hq: Redmond, United States
+  founded: 1975
+  ownership: listed
+  ticker: MSFT
+  sec_cik: 789019
+  wikipedia: Microsoft
+  notes: $3B India investment (2025); OpenAI partner; Copilot across Office.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 281724
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Meta
+  entity: Meta Platforms, Inc.
+  hq: Menlo Park, United States
+  founded: 2004
+  ownership: listed
+  ticker: META
+  sec_cik: 1326801
+  wikipedia: Meta Platforms
+  notes: Llama open weights; Meta AI in WhatsApp is the most-used AI assistant in India.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 164501
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Nvidia
+  entity: Nvidia Corporation
+  hq: Santa Clara, United States
+  founded: 1993
+  ownership: listed
+  ticker: NVDA
+  sec_cik: 1045810
+  wikipedia: Nvidia
+  notes: Supplies the GPUs behind the IndiaAI Mission's 38,000-GPU pool.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 130497
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: xAI
+  entity: xAI Corp. (merged with X)
+  hq: Palo Alto, United States
+  founded: 2023
+  ownership: private
+  wikipedia: XAI (company)
+  investors:
+  - Valor
+  - a16z
+  - Sequoia
+  - Saudi PIF (reported)
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 200000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Mistral AI
+  entity: Mistral AI SAS
+  hq: Paris, France
+  founded: 2023
+  ownership: private
+  wikipedia: Mistral AI
+  investors:
+  - ASML
+  - a16z
+  - General Catalyst
+  - Nvidia
+  notes: Europe's champion; €11.7B valuation (Sept 2025).
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 11700
+    currency: EUR
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Perplexity
+  entity: Perplexity AI, Inc.
+  hq: San Francisco, United States
+  founded: 2022
+  ownership: private
+  wikipedia: Perplexity AI
+  investors:
+  - IVP
+  - NEA
+  - SoftBank
+  - Nvidia
+  - Jeff Bezos
+  notes: Free Pro for Airtel's 360M users (2025) made India its largest market.
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 20000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: DeepSeek
+  entity: Hangzhou DeepSeek AI
+  hq: Hangzhou, China
+  founded: 2023
+  ownership: private
+  wikipedia: DeepSeek
+  investors:
+  - High-Flyer
+  notes: R1 (Jan 2025) crashed Nvidia's stock and reset the cost debate; India hosts it on domestic servers.
+- brand: Sarvam AI
+  entity: Sarvam AI Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2023
+  ownership: private
+  wikipedia: Sarvam AI
+  investors:
+  - Lightspeed
+  - Peak XV
+  - Khosla
+  notes: First IndiaAI Mission sovereign-model pick; 105B-parameter Indic model (2025).
+  financials:
+  - metric: funding_total
+    period: '2023'
+    value: 41
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Krutrim
+  entity: Krutrim SI Designs Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2023
+  ownership: private
+  wikipedia: Krutrim
+  investors:
+  - Matrix
+  - Z47
+  - Bhavish Aggarwal
+  notes: India's first AI unicorn ($1B, Jan 2024); Kruti agentic assistant; chip plans.
+  financials:
+  - metric: valuation
+    period: '2024'
+    value: 1000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: BharatGen
+  entity: BharatGen (IIT Bombay-led consortium, DST/MeitY)
+  hq: Mumbai, India
+  founded: 2024
+  ownership: private
+  notes: Param-1 bilingual model; IndiaAI Mission funding.
+- brand: Zoho
+  entity: Zoho Corporation Pvt. Ltd.
+  hq: Chennai, India
+  founded: 1996
+  ownership: private
+  wikipedia: Zoho Corporation
+  notes: Bootstrapped; own LLM (Zia LLM, 2025); Arattai messaging boom.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 8703
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY24
+    value: 2836
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Freshworks
+  entity: Freshworks Inc.
+  hq: San Mateo, United States / Chennai
+  founded: 2010
+  ownership: listed
+  ticker: FRSH
+  sec_cik: 1544522
+  wikipedia: Freshworks
+  notes: First Indian SaaS on Nasdaq; Freddy AI agents.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 720
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Salesforce
+  entity: Salesforce, Inc.
+  hq: San Francisco, United States
+  founded: 1999
+  ownership: listed
+  ticker: CRM
+  sec_cik: 1108524
+  wikipedia: Salesforce
+  notes: Agentforce is the enterprise-agent benchmark; Hyderabad is its second-largest hub.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 37895
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Infosys
+  entity: Infosys Ltd.
+  hq: Bengaluru, India
+  founded: 1981
+  ownership: listed
+  ticker: INFY.NS
+  sec_cik: 1067491
+  wikipedia: Infosys
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 162990
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_profit
+    period: FY25
+    value: 26713
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: TCS
+  entity: Tata Consultancy Services Ltd.
+  hq: Mumbai, India
+  founded: 1968
+  ownership: listed
+  ticker: TCS.NS
+  wikipedia: Tata Consultancy Services
+  notes: India's largest IT exporter; 12,000 layoffs (2025) and a 1 GW AI data-centre plan with TPG.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 255324
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_profit
+    period: FY25
+    value: 48553
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Wipro
+  entity: Wipro Ltd.
+  hq: Bengaluru, India
+  founded: 1945
+  ownership: listed
+  ticker: WIPRO.NS
+  sec_cik: 1123799
+  wikipedia: Wipro
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 89088
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_profit
+    period: FY25
+    value: 13135
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: HCLTech
+  entity: HCL Technologies Ltd.
+  hq: Noida, India
+  founded: 1991
+  ownership: listed
+  ticker: HCLTECH.NS
+  wikipedia: HCL Technologies
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 117055
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_profit
+    period: FY25
+    value: 17390
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Cohere
+  entity: Cohere Inc.
+  hq: Toronto, Canada
+  founded: 2019
+  ownership: private
+  wikipedia: Cohere
+  investors:
+  - Nvidia
+  - Salesforce
+  - Oracle
+  - PSP
+  - AMD
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 6800
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Hugging Face
+  entity: Hugging Face, Inc.
+  hq: New York, United States
+  founded: 2016
+  ownership: private
+  wikipedia: Hugging Face
+  investors:
+  - Salesforce
+  - Google
+  - Amazon
+  - Nvidia
+  - Sequoia
+  notes: Where Indic models get published.
+- brand: Databricks
+  entity: Databricks, Inc.
+  hq: San Francisco, United States
+  founded: 2013
+  ownership: private
+  wikipedia: Databricks
+  investors:
+  - a16z
+  - Thrive
+  - Insight
+  - Nvidia
+  - Meta
+  notes: $100B+ valuation; big Bengaluru R&D.
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 100000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Palantir
+  entity: Palantir Technologies Inc.
+  hq: Denver, United States
+  founded: 2003
+  ownership: listed
+  ticker: PLTR
+  sec_cik: 1321655
+  wikipedia: Palantir Technologies
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 2866
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Cursor
+  entity: Anysphere, Inc.
+  hq: San Francisco, United States
+  founded: 2022
+  ownership: private
+  wikipedia: Cursor (code editor)
+  investors:
+  - Thrive
+  - a16z
+  - Accel
+  - Andreessen
+  notes: Fastest SaaS to $500M ARR; the coding-agent race with Claude Code and Codex.
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 29300
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

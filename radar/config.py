@@ -1,6 +1,7 @@
 """Load competitors.yaml + .env into one settings object."""
 from __future__ import annotations
 import os
+import re
 import tempfile
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -31,6 +32,10 @@ class Brand:
     search_terms: list[str] = field(default_factory=list)  # YouTube + autocomplete phrases (default: the name)
     aliases: list[str] = field(default_factory=list)     # product lines that can only mean this brand
     exclude: list[str] = field(default_factory=list)     # look-alikes that are never this brand
+    ambiguous: bool = False                               # the name is an everyday word (Hero, Jupiter, Slice): needs context
+    country: str = ""                                    # HQ country (Nazar's India / world lens)
+    kind: str = ""                                       # company type shown in the Nazar directory (OEM, bank, OTA, ...)
+    website: str = ""                                    # public site when there is no storefront to poll
 
     @property
     def host(self) -> str | None:
@@ -74,6 +79,52 @@ class Settings:
     money_terms: list[str] = field(default_factory=list)  # financial news phrases run per brand
     market: dict = field(default_factory=dict)            # India market model + impact assumptions (market.yaml)
     sec_contact: str = ""                                 # SEC EDGAR asks for a contact in the user agent
+    # ---- Nazar: one radar per sector. Everything below is optional and defaults to the Pebble behaviour. ----
+    sector_key: str = ""                                  # short id of this sector (iot, auto, fintech, ...)
+    sector_label: str = ""                                # display name ("Automotive & EV")
+    perspective: str = ""                                 # whose seat the analysis is written from; empty = the self brand, else neutral
+    vocab: dict = field(default_factory=dict)             # sector | category | hot | core | noise regexes (relevance.py, enrich.py)
+    voice_themes: list = field(default_factory=list)      # [{key, rx}] review themes for this sector (collectors/voice.py)
+    world: dict = field(default_factory=dict)             # free-form sector facts for the Nazar directory (regulators, trackers, ...)
+
+    config_self: str = ""                                 # the brand competitors.yaml flags `self:` (set in __post_init__)
+
+    def __post_init__(self) -> None:
+        self.config_self = next((b.name for b in self.brands if b.self_brand), "")
+
+    @property
+    def me(self) -> str:
+        """Who the radar writes for: the self brand, else the configured perspective, else 'you'."""
+        if self.self_brand:
+            return self.self_brand.name
+        return self.perspective or "you"
+
+    @property
+    def self_market(self) -> dict:
+        """The self brand's block of market.yaml (`self:`; the original key `pebble:` still works)."""
+        if not self.self_brand or self.self_brand.name != self.config_self:
+            return {}   # own revenue, mix and sales describe the YAML home brand only; another seat has no own data
+        m = self.market or {}
+        return m.get("self") or m.get("pebble") or {}
+
+    @property
+    def own_data(self) -> bool:
+        """True when the current seat has first-party figures (market.yaml self block): at-risk money, own sales."""
+        return bool(self.self_market)
+
+    def localize(self, text: str | None) -> str | None:
+        """The radar's templates were written for Pebble. In another sector the same sentence is addressed to the
+        self brand by name, or, with no self brand, to 'you' (the reader competing in that sector)."""
+        if not text or "Pebble" not in text or (self.self_brand and self.self_brand.name == "Pebble"):
+            return text
+        text = re.sub(r"\bPebble (Competitor )?Radar\b", "Nazar", text)
+        if self.self_brand or self.perspective:
+            return re.sub(r"\bPebble\b", self.me, text)
+        for old, new in ((r"\bPebble's\b", "your"), (r"\bPebble is\b", "you are"), (r"\bPebble has\b", "you have"),
+                         (r"\bPebble does\b", "you do"), (r"\bPebble needs\b", "you need"), (r"\bPebble ranks\b", "you rank"),
+                         (r"\bPebble reads\b", "you read"), (r"\bPebble itself\b", "you yourself"), (r"\bPebble\b", "you")):
+            text = re.sub(old, new, text)
+        return text
 
     def company(self, name: str) -> dict:
         return self.companies.get(name) or self.companies.get(name.lower()) or {}
@@ -87,6 +138,16 @@ class Settings:
     @property
     def self_brand(self) -> Brand | None:
         return next((b for b in self.brands if b.self_brand), None)
+
+    def set_perspective(self, name: str | None) -> str | None:
+        """Choose at runtime whose seat the radar writes from: a brand of this sector, or None for the neutral view.
+        Every reader goes through `self_brand` / `me`, so flipping the flags is enough; callers persist the choice."""
+        target = self.brand(name) if name else None
+        if name and target is None:
+            raise ValueError(f"{name!r} is not a brand in this sector")
+        for b in self.brands:
+            b.self_brand = b is target
+        return target.name if target else None
 
     @property
     def ai_provider(self) -> str | None:
@@ -124,6 +185,10 @@ def load() -> Settings:
             search_terms=b.get("search_terms", []) or [],
             aliases=b.get("aliases", []) or [],
             exclude=b.get("exclude", []) or [],
+            ambiguous=bool(b.get("ambiguous")),
+            country=str(b.get("country") or ""),
+            kind=str(b.get("kind") or ""),
+            website=str(b.get("website") or b.get("shopify") or b.get("store") or "").rstrip("/"),
         )
         for b in raw["brands"]
     ]
@@ -167,6 +232,12 @@ def load() -> Settings:
         money_terms=companies_raw.get("money_terms") or [],
         market=market,
         sec_contact=(os.environ.get("SEC_CONTACT") or "").strip(),
+        sector_key=os.environ.get("RADAR_SECTOR") or str(raw.get("key") or ""),
+        sector_label=os.environ.get("RADAR_SECTOR_LABEL") or str(raw.get("label") or ""),
+        perspective=str(raw.get("perspective") or ""),
+        vocab=raw.get("vocab") or {},
+        voice_themes=[(t["key"], t["rx"]) for t in (raw.get("voice_themes") or []) if t.get("key") and t.get("rx")],
+        world=raw.get("world") or {},
     )
 
 

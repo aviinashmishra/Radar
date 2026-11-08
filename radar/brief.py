@@ -108,10 +108,10 @@ def write(days: int = 7, push: bool = True) -> str:
     if settings.ai_enabled and (ev or sig):
         bench = analytics.benchmark()
         ctx = _context(days)
-        prompt = (f"Write the {'weekly' if days >= 7 else 'daily'} competitor brief for Pebble's founders. Max 450 words. "
+        prompt = (f"Write the {'weekly' if days >= 7 else 'daily'} competitor brief for {settings.me if settings.self_brand else 'a leadership team competing in this sector'} ({settings.sector}). Max 450 words. "
                   "Structure: 1) Three things to act on this week, each with the concrete move and the ₹/month at stake where the model "
                   "gives one. 2) What each major rival did. 3) Pricing / white-space observations. 4) Money and market: what rivals' "
-                  "financials, funding and share prices mean for Pebble, and where the market is growing or shrinking. 5) One risk and one "
+                  f"financials, funding and share prices mean for {settings.me if settings.self_brand else 'a challenger'}, and where the market is growing or shrinking. 5) One risk and one "
                   "opportunity. Plain text, short lines, no markdown tables. Mark model estimates as estimates.\n\n"
                   f"SIGNALS:\n{json.dumps(sig)[:6000]}\n\nEVENTS:\n{json.dumps(ev)[:26000]}\n\nBENCHMARK:\n{json.dumps(bench)[:5000]}\n\n"
                   f"IMPACT MODEL (INR/month):\n{json.dumps({k: ctx['pressure'][k] for k in ('total_risk', 'total_upside', 'by_brand', 'by_segment', 'top')}, default=str)[:5000]}\n\n"
@@ -120,10 +120,11 @@ def write(days: int = 7, push: bool = True) -> str:
         body = enrich.ask_text(prompt)
     if not body:
         body = _template(days, ev, sig)
+    body = settings.localize(body) or body
     with db.tx() as c:
         c.execute("INSERT INTO briefs(created_at,period,body) VALUES(?,?,?)", (db.now(), f"{days}d", body))
     if push:
         alerts.send_text(body)
         from . import exports
-        exports.send_email(f"Pebble Radar {'weekly' if days >= 7 else 'daily'} brief", body)
+        exports.send_email(f"{settings.sector_label or 'Radar'} {'weekly' if days >= 7 else 'daily'} brief", body)
     return body

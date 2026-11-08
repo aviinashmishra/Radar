@@ -1,0 +1,102 @@
+# Nazar sector: Edtech. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- Company filings (MCA, NSE, SEC)
+- Tracxn and Inc42 funding data
+- HolonIQ and Redseer sector estimates
+- NTA registration counts
+segments:
+  k12:
+    name: K-12 online learning
+    units_m: 25
+    growth_pct: 8
+    asp_inr: 6000
+    value_cr: 15000
+    trend: Post-pandemic reset; BYJU'S collapse freed share for PW, Vedantu and free YouTube.
+    confidence: estimate
+    shares_pct:
+      Physics Wallah: 20
+      BYJU'S: 12
+      Vedantu: 10
+      Cuemath: 4
+      Khan Academy: 3
+      Duolingo: 2
+  testprep:
+    name: Test prep (online + hybrid)
+    units_m: 12
+    growth_pct: 20
+    asp_inr: 21000
+    value_cr: 25200
+    trend: PW's price point reset the market; Unacademy shrank; Allen and Aakash went online.
+    confidence: estimate
+    shares_pct:
+      Physics Wallah: 32
+      Unacademy: 16
+      Allen: 15
+      Aakash: 12
+      Vedantu: 6
+      BYJU'S: 3
+  higher:
+    name: Online degrees & executive education
+    units_m: 2.5
+    growth_pct: 25
+    asp_inr: 80000
+    value_cr: 20000
+    trend: UGC-approved online degrees and study-abroad counselling drive upGrad and Emeritus.
+    confidence: estimate
+    shares_pct:
+      upGrad: 28
+      Emeritus: 12
+      Coursera: 12
+      Simplilearn: 8
+      Scaler: 4
+  skills:
+    name: Upskilling & careers
+    units_m: 8
+    growth_pct: 18
+    asp_inr: 15000
+    value_cr: 12000
+    trend: AI and data skills courses boom; pay-after-placement under scrutiny.
+    confidence: estimate
+    shares_pct:
+      Scaler: 12
+      upGrad: 14
+      Coursera: 12
+      Udemy: 10
+      Simplilearn: 8
+      Physics Wallah: 5
+      Chegg: 2
+  language:
+    name: Language learning
+    units_m: 10
+    growth_pct: 15
+    asp_inr: 2000
+    value_cr: 2000
+    trend: Duolingo dominates; spoken-English apps fragment the rest.
+    confidence: estimate
+    shares_pct:
+      Duolingo: 60
+  offline:
+    name: Offline & hybrid coaching
+    units_m: 6
+    growth_pct: 28
+    asp_inr: 70000
+    value_cr: 42000
+    trend: Every online brand opened centres; Kota lost share to local hubs.
+    confidence: estimate
+    shares_pct:
+      Allen: 30
+      Aakash: 20
+      Physics Wallah: 16
+      Unacademy: 4
+      Vedantu: 3
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

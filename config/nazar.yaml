@@ -1,0 +1,108 @@
+# Nazar: the registry of sectors. Each sector is a full radar (its own config folder, database and schedule) that the
+# Nazar hub loads side by side and reads together. `primary` marks the sector whose Telegram bot and Shopify sales run;
+# `snapshot` names the file the cloud worker publishes on the `data` release. Add a sector by copying a folder under
+# config/sectors/ and listing it here.
+
+name: Nazar
+tagline: One eye on every market. Nazar runs one radar per sector and reads them together.
+sectors:
+- key: iot
+  label: IoT & Smart Gadgets
+  short: IoT
+  icon: ⌚
+  color: '#2a78d6'
+  tagline: 'Pebble''s home turf: screenless bands, smart rings, smartwatches, earbuds, speakers'
+  config: config/competitors.yaml
+  db: data/radar.db
+  snapshot: radar.db.gz
+  primary: true
+- key: auto
+  label: Automotive & EV
+  short: Auto
+  icon: 🚗
+  color: '#e34948'
+  tagline: Cars, EVs, two-wheelers, ride-hailing and the charging that powers them
+  config: config/sectors/auto/competitors.yaml
+  db: data/sectors/auto/radar.db
+  snapshot: auto.db.gz
+  primary: false
+- key: travel
+  label: Travel Tech
+  short: Travel
+  icon: ✈️
+  color: '#1baf7a'
+  tagline: 'OTAs, airlines, hotels, rail and bus: who moves India and at what fare'
+  config: config/sectors/travel/competitors.yaml
+  db: data/sectors/travel/radar.db
+  snapshot: travel.db.gz
+  primary: false
+- key: fintech
+  label: Fintech
+  short: Fintech
+  icon: ₹
+  color: '#6250d6'
+  tagline: UPI, lending, broking, insurance, payments rails and the regulators above them
+  config: config/sectors/fintech/competitors.yaml
+  db: data/sectors/fintech/radar.db
+  snapshot: fintech.db.gz
+  primary: false
+- key: qcom
+  label: Quick Commerce & Food
+  short: Q-com
+  icon: ⚡
+  color: '#eda100'
+  tagline: 10-minute delivery, food, grocery and the gig fleets behind the apps
+  config: config/sectors/qcom/competitors.yaml
+  db: data/sectors/qcom/radar.db
+  snapshot: qcom.db.gz
+  primary: false
+- key: ecom
+  label: E-commerce & D2C
+  short: E-com
+  icon: 🛍️
+  color: '#e87ba4'
+  tagline: Marketplaces, fashion, beauty, D2C houses and the cross-border challengers
+  config: config/sectors/ecom/competitors.yaml
+  db: data/sectors/ecom/radar.db
+  snapshot: ecom.db.gz
+  primary: false
+- key: edtech
+  label: Edtech
+  short: Edtech
+  icon: 🎓
+  color: '#008383'
+  tagline: Test prep, K-12, degrees and upskilling, online and in Kota
+  config: config/sectors/edtech/competitors.yaml
+  db: data/sectors/edtech/radar.db
+  snapshot: edtech.db.gz
+  primary: false
+- key: health
+  label: Health Tech
+  short: Health
+  icon: 🩺
+  color: '#d95926'
+  tagline: Doctor apps, e-pharmacy, labs, hospital chains and health insurance tech
+  config: config/sectors/health/competitors.yaml
+  db: data/sectors/health/radar.db
+  snapshot: health.db.gz
+  primary: false
+- key: ai
+  label: AI & SaaS
+  short: AI
+  icon: ✦
+  color: '#0ea5e9'
+  tagline: Frontier labs, Indian sovereign AI, GPUs, SaaS and IT services
+  config: config/sectors/ai/competitors.yaml
+  db: data/sectors/ai/radar.db
+  snapshot: ai.db.gz
+  primary: false
+- key: energy
+  label: Energy & Clean Tech
+  short: Energy
+  icon: ☀️
+  color: '#65a30d'
+  tagline: Solar, wind, cells, charging, grid, hydrogen and the oil money funding it all
+  config: config/sectors/energy/competitors.yaml
+  db: data/sectors/energy/radar.db
+  snapshot: energy.db.gz
+  primary: false

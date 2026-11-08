@@ -1,0 +1,21 @@
+/* Nazar bar: the strip above every sector dashboard. Frosted glass tinted with the sector colour; follows the theme. */
+.nz-bar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:10px;padding:6px 14px;
+  background:color-mix(in srgb,var(--glass) 86%,var(--sector,#2a6fe0));border-bottom:1px solid var(--glass-line);box-shadow:0 10px 30px -24px rgba(16,24,40,.5);
+  font:13px/1.3 var(--font);color:var(--ink);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5)}
+.nz-bar a{color:inherit;text-decoration:none}
+.nz-eye{display:inline-flex;align-items:center;gap:8px;font-weight:700;letter-spacing:-.01em;padding:4px 10px 4px 6px;border-radius:999px;transition:background .15s}
+.nz-eye:hover{background:var(--glass-strong)}
+.nz-eye svg{width:22px;height:22px;flex:none;filter:drop-shadow(0 2px 6px rgba(15,42,92,.35))}
+.nz-sectors{display:flex;gap:3px;flex:1;overflow-x:auto;scrollbar-width:none;padding:3px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line)}
+.nz-sectors::-webkit-scrollbar{display:none}
+.nz-sec{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;border:1px solid transparent;color:var(--ink-2);white-space:nowrap;font-size:12.5px;font-weight:500;transition:background .15s,color .15s,box-shadow .15s}
+.nz-sec:hover{background:var(--glass-strong);text-decoration:none;color:var(--ink)}
+.nz-sec.on{background:var(--glass-strong);border-color:color-mix(in srgb,var(--c,#2a6fe0) 45%,transparent);color:var(--ink);font-weight:600;box-shadow:0 6px 16px -10px var(--c,#2a6fe0)}
+.nz-sec i{width:7px;height:7px;border-radius:50%;background:var(--c);display:inline-block;flex:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 22%,transparent)}
+.nz-who{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;white-space:nowrap;padding:2px 4px 2px 10px;border-radius:999px;background:var(--glass-2);border:1px solid var(--glass-line)}
+.nz-who b{color:var(--ink);font-weight:600}
+.nz-persp{font:inherit;font-weight:600;color:var(--ink);background:var(--glass-strong);border:1px solid transparent;border-radius:999px;padding:3px 26px 3px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;max-width:180px;text-overflow:ellipsis;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 13px) 55%,calc(100% - 9px) 55%;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
+.nz-persp:hover{border-color:color-mix(in srgb,var(--sector,#2a6fe0) 45%,transparent)} .nz-persp:focus{outline:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--sector,#2a6fe0) 22%,transparent)}
+.nz-persp:disabled{opacity:.6;cursor:progress}
+@media(max-width:860px){.nz-who-l{display:none} .nz-who{padding-left:2px;background:none;border:0} .nz-eye span{display:none}} @media(max-width:520px){.nz-persp{max-width:110px}}

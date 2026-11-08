@@ -1,0 +1,118 @@
+# Nazar sector: AI & SaaS. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- Company filings (SEC, NSE)
+- Press reporting of private-company revenue run-rates and valuations
+- Nasscom and IDC India AI spend estimates
+- IndiaAI Mission disclosures
+segments:
+  frontier:
+    name: Frontier model revenue (global)
+    units_m: 1000
+    growth_pct: 150
+    asp_inr: 2500
+    value_cr: 250000
+    trend: OpenAI, Anthropic and Google take almost all paid model revenue; open weights (Llama, DeepSeek, Qwen) set the price floor.
+    confidence: estimate
+    shares_pct:
+      OpenAI: 45
+      Anthropic: 20
+      Google: 18
+      xAI: 3
+      Mistral AI: 1
+      Cohere: 1
+      DeepSeek: 1
+  apps:
+    name: Consumer AI apps (India users, weighted)
+    units_m: 350
+    growth_pct: 90
+    asp_inr: 150
+    value_cr: 5250
+    trend: ChatGPT leads; Gemini bundled into Android and Jio; Perplexity via Airtel; Meta AI inside WhatsApp.
+    confidence: estimate
+    shares_pct:
+      OpenAI: 45
+      Google: 25
+      Meta: 12
+      Perplexity: 8
+      Anthropic: 3
+      xAI: 2
+      Microsoft: 3
+  india:
+    name: India AI spend (enterprise + government)
+    units_m: 10
+    growth_pct: 35
+    asp_inr: 600000
+    value_cr: 60000
+    trend: IndiaAI Mission's ₹10,372 cr; hyperscalers announced $40B+ of Indian data-centre capex in 2025.
+    confidence: estimate
+    shares_pct:
+      Microsoft: 22
+      Google: 18
+      TCS: 6
+      Infosys: 5
+      Sarvam AI: 1
+      Krutrim: 1
+      Zoho: 2
+  infra:
+    name: AI infrastructure (India capex)
+    units_m: 2
+    growth_pct: 45
+    asp_inr: 5000000
+    value_cr: 100000
+    trend: GPU clusters (Yotta, E2E, Tata, Reliance-Jio) and hyperscaler regions; power and chips are the bottleneck.
+    confidence: estimate
+    shares_pct:
+      Nvidia: 70
+      Microsoft: 8
+      Google: 8
+      TCS: 2
+      Krutrim: 1
+  saas:
+    name: India SaaS revenue
+    units_m: 2
+    growth_pct: 20
+    asp_inr: 8500000
+    value_cr: 170000
+    trend: Agentic AI reprices seats to outcomes; Zoho and Freshworks are the Indian scale players.
+    confidence: estimate
+    shares_pct:
+      Zoho: 6
+      Freshworks: 4
+      Salesforce: 8
+      Microsoft: 15
+      Databricks: 2
+      Palantir: 1
+      Cursor: 0.5
+  policy:
+    name: AI policy & safety (activity index)
+    units_m: 1
+    growth_pct: 50
+    asp_inr: 1
+    value_cr: 1
+    trend: DPDP rules, the IndiaAI safety institute, EU AI Act timelines and US export controls shape every player.
+    confidence: estimate
+    shares_pct: {}
+  services:
+    name: IT services & GCCs (India exports)
+    units_m: 6
+    growth_pct: 5
+    asp_inr: 3000000
+    value_cr: 1800000
+    trend: Growth at a decade low while GCCs hire; AI deflates seat-based deals.
+    confidence: estimate
+    shares_pct:
+      TCS: 14
+      Infosys: 9
+      HCLTech: 6.5
+      Wipro: 5
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

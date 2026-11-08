@@ -1,0 +1,118 @@
+# Nazar sector: Energy & Clean Tech. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- CEA and MNRE capacity data
+- Mercom India and JMK Research
+- Company filings (NSE, SEC, HKEX)
+- BNEF and IEA (press coverage)
+segments:
+  solar:
+    name: Solar (GW added per year; units = GW)
+    units_m: 24.5
+    growth_pct: 60
+    asp_inr: 60000000
+    value_cr: 150000
+    trend: Record additions; ALCM and duties favour domestic modules; cell capacity catching up.
+    confidence: estimate
+    shares_pct:
+      Waaree Energies: 20
+      Adani Green: 12
+      Tata Power: 8
+      Premier Energies: 8
+      ReNew: 4
+      First Solar: 3
+      Reliance New Energy: 2
+  wind:
+    name: Wind (GW added per year; units = GW)
+    units_m: 3.4
+    growth_pct: 20
+    asp_inr: 70000000
+    value_cr: 24000
+    trend: Suzlon and Inox orders at records; hybrid and FDRE tenders drive demand.
+    confidence: estimate
+    shares_pct:
+      Suzlon: 35
+      Inox Wind: 15
+      Vestas: 12
+      Adani Green: 8
+      ReNew: 6
+  storage:
+    name: Batteries & storage (GWh; units = GWh)
+    units_m: 6
+    growth_pct: 150
+    asp_inr: 16000000
+    value_cr: 10000
+    trend: BESS tenders at ₹2.1 lakh/MW/month; four Indian gigafactories ramping; Chinese cells still dominate.
+    confidence: estimate
+    shares_pct:
+      CATL: 25
+      BYD: 15
+      Exide: 10
+      Amara Raja: 8
+      Ola Electric: 5
+      Reliance New Energy: 3
+      Tata Power: 3
+      Tesla Energy: 2
+  charging:
+    name: Public EV charging (thousand points; units = thousand)
+    units_m: 26
+    growth_pct: 60
+    asp_inr: 1000000
+    value_cr: 2600
+    trend: Oil companies and Tata Power own most points; private CPOs chase highways.
+    confidence: estimate
+    shares_pct:
+      Tata Power: 22
+      Indian Oil: 20
+      Statiq: 12
+      ChargeZone: 8
+      Servotech: 3
+      Ola Electric: 3
+  grid:
+    name: Power generation & utilities (revenue)
+    units_m: 1800
+    growth_pct: 7
+    asp_inr: 6500
+    value_cr: 1170000
+    trend: Peak demand past 250 GW; thermal still two-thirds of generation; smart meters and transmission build-out.
+    confidence: estimate
+    shares_pct:
+      NTPC: 16
+      Tata Power: 6
+      Adani Green: 1
+      ReNew: 1
+  hydrogen:
+    name: Green hydrogen & fuels
+    units_m: 1
+    growth_pct: 80
+    asp_inr: 50000000
+    value_cr: 5000
+    trend: SIGHT tenders; Reliance, Adani, NTPC and IOC build the first electrolyser plants.
+    confidence: estimate
+    shares_pct:
+      Reliance New Energy: 25
+      Adani Green: 20
+      NTPC: 15
+      Indian Oil: 10
+      ReNew: 5
+  oilgas:
+    name: Oil & gas (revenue)
+    units_m: 250
+    growth_pct: 3
+    asp_inr: 60000
+    value_cr: 1500000
+    trend: Refiners and fuel retailers fund the transition; crude volatility and Russian discounts drive margins.
+    confidence: estimate
+    shares_pct:
+      Reliance New Energy: 30
+      Indian Oil: 28
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

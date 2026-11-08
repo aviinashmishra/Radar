@@ -1,0 +1,298 @@
+# Nazar sector: Quick Commerce & Food. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: Blinkit
+  entity: Blink Commerce Pvt. Ltd. (Eternal)
+  hq: Gurugram, India
+  founded: 2013
+  ownership: subsidiary
+  wikipedia: Blinkit
+  notes: Quick-commerce leader by GOV; 1,500+ dark stores; moved to inventory-led model in 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 4923
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Zepto
+  entity: Kiranakart Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2021
+  ownership: private
+  wikipedia: Zepto (company)
+  investors:
+  - Nexus
+  - Y Combinator
+  - Glade Brook
+  - StepStone
+  - General Catalyst
+  - Motilal Oswal
+  notes: Fastest-growing q-com player; redomiciled to India; IPO filed 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 11110
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 1248
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: valuation
+    period: '2025'
+    value: 7000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Swiggy
+  entity: Swiggy Ltd.
+  hq: Bengaluru, India
+  founded: 2014
+  ownership: listed
+  ticker: SWIGGY.NS
+  wikipedia: Swiggy
+  investors:
+  - Prosus
+  - SoftBank
+  - Accel
+  notes: Listed Nov 2024; Instamart is the number-three q-com player and its main cash burn.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 15227
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 3117
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Zomato
+  entity: Eternal Ltd. (formerly Zomato Ltd.)
+  hq: Gurugram, India
+  founded: 2008
+  ownership: listed
+  ticker: ETERNAL.NS
+  wikipedia: Zomato
+  notes: Parent renamed Eternal in 2025; profitable; owns Blinkit, District, Hyperpure.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 20243
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 527
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: BigBasket
+  entity: Supermarket Grocery Supplies Pvt. Ltd. (Tata Digital)
+  hq: Bengaluru, India
+  founded: 2011
+  ownership: subsidiary
+  wikipedia: BigBasket
+  investors:
+  - Tata Digital
+  notes: Shifted entirely to 10-minute delivery in 2025; IPO talk for 2026.
+- brand: Flipkart Minutes
+  entity: Flipkart Internet Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2024
+  ownership: subsidiary
+  investors:
+  - Walmart
+  notes: Scaled to 800+ dark stores in 2025; fourth q-com player.
+- brand: JioMart
+  entity: Reliance Retail Ventures Ltd.
+  hq: Mumbai, India
+  founded: 2020
+  ownership: subsidiary
+  wikipedia: JioMart
+  notes: Store-backed 30-minute delivery across 1,000+ cities.
+- brand: Amazon Now
+  entity: Amazon Seller Services Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2025
+  ownership: subsidiary
+  notes: Amazon's 10-minute play launched 2025 in Bengaluru, Delhi, Mumbai.
+- brand: Dunzo
+  entity: Dunzo Digital Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2014
+  ownership: private
+  wikipedia: Dunzo
+  investors:
+  - Reliance Retail
+  - Google
+  - Lightbox
+  notes: Pioneer that ran out of money; Flipkart acquired the brand and team in 2025.
+- brand: Porter
+  entity: Smartshift Logistics Solutions Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2014
+  ownership: private
+  investors:
+  - Kedaara
+  - Wellington
+  - Peak XV
+  - Tiger Global
+  notes: Unicorn (2025); trucks and two-wheeler deliveries for businesses.
+- brand: Shadowfax
+  entity: Shadowfax Technologies Ltd.
+  hq: Bengaluru, India
+  founded: 2015
+  ownership: private
+  investors:
+  - Flipkart
+  - TPG
+  - Eight Roads
+  - Mirae
+  notes: IPO filed 2025; biggest third-party rider network for q-com and e-commerce.
+- brand: Delhivery
+  entity: Delhivery Ltd.
+  hq: Gurugram, India
+  founded: 2011
+  ownership: listed
+  ticker: DELHIVERY.NS
+  wikipedia: Delhivery
+  notes: Bought Ecom Express in 2025; launched rapid commerce for brands.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 8932
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 162
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: DoorDash
+  entity: DoorDash, Inc.
+  hq: San Francisco, United States
+  founded: 2013
+  ownership: listed
+  ticker: DASH
+  sec_cik: 1792789
+  wikipedia: DoorDash
+  notes: Bought Deliveroo (2025); the profitability template Indian platforms cite.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 10722
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Uber Eats
+  entity: Uber Technologies, Inc.
+  hq: San Francisco, United States
+  founded: 2014
+  ownership: subsidiary
+  wikipedia: Uber Eats
+  notes: Exited India food delivery in 2020 (sold to Zomato); global number two.
+- brand: Meituan
+  entity: Meituan
+  hq: Beijing, China
+  founded: 2010
+  ownership: listed
+  ticker: 3690.HK
+  wikipedia: Meituan
+  notes: World's largest food-delivery platform; Keeta expanding to the Gulf and Brazil.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 337592
+    currency: CNY
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Delivery Hero
+  entity: Delivery Hero SE
+  hq: Berlin, Germany
+  founded: 2011
+  ownership: listed
+  ticker: DHER.DE
+  wikipedia: Delivery Hero
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 12800
+    currency: EUR
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Instacart
+  entity: Maplebear Inc.
+  hq: San Francisco, United States
+  founded: 2012
+  ownership: listed
+  ticker: CART
+  sec_cik: 1579091
+  wikipedia: Instacart
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 3378
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Getir
+  entity: Getir Perakende Lojistik A.Ş.
+  hq: Istanbul, Turkey
+  founded: 2015
+  ownership: private
+  wikipedia: Getir
+  investors:
+  - Mubadala
+  - Sequoia
+  - Tiger Global
+  notes: The global q-com pioneer that retreated to Turkey; the cautionary tale.
+- brand: Deliveroo
+  entity: Deliveroo plc
+  hq: London, United Kingdom
+  founded: 2013
+  ownership: subsidiary
+  wikipedia: Deliveroo
+  notes: Acquired by DoorDash in 2025.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 2071
+    currency: GBP
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

@@ -25,6 +25,9 @@ def _impact_line(e: dict) -> str:
 
 
 def _send(text: str) -> None:
+    text = settings.localize(text) or ""
+    if settings.sector_label and not settings.self_brand:  # Nazar: which sector this alert comes from
+        text = f"[{settings.sector_label}] {text}"
     if settings.telegram_token and settings.telegram_chat:
         try:
             requests.post(f"https://api.telegram.org/bot{settings.telegram_token}/sendMessage",
@@ -53,7 +56,18 @@ def flush(threshold: int | None = None) -> int:
     """Alert every enriched, un-alerted event at or above the threshold, plus every new signal."""
     thr = threshold if threshold is not None else settings.alert_threshold
     sent = 0
-    events = db.q("SELECT * FROM events WHERE enriched>0 AND alerted=0 AND importance>=? ORDER BY importance DESC, id LIMIT 40", (thr,))
+    events = db.q("SELECT * FROM events WHERE enriched>0 AND alerted=0 AND importance>=? ORDER BY importance DESC, id LIMIT 400", (thr,))
+    if len(events) > 40:
+        # a backlog (a sector's first sweep, or a long gap), not a trickle: pushing hundreds of messages would bury the
+        # chat. Send the handful of strongest moves and leave the rest on the dashboard; alerting resumes with the next change.
+        keep = [e for e in events if (e["importance"] or 0) >= 8][:5]
+        keep_ids = {e["id"] for e in keep}
+        log.info("alerts: %d scored moves at once; sending the %d strongest, the rest stay on the dashboard", len(events), len(keep))
+        with db.tx() as c:
+            for e in events:
+                if e["id"] not in keep_ids:
+                    c.execute("UPDATE events SET alerted=-1 WHERE id=?", (e["id"],))
+        events = keep
     for e in events:
         msg = format_event(e)
         log.info("ALERT %s", msg.replace("\n", " | "))

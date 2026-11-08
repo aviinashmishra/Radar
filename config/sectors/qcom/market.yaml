@@ -1,0 +1,85 @@
+# Nazar sector: Quick Commerce & Food. Market model: size, growth and shares per segment (all flagged estimates), and the
+# assumptions of the impact model. There is no `self:` block because no brand is marked self; add one
+# (revenue_cr, revenue_period, segment_mix_pct) to turn events into rupees at risk for a specific company.
+
+year: 2025
+sources:
+- Company quarterly disclosures (Eternal, Swiggy)
+- Datum Intelligence / Redseer quick-commerce estimates
+- Bernstein, HSBC and Kotak sector notes (press coverage)
+segments:
+  qc:
+    name: Quick commerce (GOV)
+    units_m: 1200
+    growth_pct: 75
+    asp_inr: 550
+    value_cr: 66000
+    trend: Blinkit leads; Zepto second; Instamart third; Flipkart Minutes, Amazon Now and BigBasket crowding in.
+    confidence: estimate
+    shares_pct:
+      Blinkit: 44
+      Zepto: 28
+      Swiggy: 22
+      Flipkart Minutes: 3
+      BigBasket: 2
+      JioMart: 1
+  food:
+    name: Food delivery (GOV)
+    units_m: 2600
+    growth_pct: 16
+    asp_inr: 690
+    value_cr: 180000
+    trend: Duopoly; growth slowed to mid-teens; both platforms added 10-minute food (Bistro, Snacc).
+    confidence: estimate
+    shares_pct:
+      Zomato: 57
+      Swiggy: 43
+  grocery:
+    name: Online grocery (GMV)
+    units_m: 900
+    growth_pct: 30
+    asp_inr: 1000
+    value_cr: 90000
+    trend: Quick commerce is eating scheduled grocery; BigBasket moved fully to 10 minutes.
+    confidence: estimate
+    shares_pct:
+      Blinkit: 28
+      Zepto: 18
+      Swiggy: 15
+      BigBasket: 14
+      JioMart: 8
+      Amazon Now: 6
+      Flipkart Minutes: 5
+  logistics:
+    name: Hyperlocal & e-commerce logistics
+    units_m: 6000
+    growth_pct: 20
+    asp_inr: 42
+    value_cr: 25000
+    trend: Gig-worker codes and rider pay are the regulatory risk.
+    confidence: estimate
+    shares_pct:
+      Delhivery: 20
+      Shadowfax: 10
+      Porter: 8
+      Dunzo: 1
+  membership:
+    name: Memberships & platform fees
+    units_m: 60
+    growth_pct: 40
+    asp_inr: 600
+    value_cr: 3600
+    trend: Platform fees rose from ₹2 to ₹10+ per order; memberships bundle q-com and food.
+    confidence: estimate
+    shares_pct:
+      Zomato: 50
+      Swiggy: 40
+      Zepto: 6
+      Blinkit: 4
+assumptions:
+  price_elasticity: 1.0
+  overlap_core: 0.4
+  overlap_adjacent: 0.1
+  launch_shift_pct: 2
+  stockout_capture_pct: 5
+  max_share_at_risk: 0.3

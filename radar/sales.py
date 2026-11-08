@@ -132,7 +132,7 @@ def report(kind: str = "weekly", period: str | None = None) -> dict:
     for p in pxy:
         p["growth_pct"] = _growth(p["est_units"], (ppxy.get(p["brand"]) or {}).get("est_units", 0))
     has_own = cur["lines"] > 0 or prev["lines"] > 0
-    peb = (settings.market.get("pebble") or {}) if settings.market else {}
+    peb = settings.self_market
     return {"kind": kind, "period": label, "start": start, "end": end, "prev_period": {"start": pstart, "end": pend},
             "own": {**cur, "growth": {"revenue_pct": _growth(cur["revenue"], prev["revenue"]), "units_pct": _growth(cur["units"], prev["units"])},
                     "prev": {"revenue": prev["revenue"], "units": prev["units"]}, "has_data": has_own,

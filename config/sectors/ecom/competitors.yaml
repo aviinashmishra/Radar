@@ -1,0 +1,572 @@
+# Nazar sector: E-commerce & D2C (ecom). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: ecom
+label: E-commerce & D2C
+sector: 'E-commerce and consumer internet, India and world: marketplaces, fashion, beauty, D2C brands, social commerce, cross-border, retail tech'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: marketplace
+  name: Horizontal marketplaces
+  show: true
+  keywords: marketplace|e-?commerce|online shopping|big billion|great indian festival|prime day|flipkart|amazon india|meesho|jiomart|snapdeal|tata neu
+- key: fashion
+  name: Fashion & lifestyle
+  show: true
+  keywords: fashion|apparel|footwear|ethnic|myntra|ajio|nykaa fashion|tata cliq|zudio|fashion brand|sneaker
+- key: beauty
+  name: Beauty & personal care
+  show: true
+  keywords: beauty|cosmetic|skincare|personal care|makeup|nykaa|purplle|tira|mamaearth|minimalist|sugar cosmetics|plum goodness
+- key: d2c
+  name: D2C brands & omnichannel
+  show: true
+  keywords: \bd2c\b|direct-to-consumer|brand launch|omnichannel|store launch|exclusive brand outlet|lenskart|boat|mamaearth|firstcry|licious|wakefit
+- key: social
+  name: Social & video commerce
+  show: true
+  keywords: social commerce|reseller|live commerce|video commerce|creator|influencer commerce|shopsy|meesho
+- key: cross
+  name: Cross-border
+  show: true
+  keywords: cross-?border|import|chinese e-?commerce|shein|temu|aliexpress|customs duty|de minimis
+- key: retailtech
+  name: Retail tech & enablers
+  show: true
+  keywords: shopify|unicommerce|checkout|returns|\brto\b|ondc|seller|logistics partner|warehouse|fulfil
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: Amazon Prime Day
+  month: 7
+  day: 12
+- name: Big Billion Days / Great Indian Festival
+  month: 9
+  day: 22
+- name: End of Reason Sale (Myntra)
+  month: 6
+  day: 1
+brands:
+- name: Flipkart
+  origin: Indian
+  tier: core
+  country: India
+  kind: Horizontal marketplace (Walmart)
+  segments:
+  - marketplace
+  - fashion
+  - social
+  - retailtech
+  website: https://www.flipkart.com
+  news_terms:
+  - Flipkart
+  - Flipkart IPO
+  aliases:
+  - Shopsy
+  - Flipkart Minutes
+  - Big Billion Days
+  - Flipkart Plus
+  - Flipkart Black
+  - SuperCoins
+  - Cleartrip
+  apps:
+  - com.flipkart.android
+  watch_pages:
+  - https://stories.flipkart.com/
+- name: Amazon India
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Horizontal marketplace
+  segments:
+  - marketplace
+  - retailtech
+  - fashion
+  - beauty
+  website: https://www.amazon.in
+  news_terms:
+  - Amazon India
+  - Amazon Great Indian Festival
+  aliases:
+  - Great Indian Festival
+  - Amazon Bazaar
+  - Amazon Prime India
+  - Amazon Fresh
+  - Amazon Now
+  exclude:
+  - Amazon rainforest
+  - AWS
+  - Amazon Prime Video
+  - Amazon river
+  apps:
+  - in.amazon.mShop.android.shopping
+  watch_pages:
+  - https://www.aboutamazon.in/news
+- name: Meesho
+  origin: Indian
+  tier: core
+  country: India
+  kind: Value marketplace
+  segments:
+  - marketplace
+  - social
+  - fashion
+  website: https://www.meesho.com
+  news_terms:
+  - Meesho
+  - Meesho IPO
+  aliases:
+  - Valmo
+  - Meesho Mall
+  - Fashnear
+  apps:
+  - com.meesho.supply
+  watch_pages:
+  - https://www.meesho.io/
+- name: Myntra
+  origin: Indian
+  tier: core
+  country: India
+  kind: Fashion marketplace (Flipkart)
+  segments:
+  - fashion
+  - beauty
+  website: https://www.myntra.com
+  news_terms:
+  - Myntra
+  aliases:
+  - End of Reason Sale
+  - Myntra Now
+  - M-Now
+  - Myntra Insider
+  - FWD
+  apps:
+  - com.myntra.android
+  watch_pages:
+  - https://www.myntra.com/
+- name: Nykaa
+  origin: Indian
+  tier: core
+  country: India
+  kind: Beauty and fashion retailer
+  segments:
+  - beauty
+  - fashion
+  - d2c
+  website: https://www.nykaa.com
+  news_terms:
+  - Nykaa
+  - FSN E-Commerce
+  aliases:
+  - Nykaa Fashion
+  - Nykaa Man
+  - Superstore by Nykaa
+  - FSN E-Commerce
+  - Dot & Key
+  - Kay Beauty
+  apps:
+  - com.fsn.nykaa
+  watch_pages:
+  - https://www.nykaa.com/
+- name: Ajio
+  origin: Indian
+  tier: core
+  country: India
+  kind: Fashion marketplace (Reliance)
+  segments:
+  - fashion
+  website: https://www.ajio.com
+  news_terms:
+  - Ajio
+  - Ajio Reliance Retail
+  aliases:
+  - Ajio Luxe
+  - AJIOgram
+  - Ajio Rush
+  apps:
+  - com.ril.ajio
+- name: Tira
+  origin: Indian
+  tier: core
+  country: India
+  kind: Beauty retailer (Reliance)
+  segments:
+  - beauty
+  website: https://www.tirabeauty.com
+  news_terms:
+  - Tira beauty Reliance
+  aliases:
+  - Tira Beauty
+  - Tira Luxe
+  exclude:
+  - Tirana
+  - Tirah
+  - tiramisu
+  ambiguous: true
+- name: Tata Neu
+  origin: Indian
+  tier: core
+  country: India
+  kind: Super-app (Tata Digital)
+  segments:
+  - marketplace
+  - fashion
+  - beauty
+  website: https://www.tatadigital.com
+  news_terms:
+  - Tata Neu
+  - Tata Digital
+  aliases:
+  - Tata Cliq
+  - Tata Digital
+  - NeuPass
+  - Croma online
+  - Westside online
+  apps:
+  - com.tatadigital.tcp
+  watch_pages:
+  - https://www.tatadigital.com/
+- name: JioMart
+  origin: Indian
+  tier: core
+  country: India
+  kind: Marketplace and grocery (Reliance)
+  segments:
+  - marketplace
+  - retailtech
+  website: https://www.jiomart.com
+  news_terms:
+  - JioMart
+- name: Snapdeal
+  origin: Indian
+  tier: core
+  country: India
+  kind: Value marketplace
+  segments:
+  - marketplace
+  website: https://www.snapdeal.com
+  news_terms:
+  - Snapdeal
+  - AceVector
+  aliases:
+  - AceVector
+  - Unicommerce
+  - Stellaro
+- name: Lenskart
+  origin: Indian
+  tier: core
+  country: India
+  kind: Eyewear D2C and retail
+  segments:
+  - d2c
+  website: https://www.lenskart.com
+  news_terms:
+  - Lenskart
+  - Lenskart IPO
+  aliases:
+  - Owndays
+  - Lenskart Blu
+  - Hustlr
+  - John Jacobs
+  - Aqualens
+  watch_pages:
+  - https://www.lenskart.com/
+- name: Mamaearth
+  origin: Indian
+  tier: core
+  country: India
+  kind: Beauty and personal care D2C house
+  segments:
+  - d2c
+  - beauty
+  website: https://mamaearth.in
+  news_terms:
+  - Mamaearth
+  - Honasa Consumer
+  aliases:
+  - Honasa Consumer
+  - The Derma Co
+  - Aqualogica
+  - Dr. Sheth's
+  - BBlunt
+  watch_pages:
+  - https://mamaearth.in/
+- name: FirstCry
+  origin: Indian
+  tier: core
+  country: India
+  kind: Kids and baby omnichannel retailer
+  segments:
+  - d2c
+  - marketplace
+  website: https://www.firstcry.com
+  news_terms:
+  - FirstCry
+  - Brainbees Solutions
+  aliases:
+  - Brainbees
+  - BabyHug
+  - GlobalBees
+  watch_pages:
+  - https://www.firstcry.com/
+- name: Purplle
+  origin: Indian
+  tier: core
+  country: India
+  kind: Beauty marketplace
+  segments:
+  - beauty
+  website: https://www.purplle.com
+  news_terms:
+  - Purplle
+  aliases:
+  - Good Vibes
+  - Faces Canada
+  - Manish Malhotra Beauty
+- name: Shopify
+  origin: Global
+  tier: adjacent
+  country: Canada
+  kind: Commerce platform
+  segments:
+  - retailtech
+  - d2c
+  website: https://www.shopify.com/in
+  news_terms:
+  - Shopify India
+  - Shopify merchants
+  aliases:
+  - Shop Pay
+  - Shopify Payments
+  - Shopify Editions
+  watch_pages:
+  - https://www.shopify.com/news
+- name: Alibaba
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: E-commerce group
+  segments:
+  - marketplace
+  - cross
+  - retailtech
+  website: https://www.alibabagroup.com
+  news_terms:
+  - Alibaba Group
+  - AliExpress India
+  aliases:
+  - AliExpress
+  - Taobao
+  - Tmall
+  - Lazada
+  - Trendyol
+  - Daraz
+  - Alibaba Cloud
+  apps:
+  - com.alibaba.aliexpresshd
+  watch_pages:
+  - https://www.alibabagroup.com/en-US/news
+- name: Shein
+  origin: Global
+  tier: adjacent
+  country: Singapore
+  kind: Fast-fashion e-commerce
+  segments:
+  - cross
+  - fashion
+  website: https://www.shein.in
+  news_terms:
+  - Shein India Reliance
+  - Shein IPO
+  apps:
+  - com.zzkko
+- name: Temu
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: Cross-border marketplace (PDD)
+  segments:
+  - cross
+  - marketplace
+  website: https://www.temu.com
+  news_terms:
+  - Temu PDD
+  - Temu India
+  aliases:
+  - PDD Holdings
+  - Pinduoduo
+  apps:
+  - com.einnovation.temu
+- name: Shopee
+  origin: Global
+  tier: adjacent
+  country: Singapore
+  kind: Marketplace (Sea)
+  segments:
+  - marketplace
+  - cross
+  website: https://shopee.sg
+  news_terms:
+  - Shopee Sea Limited
+  aliases:
+  - Sea Limited
+  - Sea Ltd
+  - Garena
+  - SeaMoney
+- name: Walmart
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Retail group (Flipkart parent)
+  segments:
+  - marketplace
+  - retailtech
+  website: https://corporate.walmart.com
+  news_terms:
+  - Walmart Flipkart
+  - Walmart India sourcing
+  aliases:
+  - Walmart International
+  - Flipkart parent
+sector_news_terms:
+- e-commerce India festive sales
+- Flipkart Amazon India GMV
+- D2C brand India funding
+- ONDC
+- e-commerce policy India
+- Meesho Nykaa Myntra
+- Shein Temu India
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://retail.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://inc42.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://entrackr.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.modernretail.co/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.retaildive.com/feeds/news/
+  filter: sector
+reddit:
+  subreddits:
+  - india
+  - IndianSkincareAddicts
+  - IndianFashionAddicts
+  - ecommerce
+  searches:
+  - Flipkart
+  - Amazon India
+  - Meesho
+  - Myntra
+  - Nykaa
+  - Ajio
+  - Shein India
+  - Lenskart
+price_bands:
+- 0
+- 300
+- 700
+- 1500
+- 3000
+- 7000
+- 20000
+- 10000000
+youtube_queries:
+- haul
+- review
+search_seeds:
+- '{brand} '
+- '{brand} sale'
+- best online shopping app
+- big billion days
+- d2c brand
+vocab:
+  sector: e-?commerce|marketplace|online (shopping|retail|store)|\bd2c\b|direct-to-consumer|fashion|beauty|skincare|apparel|seller|gmv|festive sale|big billion|great indian festival|prime day|ondc|flipkart|amazon|meesho|myntra|ajio|nykaa|tata
+    neu|jiomart|snapdeal|purplle|tira|shopify|alibaba|shein|temu|pinduoduo|\bpdd\b|sea limited|shopee|lenskart|mamaearth|honasa|firstcry|walmart
+  category: e-?commerce|marketplace|online|shopping|seller|sellers|gmv|order|orders|delivery|returns|fashion|beauty|brand|brands|sale|festive|app|users|customers|store|stores|retail|category|listing
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|festive
+    sale|gmv|seller fee|commission|cci|antitrust|fdi policy|press note|dark pattern|ccpa|ondc|de minimis|customs
+  core: e-?commerce|marketplace|seller|fashion|beauty|d2c
+  noise: recipe|cricket score|movie|song|lyrics|wallpaper|unboxing asmr
+  ambiguous:
+  - Tira
+  - Minimalist
+  - Plum
+  - Sugar
+  noise_note: Coupon spam, hauls and celebrity gossip score 1-3. GMV, seller fees, CCI/FDI policy, festive-sale performance, category launches, funding and results matter most.
+voice_themes:
+- key: delivery
+  rx: delivery|late|delay|courier|tracking|shipping|lost|not delivered
+- key: returns
+  rx: return|refund|replacement|exchange|pickup|policy|rejected
+- key: quality
+  rx: fake|counterfeit|quality|damaged|wrong item|defective|cheap material|different from
+- key: price
+  rx: price|expensive|discount|sale|coupon|offer|deal|hidden|inflated mrp
+- key: support
+  rx: support|customer care|chat|\bbot\b|complaint|resolution|helpline|no response
+- key: app
+  rx: \bapp\b|crash|bug|login|slow|\bui\b|glitch|search|filter
+- key: sellers
+  rx: seller|vendor|third party|rating|fake review|listing|out of stock
+- key: payments
+  rx: payment|\bcod\b|\bupi\b|card|\bemi\b|wallet|refund delay|cashback not
+world:
+  regulators:
+  - DPIIT (FDI Press Note 2/3)
+  - CCI
+  - CCPA (dark patterns)
+  - Legal Metrology
+  trackers:
+  - Redseer
+  - Datum Intelligence
+  - Bain-Flipkart reports
+  - Unicommerce
+  watch_events:
+  - Festive season (Sept-Nov)
+  - Prime Day (July)
+  - Union Budget (1 Feb)
+  - ONDC monthly orders
+perspective: ''

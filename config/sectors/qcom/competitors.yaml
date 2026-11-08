@@ -1,0 +1,512 @@
+# Nazar sector: Quick Commerce & Food (qcom). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: qcom
+label: Quick Commerce & Food
+sector: 'Quick commerce, food delivery and online grocery, India and world: 10-minute delivery, restaurant delivery, grocery, hyperlocal logistics, memberships and ads'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: qc
+  name: Quick commerce
+  show: true
+  keywords: quick commerce|10-?minute|dark store|instant delivery|grocery delivery|q-?commerce|blinkit|zepto|instamart|flipkart minutes|amazon now|bigbasket now|bbnow
+- key: food
+  name: Food delivery
+  show: true
+  keywords: food delivery|restaurant|cloud kitchen|dining|order food|eternal|zomato|swiggy|ownly|bistro|snacc|district
+- key: grocery
+  name: Online grocery
+  show: true
+  keywords: grocery|supermarket|hypermarket|fresh\b|staples|bigbasket|jiomart|dmart ready|zepto cafe
+- key: logistics
+  name: Hyperlocal logistics & gig work
+  show: true
+  keywords: logistics|hyperlocal|last mile|delivery partner|gig worker|rider|porter|dunzo|shadowfax|delhivery
+- key: membership
+  name: Memberships, ads & fees
+  show: true
+  keywords: gold|swiggy one|membership|subscription|platform fee|handling fee|ads? revenue|advertis|rain fee|surge
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: IPL season (ad spend peak)
+  month: 3
+  day: 22
+- name: Monsoon demand spike
+  month: 7
+  day: 1
+- name: New Year's Eve orders
+  month: 12
+  day: 31
+brands:
+- name: Blinkit
+  origin: Indian
+  tier: core
+  country: India
+  kind: Quick commerce (Eternal)
+  segments:
+  - qc
+  - grocery
+  - membership
+  website: https://blinkit.com
+  news_terms:
+  - Blinkit
+  - Blinkit dark stores
+  aliases:
+  - Grofers
+  - Bistro by Blinkit
+  - Blinkit Bistro
+  apps:
+  - com.grofers.customerapp
+  watch_pages:
+  - https://blinkit.com/
+- name: Zepto
+  origin: Indian
+  tier: core
+  country: India
+  kind: Quick commerce
+  segments:
+  - qc
+  - grocery
+  - membership
+  website: https://www.zeptonow.com
+  news_terms:
+  - Zepto quick commerce
+  - Zepto IPO
+  aliases:
+  - Zepto Cafe
+  - Kiranakart
+  - Zepto Pass
+  - Zepto Super Saver
+  exclude:
+  - zeptosecond
+  apps:
+  - com.zeptoconsumerapp
+  watch_pages:
+  - https://www.zeptonow.com/
+  ambiguous: true
+- name: Swiggy
+  origin: Indian
+  tier: core
+  country: India
+  kind: Food delivery and quick commerce
+  segments:
+  - food
+  - qc
+  - membership
+  - logistics
+  website: https://www.swiggy.com
+  news_terms:
+  - Swiggy
+  - Swiggy Instamart
+  aliases:
+  - Instamart
+  - Swiggy One
+  - Snacc
+  - Scenes
+  - Dineout
+  - Swiggy Genie
+  - Bolt
+  - Pyng
+  - Swiggy Maxxsaver
+  apps:
+  - in.swiggy.android
+  watch_pages:
+  - https://www.swiggy.com/
+- name: Zomato
+  origin: Indian
+  tier: core
+  country: India
+  kind: Food delivery (Eternal)
+  segments:
+  - food
+  - membership
+  - logistics
+  website: https://www.zomato.com
+  news_terms:
+  - Zomato
+  - Eternal Ltd Deepinder Goyal
+  aliases:
+  - Eternal Ltd
+  - Zomato Gold
+  - Hyperpure
+  - District app
+  - Zomato Everyday
+  - Zomato Quick
+  apps:
+  - com.application.zomato
+- name: BigBasket
+  origin: Indian
+  tier: core
+  country: India
+  kind: Online grocery (Tata)
+  segments:
+  - grocery
+  - qc
+  website: https://www.bigbasket.com
+  news_terms:
+  - BigBasket
+  - bbnow
+  aliases:
+  - bbnow
+  - BB Daily
+  - Fresho
+  - Supermarket Grocery Supplies
+  apps:
+  - com.bigbasket.mobileapp
+  watch_pages:
+  - https://www.bigbasket.com/
+- name: Flipkart Minutes
+  origin: Indian
+  tier: core
+  country: India
+  kind: Quick commerce (Flipkart)
+  segments:
+  - qc
+  - grocery
+  website: https://www.flipkart.com
+  news_terms:
+  - Flipkart Minutes
+  aliases:
+  - Flipkart Minutes
+  - Flipkart quick commerce
+- name: JioMart
+  origin: Indian
+  tier: core
+  country: India
+  kind: Online grocery and commerce (Reliance)
+  segments:
+  - grocery
+  - qc
+  website: https://www.jiomart.com
+  news_terms:
+  - JioMart
+  - JioMart quick delivery
+  aliases:
+  - JioMart Express
+  - Reliance Retail quick commerce
+  watch_pages:
+  - https://www.jiomart.com/
+- name: Amazon Now
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Quick commerce (Amazon India)
+  segments:
+  - qc
+  - grocery
+  website: https://www.amazon.in
+  news_terms:
+  - Amazon Now India
+  - Amazon Fresh India quick
+  aliases:
+  - Amazon Fresh
+  - Amazon Now
+  - Amazon Tez
+  exclude:
+  - Amazon rainforest
+  - Amazon Prime Video
+  - AWS
+- name: Dunzo
+  origin: Indian
+  tier: core
+  country: India
+  kind: Hyperlocal delivery
+  segments:
+  - logistics
+  - qc
+  website: https://www.dunzo.com
+  news_terms:
+  - Dunzo
+  aliases:
+  - Dunzo Daily
+- name: Porter
+  origin: Indian
+  tier: core
+  country: India
+  kind: Intra-city logistics
+  segments:
+  - logistics
+  website: https://porter.in
+  news_terms:
+  - Porter logistics unicorn
+  aliases:
+  - Porter trucks
+  - Smartshift Logistics
+  exclude:
+  - Harry Porter
+  - porter beer
+  - railway porter
+  - Cole Porter
+  - Porter Robinson
+  ambiguous: true
+- name: Shadowfax
+  origin: Indian
+  tier: core
+  country: India
+  kind: Logistics for e-commerce and q-com
+  segments:
+  - logistics
+  website: https://shadowfax.in
+  news_terms:
+  - Shadowfax logistics
+- name: Delhivery
+  origin: Indian
+  tier: core
+  country: India
+  kind: Logistics
+  segments:
+  - logistics
+  website: https://www.delhivery.com
+  news_terms:
+  - Delhivery
+  aliases:
+  - Ecom Express (acquired)
+  - Delhivery Rapid
+- name: DoorDash
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Food delivery platform
+  segments:
+  - food
+  - grocery
+  - membership
+  website: https://www.doordash.com
+  news_terms:
+  - DoorDash
+  aliases:
+  - DashPass
+  - Wolt
+  - Deliveroo (acquired)
+  apps:
+  - com.dd.doordash
+  watch_pages:
+  - https://about.doordash.com/en-us/news
+- name: Uber Eats
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Food delivery (Uber)
+  segments:
+  - food
+  - grocery
+  website: https://www.ubereats.com
+  news_terms:
+  - Uber Eats
+  apps:
+  - com.ubercab.eats
+- name: Meituan
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: Local services super-app
+  segments:
+  - food
+  - qc
+  - grocery
+  website: https://www.meituan.com
+  news_terms:
+  - Meituan
+  - Meituan Keeta
+  aliases:
+  - Keeta
+  - Meituan Instashopping
+  apps:
+  - com.sankuai.meituan
+- name: Delivery Hero
+  origin: Global
+  tier: adjacent
+  country: Germany
+  kind: Food delivery group
+  segments:
+  - food
+  - qc
+  website: https://www.deliveryhero.com
+  news_terms:
+  - Delivery Hero
+  - Talabat foodpanda
+  aliases:
+  - Talabat
+  - foodpanda
+  - Glovo
+  - Baemin
+  watch_pages:
+  - https://www.deliveryhero.com/newsroom/
+- name: Instacart
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Grocery delivery
+  segments:
+  - grocery
+  - membership
+  website: https://www.instacart.com
+  news_terms:
+  - Instacart
+  aliases:
+  - Maplebear
+  - Instacart+
+  apps:
+  - com.instacart.client
+  watch_pages:
+  - https://www.instacart.com/company/pressroom
+- name: Getir
+  origin: Global
+  tier: adjacent
+  country: Turkey
+  kind: Quick commerce
+  segments:
+  - qc
+  website: https://getir.com
+  news_terms:
+  - Getir
+- name: Deliveroo
+  origin: Global
+  tier: adjacent
+  country: United Kingdom
+  kind: Food delivery (DoorDash)
+  segments:
+  - food
+  - qc
+  website: https://deliveroo.co.uk
+  news_terms:
+  - Deliveroo
+  apps:
+  - com.deliveroo.orderapp
+sector_news_terms:
+- quick commerce India dark stores
+- Blinkit Zepto Instamart
+- food delivery India orders
+- online grocery India
+- gig workers delivery India
+- quick commerce funding
+- 10-minute delivery
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://inc42.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://entrackr.com/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://retail.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.grocerydive.com/feeds/news/
+  filter: sector
+reddit:
+  subreddits:
+  - india
+  - bangalore
+  - mumbai
+  - delhi
+  - IndiaInvestments
+  searches:
+  - Blinkit
+  - Zepto
+  - Instamart
+  - Swiggy
+  - Zomato delivery
+  - Flipkart Minutes
+  - BigBasket
+  - Amazon Now India
+price_bands:
+- 0
+- 100
+- 200
+- 500
+- 1000
+- 2000
+- 5000
+- 1000000
+youtube_queries:
+- review
+- delivery
+search_seeds:
+- '{brand} '
+- '{brand} offer'
+- 10 minute delivery
+- grocery delivery app
+- food delivery coupon
+vocab:
+  sector: quick commerce|q-?commerce|dark store|10-?minute|food delivery|grocery|hyperlocal|delivery (partner|rider|fee)|gig worker|cloud kitchen|restaurant|zomato|eternal|swiggy|instamart|blinkit|zepto|bigbasket|jiomart|dunzo|flipkart
+    minutes|amazon (fresh|now)|doordash|uber eats|deliveroo|meituan|delivery hero|instacart|getir|porter|shadowfax|delhivery|rapido food|ownly
+  category: delivery|grocery|order|orders|dark store|restaurant|food|gmv|gov|rider|partner|platform fee|app|city|cities|store|stores|quick|minutes|logistics|membership|ads|advertis
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|dark stores?|new
+    cit(y|ies)|platform fee|rain fee|strike|gig worker|labour code|fssai|cci|antitrust|contribution margin|ebitda positive
+  core: delivery|grocery|dark store|restaurant|order
+  noise: recipe|cooking|restaurant review|food vlog|mukbang|cricket score
+  ambiguous:
+  - Eternal
+  - Porter
+  - Zepto
+  noise_note: Recipes, food vlogs and restaurant reviews score 1-3. Store counts, city launches, fees, contribution margins, gig-worker regulation, CCI/FSSAI actions, funding and results matter most.
+voice_themes:
+- key: speed
+  rx: fast|minutes|late|delay|on time|quick|slow|took hours
+- key: quality
+  rx: stale|expired|rotten|damaged|wrong item|missing|quality|fresh|spoil
+- key: price
+  rx: price|expensive|\bmrp\b|surge|handling fee|platform fee|delivery fee|discount|coupon|rain fee
+- key: app
+  rx: \bapp\b|crash|bug|login|glitch|slow app|\bui\b|location
+- key: support
+  rx: support|refund|customer care|chat|\bbot\b|resolution|complaint|no response
+- key: riders
+  rx: rider|delivery partner|rude|behaviour|behavior|\btip\b|wait(ing)? outside|call
+- key: availability
+  rx: out of stock|not available|serviceable|area|not delivering|store closed
+- key: membership
+  rx: gold|swiggy one|membership|subscription|free delivery|benefits
+world:
+  regulators:
+  - CCI
+  - FSSAI
+  - Labour ministry (gig-worker code)
+  - Legal Metrology
+  trackers:
+  - Datum Intelligence
+  - Redseer
+  - Bernstein / HSBC quick-commerce trackers
+  watch_events:
+  - Quarterly results of Eternal and Swiggy
+  - IPL ad season (Mar-May)
+  - Festive quarter (Oct-Dec)
+perspective: ''

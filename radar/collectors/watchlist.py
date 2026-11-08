@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 from .. import db
-from ..config import settings, ROOT
+from ..config import settings, ROOT, CONFIG_PATH  # noqa: F401
 from .base import get, clean_text, sha, tracked, log
 
 RUPEE_RX = re.compile(r"(?:₹|Rs\.?|INR)\s?([\d,]{4,9})")
@@ -97,7 +97,7 @@ def read_page(url: str, baseline: float | None) -> dict | None:
 
 def load() -> list[dict]:
     import yaml
-    p = ROOT / "config" / "watchlist.yaml"
+    p = CONFIG_PATH.parent / "watchlist.yaml"
     if not p.exists():
         return []
     return list((yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("products") or [])

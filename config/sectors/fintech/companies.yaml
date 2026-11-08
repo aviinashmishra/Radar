@@ -1,0 +1,533 @@
+# Nazar sector: Fintech. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: PhonePe
+  entity: PhonePe Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2015
+  ownership: private
+  wikipedia: PhonePe
+  investors:
+  - Walmart (majority)
+  - General Atlantic
+  - Tiger Global
+  - Ribbit
+  notes: About 46% of UPI volume; filed confidential DRHP in Sept 2025 for a ~$1.5B IPO.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 7115
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: valuation
+    period: '2023'
+    value: 12000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Google Pay
+  entity: Google India Digital Services Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2017
+  ownership: subsidiary
+  wikipedia: Google Pay
+  notes: About 36% of UPI volume; the only global big-tech player at UPI scale.
+- brand: Paytm
+  entity: One97 Communications Ltd.
+  hq: Noida, India
+  founded: 2010
+  ownership: listed
+  ticker: PAYTM.NS
+  wikipedia: Paytm
+  investors:
+  - Ant Group (exited 2025)
+  - SoftBank (exited)
+  - Elevation Capital
+  notes: Lost its payments bank in 2024; merchant payments and devices business; first profitable quarter in FY26.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 6900
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 659
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Razorpay
+  entity: Razorpay Software Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2014
+  ownership: private
+  wikipedia: Razorpay
+  investors:
+  - Peak XV
+  - Tiger Global
+  - GIC
+  - Lone Pine
+  - Y Combinator
+  notes: Largest Indian payment gateway by merchants; redomiciled to India in 2025 ahead of an IPO.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 2475
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY24
+    value: 34
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: valuation
+    period: '2021'
+    value: 7500
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: CRED
+  entity: Dreamplug Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2018
+  ownership: private
+  wikipedia: CRED (company)
+  investors:
+  - Peak XV
+  - Tiger Global
+  - Ribbit
+  - GIC
+  - Sofina
+  notes: Affluent-user payments; valuation cut to $3.5B in 2025 round.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 2473
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY24
+    value: 609
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: valuation
+    period: '2025'
+    value: 3500
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Groww
+  entity: Billionbrains Garage Ventures Ltd.
+  hq: Bengaluru, India
+  founded: 2016
+  ownership: listed
+  ticker: GROWW.NS
+  wikipedia: Groww
+  investors:
+  - Peak XV
+  - Tiger Global
+  - Ribbit
+  - Y Combinator
+  - GIC
+  notes: India's largest broker by active clients; listed on NSE in Nov 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 4056
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1819
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Zerodha
+  entity: Zerodha Broking Ltd.
+  hq: Bengaluru, India
+  founded: 2010
+  ownership: private
+  wikipedia: Zerodha
+  notes: Bootstrapped and the most profitable broker; SEBI's F&O curbs hit volumes in FY25.
+  financials:
+  - metric: revenue
+    period: FY24
+    value: 8320
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: net_profit
+    period: FY24
+    value: 4700
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Upstox
+  entity: RKSV Securities India Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2009
+  ownership: private
+  wikipedia: Upstox
+  investors:
+  - Tiger Global
+  - Ratan Tata
+  - Kalaari
+  notes: Third-largest discount broker; profitable since FY24.
+- brand: Angel One
+  entity: Angel One Ltd.
+  hq: Mumbai, India
+  founded: 1996
+  ownership: listed
+  ticker: ANGELONE.NS
+  wikipedia: Angel One
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 5238
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1172
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Policybazaar
+  entity: PB Fintech Ltd.
+  hq: Gurugram, India
+  founded: 2008
+  ownership: listed
+  ticker: POLICYBZR.NS
+  wikipedia: Policybazaar
+  notes: Profitable since FY24; applying for a health-insurance manufacturing licence (PB Health).
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 4977
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 353
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: MobiKwik
+  entity: One MobiKwik Systems Ltd.
+  hq: Gurugram, India
+  founded: 2009
+  ownership: listed
+  ticker: MOBIKWIK.NS
+  wikipedia: MobiKwik
+  notes: Listed Dec 2024; swung to losses as credit tightened.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 1192
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 121
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Navi
+  entity: Navi Technologies Ltd.
+  hq: Bengaluru, India
+  founded: 2018
+  ownership: private
+  investors:
+  - Sachin Bansal
+  notes: Fast-growing UPI number four; RBI lending-rate action in 2024.
+- brand: Jupiter
+  entity: Amica Financial Technologies Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2019
+  ownership: private
+  investors:
+  - Tiger Global
+  - Peak XV
+  - Matrix
+  - QED
+  notes: Largest Indian neobank by users; NBFC licence 2023.
+- brand: Fi Money
+  entity: epiFi Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2019
+  ownership: private
+  investors:
+  - Peak XV
+  - Ribbit
+  - Temasek
+  - Alpha Wave
+  notes: Salaried-user neobank; wealth and credit products.
+- brand: slice
+  entity: Slice Small Finance Bank Ltd.
+  hq: Bengaluru, India
+  founded: 2016
+  ownership: private
+  investors:
+  - Tiger Global
+  - Insight Partners
+  - Blume
+  notes: First fintech to become a bank in India (NESFB merger, Oct 2024).
+- brand: BharatPe
+  entity: Resilient Innovations Pvt. Ltd.
+  hq: New Delhi, India
+  founded: 2018
+  ownership: private
+  wikipedia: BharatPe
+  investors:
+  - Peak XV
+  - Tiger Global
+  - Ribbit
+  - Coatue
+  notes: Merchant QR and lending; stake in Unity SFB; PA licence 2025.
+- brand: Pine Labs
+  entity: Pine Labs Ltd.
+  hq: Noida, India
+  founded: 1998
+  ownership: listed
+  ticker: PINELABS.NS
+  wikipedia: Pine Labs
+  investors:
+  - Peak XV
+  - Temasek
+  - PayPal
+  - Mastercard
+  notes: POS and gift-card leader; listed on NSE in Nov 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 2274
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 145
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Stripe
+  entity: Stripe, Inc.
+  hq: San Francisco / Dublin
+  founded: 2010
+  ownership: private
+  wikipedia: Stripe, Inc.
+  investors:
+  - Sequoia
+  - Andreessen Horowitz
+  - Thrive
+  - GIC
+  notes: Invite-only in India; $91.5B valuation (2025); stablecoin push via Bridge.
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 91500
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Adyen
+  entity: Adyen N.V.
+  hq: Amsterdam, Netherlands
+  founded: 2006
+  ownership: listed
+  ticker: ADYEN.AS
+  wikipedia: Adyen
+  notes: Enterprise acquiring; RBI PA licence for India in 2024.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 1996
+    currency: EUR
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: PayPal
+  entity: PayPal Holdings, Inc.
+  hq: San Jose, United States
+  founded: 1998
+  ownership: listed
+  ticker: PYPL
+  sec_cik: 1633917
+  wikipedia: PayPal
+  notes: PayPal World links UPI (NPCI) with Venmo and Mercado Pago (2025).
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 31797
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Block
+  entity: Block, Inc.
+  hq: Oakland, United States
+  founded: 2009
+  ownership: listed
+  ticker: XYZ
+  sec_cik: 1512673
+  wikipedia: Block, Inc.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 24121
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Revolut
+  entity: Revolut Ltd.
+  hq: London, United Kingdom
+  founded: 2015
+  ownership: private
+  wikipedia: Revolut
+  investors:
+  - SoftBank
+  - Tiger Global
+  - Coatue
+  - Mubadala
+  notes: Launched in India in 2025 with a PPI licence; $75B valuation.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 3100
+    currency: GBP
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+  - metric: valuation
+    period: '2025'
+    value: 75000
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Wise
+  entity: Wise plc
+  hq: London, United Kingdom
+  founded: 2011
+  ownership: listed
+  ticker: WISE.L
+  wikipedia: Wise (company)
+  notes: Moving primary listing to the US; India outbound via LRS.
+- brand: Nubank
+  entity: Nu Holdings Ltd.
+  hq: São Paulo, Brazil
+  founded: 2013
+  ownership: listed
+  ticker: NU
+  sec_cik: 1691493
+  wikipedia: Nubank
+  notes: World's largest digital bank by customers; the model Indian neobanks cite.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 11508
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Coinbase
+  entity: Coinbase Global, Inc.
+  hq: Remote, United States
+  founded: 2012
+  ownership: listed
+  ticker: COIN
+  sec_cik: 1679788
+  wikipedia: Coinbase
+  notes: Registered with FIU-IND in 2025 to re-enter India.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 6564
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Robinhood
+  entity: Robinhood Markets, Inc.
+  hq: Menlo Park, United States
+  founded: 2013
+  ownership: listed
+  ticker: HOOD
+  sec_cik: 1783879
+  wikipedia: Robinhood Markets
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 2951
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Klarna
+  entity: Klarna Group plc
+  hq: Stockholm, Sweden
+  founded: 2005
+  ownership: listed
+  ticker: KLAR
+  wikipedia: Klarna
+  notes: Listed on NYSE in Sept 2025; the BNPL reference for Indian pay-later players.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 2810
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Affirm
+  entity: Affirm Holdings, Inc.
+  hq: San Francisco, United States
+  founded: 2012
+  ownership: listed
+  ticker: AFRM
+  sec_cik: 1820953
+  wikipedia: Affirm Holdings
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

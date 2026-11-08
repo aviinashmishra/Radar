@@ -1,0 +1,430 @@
+# Nazar sector: Automotive & EV. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: Tata Motors
+  entity: Tata Motors Passenger Vehicles Ltd. (TMPV; the CV business trades as TMCV.NS)
+  hq: Mumbai, India
+  founded: 1945
+  ownership: listed
+  ticker: TMPV.NS
+  wikipedia: Tata Motors
+  investors:
+  - Tata Sons
+  - TPG Rise Climate (Tata Passenger Electric Mobility)
+  notes: India's EV leader by volume; JLR owner. Demerger of the CV business completed in 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 439695
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 28149
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Mahindra
+  entity: Mahindra & Mahindra Ltd.
+  hq: Mumbai, India
+  founded: 1945
+  ownership: listed
+  ticker: M&M.NS
+  wikipedia: Mahindra & Mahindra
+  notes: SUV-led growth; born-electric BE 6 / XEV 9e platform; world's largest tractor maker by volume.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 159211
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 12929
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Maruti Suzuki
+  entity: Maruti Suzuki India Ltd.
+  hq: New Delhi, India
+  founded: 1981
+  ownership: listed
+  ticker: MARUTI.NS
+  wikipedia: Maruti Suzuki
+  investors:
+  - Suzuki Motor Corporation (majority)
+  notes: About 40% of India's passenger-vehicle market; first EV (e Vitara) in 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 152913
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 13955
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Hyundai India
+  entity: Hyundai Motor India Ltd.
+  hq: Gurugram, India
+  founded: 1996
+  ownership: listed
+  ticker: HYUNDAI.NS
+  wikipedia: Hyundai Motor India
+  notes: India's biggest IPO (2024); Creta is the SUV benchmark.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 69193
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 5640
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Ola Electric
+  entity: Ola Electric Mobility Ltd.
+  hq: Bengaluru, India
+  founded: 2017
+  ownership: listed
+  ticker: OLAELEC.NS
+  wikipedia: Ola Electric
+  investors:
+  - SoftBank
+  - Temasek
+  - Tiger Global
+  - Hyundai Motor
+  notes: Listed Aug 2024; lost the e-scooter lead to TVS and Bajaj in 2025; building its own 4680 cell plant.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 4514
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 2276
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Ather Energy
+  entity: Ather Energy Ltd.
+  hq: Bengaluru, India
+  founded: 2013
+  ownership: listed
+  ticker: ATHERENERG.NS
+  wikipedia: Ather Energy
+  investors:
+  - Hero MotoCorp
+  - Tiger Global
+  - GIC
+  - NIIF
+  notes: Listed May 2025; premium scooters, Rizta family scooter drove volume.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 2255
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 812
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: TVS Motor
+  entity: TVS Motor Company Ltd.
+  hq: Chennai, India
+  founded: 1978
+  ownership: listed
+  ticker: TVSMOTOR.NS
+  wikipedia: TVS Motor Company
+  notes: India's electric-scooter volume leader for much of 2025 with iQube.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 44270
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 2711
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Bajaj Auto
+  entity: Bajaj Auto Ltd.
+  hq: Pune, India
+  founded: 1945
+  ownership: listed
+  ticker: BAJAJ-AUTO.NS
+  wikipedia: Bajaj Auto
+  notes: Chetak electric scooters and the first CNG motorcycle (Freedom); world's largest three-wheeler maker.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 51155
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 8151
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Hero MotoCorp
+  entity: Hero MotoCorp Ltd.
+  hq: New Delhi, India
+  founded: 1984
+  ownership: listed
+  ticker: HEROMOTOCO.NS
+  wikipedia: Hero MotoCorp
+  notes: World's largest two-wheeler maker by volume; Vida EV brand; Ather shareholder.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 40923
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 4610
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Royal Enfield
+  entity: Eicher Motors Ltd.
+  hq: Chennai, India
+  founded: 1955
+  ownership: listed
+  ticker: EICHERMOT.NS
+  wikipedia: Royal Enfield
+  notes: Mid-weight motorcycle leader; Flying Flea electric brand due 2026.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 18870
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 4734
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: JSW MG Motor
+  entity: JSW MG Motor India Pvt. Ltd.
+  hq: Gurugram, India
+  founded: 2017
+  ownership: private
+  investors:
+  - JSW Group (35%)
+  - SAIC Motor
+  notes: Windsor EV made MG the number-two EV seller in India in 2025 behind Tata.
+- brand: Kia India
+  entity: Kia India Pvt. Ltd.
+  hq: Anantapur, India
+  founded: 2017
+  ownership: subsidiary
+  wikipedia: Kia India
+  notes: Hyundai group's second brand; Anantapur plant exports too.
+- brand: Toyota
+  entity: Toyota Motor Corporation
+  hq: Toyota City, Japan
+  founded: 1937
+  ownership: listed
+  ticker: TM
+  sec_cik: 1094517
+  wikipedia: Toyota
+  notes: Hybrid-first in India through Toyota Kirloskar; new plant in Maharashtra.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 48037
+    currency: JPY
+    unit: billion
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Tesla
+  entity: Tesla, Inc.
+  hq: Austin, United States
+  founded: 2003
+  ownership: listed
+  ticker: TSLA
+  sec_cik: 1318605
+  wikipedia: Tesla, Inc.
+  notes: Entered India in July 2025 with the Model Y (Mumbai, Delhi showrooms); import-duty policy decides its scale here.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 97690
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: BYD
+  entity: BYD Company Ltd.
+  hq: Shenzhen, China
+  founded: 1995
+  ownership: listed
+  ticker: 1211.HK
+  wikipedia: BYD Auto
+  notes: World's largest EV maker; India presence constrained by FDI rules (Press Note 3).
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 777102
+    currency: CNY
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: VinFast
+  entity: VinFast Auto Ltd.
+  hq: Hai Phong, Vietnam
+  founded: 2017
+  ownership: listed
+  ticker: VFS
+  wikipedia: VinFast
+  notes: Tamil Nadu plant opened 2025; VF 6 / VF 7 launched in India.
+- brand: Hyundai Motor
+  entity: Hyundai Motor Company
+  hq: Seoul, South Korea
+  founded: 1967
+  ownership: listed
+  ticker: 005380.KS
+  wikipedia: Hyundai Motor Company
+  notes: Parent of Hyundai India and Kia; EV platform E-GMP.
+- brand: Volkswagen Group
+  entity: Volkswagen AG
+  hq: Wolfsburg, Germany
+  founded: 1937
+  ownership: listed
+  ticker: VOW3.DE
+  wikipedia: Volkswagen Group
+  notes: Skoda Auto Volkswagen India; Kylaq is its first sub-4m SUV. Audi and Porsche in premium.
+- brand: Mercedes-Benz
+  entity: Mercedes-Benz Group AG
+  hq: Stuttgart, Germany
+  founded: 1926
+  ownership: listed
+  ticker: MBG.DE
+  wikipedia: Mercedes-Benz Group
+  notes: India's largest luxury car brand; local assembly in Chakan.
+- brand: BMW
+  entity: Bayerische Motoren Werke AG
+  hq: Munich, Germany
+  founded: 1916
+  ownership: listed
+  ticker: BMW.DE
+  wikipedia: BMW
+  notes: Number two in Indian luxury; strongest EV share among luxury brands.
+- brand: Ford
+  entity: Ford Motor Company
+  hq: Dearborn, United States
+  founded: 1903
+  ownership: listed
+  ticker: F
+  sec_cik: 37996
+  wikipedia: Ford Motor Company
+  notes: Exited India in 2021; Chennai plant to restart for exports (2025 announcement).
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 184992
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Uber
+  entity: Uber Technologies, Inc.
+  hq: San Francisco, United States
+  founded: 2009
+  ownership: listed
+  ticker: UBER
+  sec_cik: 1543151
+  wikipedia: Uber
+  notes: Largest cab platform in India by rides; added fixed-fee driver plans in 2025.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 43978
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Ola Cabs
+  entity: ANI Technologies Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2010
+  ownership: private
+  wikipedia: Ola Cabs
+  investors:
+  - SoftBank
+  - Temasek
+  - Tiger Global
+  - Vanguard
+  notes: Shifted to a zero-commission subscription model for drivers; lost share to Rapido in 2024-25.
+- brand: Rapido
+  entity: Roppen Transportation Services Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2015
+  ownership: private
+  investors:
+  - WestBridge
+  - Swiggy
+  - Nexus
+  - Prosus
+  notes: Unicorn since 2024; largest bike-taxi network; entered food delivery (Ownly) in 2025.
+  financials:
+  - metric: valuation
+    period: '2025'
+    value: 1100
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

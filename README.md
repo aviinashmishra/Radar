@@ -1,4 +1,74 @@
-# Pebble Competitor Radar
+# Nazar
+
+**One eye on every market.** Nazar (नज़र, "sight") is live, end-to-end market and competitive intelligence across
+sectors, India and world. Every sector is a complete radar (its own companies, sources, database, scoring and
+schedule); Nazar runs them all in one process and reads them together.
+
+```
+ config/nazar.yaml  ──►  one radar per sector  ──►  SQLite per sector  ──►  Nazar hub (one origin)
+   iot  ⌚  Pebble's own radar (self brand: Pebble)                         /            Eye · Pulse · Markets · Universe
+   auto 🚗  travel ✈️  fintech ₹  qcom ⚡  ecom 🛍️                           /s/<sector>   Themes · India·World · Sectors
+   edtech 🎓  health 🩺  ai ✦  energy ☀️                                     /app          each sector's full dashboard
+```
+
+```bash
+pip install -r requirements-full.txt
+python run.py                 # or: python -m nazar      -> http://127.0.0.1:8080
+python run.py --radar         # the single-sector Pebble radar only, as before
+```
+
+Nazar today: **10 sectors, 228 companies (146 Indian, 82 global, 115 listed), 7 hub views** plus the fifteen-page radar
+dashboard inside every sector.
+
+| Hub view | What it shows |
+|---|---|
+| **Eye** | The iris: one wedge per sector, brighter the busier, dots for the hottest companies; the top move per sector; KPI strip; sector cards with sparklines. |
+| **Pulse** | Every scored move across every sector, newest first, with the sector's "so what" and counter-move; filters by sector, importance, kind, window; refreshes itself. |
+| **Markets** | A live tape (Nifty, Sensex, S&P 500, Nasdaq, USD/INR, Bitcoin, crude, gold) and every listed company: close, 1-day move, 52-week position, 30-day sparkline, gainers and losers. |
+| **Universe** | Every company categorised: sector, India / world, HQ country, type, segments, ownership, ticker, founded, parent, investors, moves and news this week, app rating, Wikipedia attention, latest revenue or valuation with its confidence. Cards or table, searchable. |
+| **Themes** | Topic × sector heat map of what the news is about (launch, funding, financials, legal, leadership, partnership, distribution, regulation ...), with the change against the previous window, the headlines and who is in each story. |
+| **India · World** | Share of moves by origin per sector, attention leaders (Wikipedia views), headquarters map, listed vs private. |
+| **Sectors** | The atlas: each sector's segments, regulators, trackers, the dates that move it, scheduler state, a Sweep button and its dashboard. |
+
+`Ctrl K` anywhere: jump to any company or sector, search every sector's feed, or ask a question (answered by the
+chosen sector's analyst with the radar's tools; keyword search without an AI key).
+
+### How a sector is defined
+
+`config/nazar.yaml` lists the sectors. Each one points at a folder with the same three files the Pebble radar uses:
+`competitors.yaml` (companies with origin, country, type, segments, news terms, aliases, look-alikes to exclude, apps,
+pages to watch; segments with keywords; feeds; Reddit; a `vocab` block that tunes news relevance and scoring for that
+industry; `voice_themes` for reviews; `world` facts for the atlas), `companies.yaml` (legal entity, HQ, founded,
+ownership, Yahoo ticker, SEC CIK, Wikipedia title, investors, seeded financials with confidence) and `market.yaml`
+(segment sizes, growth, shares, all flagged estimates). The IoT sector is the original `config/*.yaml`.
+
+No sector other than IoT has a brand marked `self: true`, so their analysis is written for a neutral reader competing
+in the sector ("Check your price on the nearest SKU"). Mark one company `self: true` (and give `market.yaml` a `self:`
+block with its revenue and segment mix) and that sector's radar turns into that company's radar: rupees at risk,
+undercuts, pressure by rival, strategy playbook, the works.
+
+Add a sector: copy a folder under `config/sectors/`, edit the three files, add a line to `config/nazar.yaml`, restart.
+
+### Running it
+
+- **Local**: `python run.py` starts every sector's scheduler inside one process (news, feeds, Reddit, YouTube, search
+  demand, Trends, app stores, filings, share prices, Wikipedia attention, pages, reviews; stores and marketplaces where
+  a sector has them). Sector starts are staggered; non-store sectors run the news tier every 45 minutes. Share prices
+  and attention are fetched first for a new sector so the tape is alive within minutes; the first full pass of all
+  sectors takes a couple of hours.
+- If an older single-sector radar window is still holding port 8080, Nazar starts on 8090, uses that process's
+  database for the IoT sector without starting a second scheduler on it, and says so in the console.
+- **Cloud**: the GitHub Actions workflow runs one job per sector (matrix, three at a time) and publishes
+  `<sector>.db.gz` next to the IoT `radar.db.gz` on the `data` release. The Vercel app still serves the IoT radar.
+- Alerts from a sector without a home brand are prefixed with the sector name (`[Fintech] ...`); the Telegram bot
+  answers for the IoT sector.
+
+Environment: `NAZAR_PORT`, `NAZAR_SECTORS` (subset), `NAZAR_SCHEDULERS=off` (dashboards only), `NAZAR_MEDIUM_MIN`,
+`NAZAR_STAGGER_SEC`, `NAZAR_DATA_DIR` (see `.env.example`). Everything below describes the radar that runs inside each sector.
+
+---
+
+## The radar inside every sector: Pebble Competitor Radar
 
 Live, end-to-end competitive intelligence for Pebble (pebblecart.com) in the Indian D2C electronics
 sector: smartwatches, TWS earbuds, speakers, chargers. It watches what competitors **do**, not just what
@@ -246,7 +316,8 @@ radar/chat.py             Ask the Radar (tool-use loop)
 radar/runner.py           scheduler and CLI
 radar/server.py           FastAPI: dashboard, SSE stream, JSON API, password gate
 radar/cloud.py            cloud mode: snapshot pull / push, Vercel refresh, GitHub dispatch, webhook, heartbeat
-radar/static/index.html   dashboard
+radar/static/theme.css    design system shared by the hub and every sector dashboard (tokens, light/dark, components)
+radar/static/index.html   dashboard shell and the core views; long pages (Market, Financials, Pricing, Reviews, Channels, Strategy) are tabbed
 app.py, vercel.json       Vercel entrypoint and function / cron config
 .github/workflows/        the cloud worker: collectors on a schedule, snapshot on the `data` release
 requirements.txt          what Vercel installs; requirements-full.txt adds the local server and screenshots

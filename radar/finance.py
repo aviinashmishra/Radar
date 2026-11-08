@@ -28,6 +28,10 @@ def period_key(p: str) -> float:
     if m := re.match(r"FY(\d{2,4})", p):
         y = int(m.group(1))
         return float(y if y > 100 else 2000 + y)
+    if m := re.match(r"TTM\s+([A-Z]{3})\s+(20\d{2})", p):  # trailing twelve months to a quarter end (Yahoo fundamentals)
+        months = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
+        mo, y = months.get(m.group(1), 12), int(m.group(2))
+        return y + (mo - 3) / 12.0  # on the Indian-FY scale: Mar 2026 = FY26 = 2026.0, Sep 2026 = 2026.5
     if m := re.match(r"(20\d{2})", p):
         return float(m.group(1)) + 0.75  # a calendar year ends after FY of the same number
     return 0.0
@@ -110,7 +114,7 @@ def profile(brand: str) -> dict:
     b = settings.brand(brand)
     rows = db.q("SELECT * FROM financials WHERE brand=? ORDER BY seen_at", (brand,))
     me = settings.self_brand.name if settings.self_brand else ""
-    peb = (settings.market.get("pebble") or {}) if settings.market else {}
+    peb = settings.self_market
     if brand == me and not any(r["metric"] == "revenue" for r in rows) and peb.get("revenue_cr"):
         # Pebble's own figure lives in market.yaml (it drives the impact model); show it here with its confidence
         rows.append({"brand": brand, "metric": "revenue", "period": str(peb.get("revenue_period") or ""), "value": float(peb["revenue_cr"]),
@@ -167,6 +171,7 @@ def profile(brand: str) -> dict:
             "valuation": val, "funding_total": fund_total, "funding_round": fund_round, "quote": q, "scale_vs_pebble": scale,
             "scale_basis": scale_basis, "scope": scope, "segment_revenue": seg_rev, "links": links_of(c),
             "rows": rows, "money_events": money_events, "news": news_fin,
+            "fundamentals": db.kv_get(f"fundamentals:{c.get('ticker')}") if c.get("ticker") else None,
             "sources": sorted({r["source"] for r in rows})[:6], "confidence": max((RANK.get(r["confidence"], 0) for r in rows), default=0)}
 
 

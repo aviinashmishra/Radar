@@ -119,6 +119,117 @@ def run_quotes() -> int:
     return n
 
 
+# ---------------------------------------------------------------- fundamentals (Yahoo quote + quoteSummary, crumb-authenticated)
+YQ_CRUMB = "https://query2.finance.yahoo.com/v1/test/getcrumb"
+YQ_QUOTE = "https://query1.finance.yahoo.com/v7/finance/quote"
+YQ_SUMMARY = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/{t}"
+CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+_yq: dict = {"session": None, "crumb": None}
+
+
+def _yahoo() -> tuple:
+    """A session that carries Yahoo's cookie and the matching crumb (both free; the quote endpoints refuse requests
+    without them). Cached for the process; `_yahoo(reset=True)` after a 401."""
+    import requests
+    if _yq["session"] is None or _yq["crumb"] is None:
+        s = requests.Session()
+        s.headers.update({"User-Agent": CHROME_UA, "Accept-Language": "en-IN,en;q=0.8"})
+        try:
+            s.get("https://fc.yahoo.com", timeout=30)
+        except requests.RequestException:
+            pass  # the cookie still lands on the redirect
+        r = s.get(YQ_CRUMB, timeout=30)
+        _yq["session"], _yq["crumb"] = s, (r.text.strip() if r.status_code == 200 and len(r.text) < 40 else None)
+    return _yq["session"], _yq["crumb"]
+
+
+def _raw(d: dict | None, k: str):
+    v = (d or {}).get(k)
+    return v.get("raw") if isinstance(v, dict) else v
+
+
+def _fin_unit(cur: str) -> tuple[str, float]:
+    return ("crore", 1e7) if (cur or "").upper() == "INR" else ("million", 1e6)
+
+
+def run_fundamentals() -> int:
+    """Market cap, multiples and analyst view for every ticker in one batch call, then trailing-twelve-month revenue,
+    net income, margins, cash and debt per ticker. Rows land in `financials` as 'reported' (TTM to the latest quarter)
+    so a sector with no filings on file still shows real revenue next to the seeded estimates; the rest sits in kv
+    `fundamentals:<ticker>` for the Financials page. Returns the number of new financials rows."""
+    tickers = {c["ticker"]: brand for brand, c in settings.companies.items() if c.get("ticker")}
+    if not tickers:
+        return 0
+    s, crumb = _yahoo()
+    if not crumb:
+        log.info("yahoo: no crumb; fundamentals skipped")
+        return 0
+    n = 0
+    syms = list(tickers)
+    quotes: dict[str, dict] = {}
+    for i in range(0, len(syms), 40):
+        try:
+            r = s.get(YQ_QUOTE, params={"symbols": ",".join(syms[i:i + 40]), "crumb": crumb}, timeout=40)
+            if r.status_code == 401:  # stale crumb
+                _yq["session"] = _yq["crumb"] = None
+                s, crumb = _yahoo()
+                r = s.get(YQ_QUOTE, params={"symbols": ",".join(syms[i:i + 40]), "crumb": crumb}, timeout=40)
+            if r.status_code == 200:
+                for q in (r.json().get("quoteResponse") or {}).get("result") or []:
+                    quotes[q.get("symbol")] = q
+        except Exception as e:  # noqa: BLE001
+            log.info("yahoo quote batch failed: %s", e)
+    today = db.now()[:10]
+    for t, brand in tickers.items():
+        q = quotes.get(t) or {}
+        f: dict = {"ticker": t, "day": today, "name": q.get("longName") or q.get("shortName"), "exchange": q.get("fullExchangeName"),
+                   "currency": q.get("currency"), "market_cap": q.get("marketCap"), "trailing_pe": q.get("trailingPE"),
+                   "forward_pe": q.get("forwardPE"), "eps_ttm": q.get("epsTrailingTwelveMonths"),
+                   "dividend_yield": q.get("trailingAnnualDividendYield"), "analyst_rating": q.get("averageAnalystRating"),
+                   "price": q.get("regularMarketPrice"), "change_pct": q.get("regularMarketChangePercent")}
+        try:
+            r = s.get(YQ_SUMMARY.format(t=t), params={"modules": "financialData,defaultKeyStatistics", "crumb": crumb}, timeout=40)
+            res = ((r.json().get("quoteSummary") or {}).get("result") or [None])[0] if r.status_code == 200 else None
+        except Exception as e:  # noqa: BLE001
+            log.info("yahoo summary %s failed: %s", t, e)
+            res = None
+        if res:
+            fd, ks = res.get("financialData") or {}, res.get("defaultKeyStatistics") or {}
+            fcur = fd.get("financialCurrency") or q.get("financialCurrency") or q.get("currency") or ""
+            unit, div = _fin_unit(fcur)
+            mrq = (ks.get("mostRecentQuarter") or {}).get("fmt") or ""
+            period = f"TTM {datetime.strptime(mrq, '%Y-%m-%d').strftime('%b %Y')}" if mrq else "TTM"
+            f.update({"fin_currency": fcur, "revenue_ttm": _raw(fd, "totalRevenue"), "revenue_growth": _raw(fd, "revenueGrowth"),
+                      "gross_margin": _raw(fd, "grossMargins"), "operating_margin": _raw(fd, "operatingMargins"),
+                      "profit_margin": _raw(fd, "profitMargins"), "cash": _raw(fd, "totalCash"), "debt": _raw(fd, "totalDebt"),
+                      "net_income_ttm": _raw(ks, "netIncomeToCommon"), "enterprise_value": _raw(ks, "enterpriseValue"),
+                      "most_recent_quarter": mrq, "fiscal_year_end": (ks.get("lastFiscalYearEnd") or {}).get("fmt"),
+                      "analysts": _raw(fd, "numberOfAnalystOpinions"), "recommendation": fd.get("recommendationKey")})
+            src = f"Yahoo Finance, trailing twelve months to {mrq or 'latest quarter'}"
+            url = f"https://finance.yahoo.com/quote/{t}/financials"
+            rows = []
+            if f.get("revenue_ttm"):
+                rows.append(("revenue", f["revenue_ttm"] / div))
+            ni = f.get("net_income_ttm")
+            if ni is not None and ni != 0:
+                rows.append(("net_profit" if ni > 0 else "net_loss", abs(ni) / div))
+            for metric, val in rows:
+                with db.tx() as cx:
+                    cur = cx.execute("INSERT OR IGNORE INTO financials(brand,metric,period,value,currency,unit,source,url,confidence,seen_at) "
+                                     "VALUES(?,?,?,?,?,?,?,?,?,?)", (brand, metric, period, round(val, 2), fcur or "USD", unit, src, url, "reported", db.now()))
+                    n += cur.rowcount
+                    if not cur.rowcount:  # same TTM window seen before: keep the figure current
+                        cx.execute("UPDATE financials SET value=?, seen_at=? WHERE brand=? AND metric=? AND period=? AND source=?",
+                                   (round(val, 2), db.now(), brand, metric, period, src))
+        if f.get("market_cap"):
+            with db.tx() as cx:
+                cx.execute("UPDATE quotes SET market_cap=? WHERE ticker=? AND day=(SELECT MAX(day) FROM quotes WHERE ticker=?)",
+                           (f["market_cap"], t, t))
+        if q or res:
+            db.kv_set(f"fundamentals:{t}", f)
+    return n
+
+
 # ---------------------------------------------------------------- EDGAR
 def _annual(units: dict) -> list[dict]:
     """One value per fiscal year end: full-year (10-K / 20-F) rows, latest filing wins."""
@@ -142,9 +253,10 @@ def _annual(units: dict) -> list[dict]:
 
 
 def run_edgar() -> int:
+    from . import resolve
     n = 0
     for brand, c in settings.companies.items():
-        cik = c.get("sec_cik")
+        cik = c.get("sec_cik") or resolve.ids(brand).get("sec_cik")  # configured, or looked up from the SEC ticker list
         if not cik:
             continue
         try:
@@ -358,7 +470,7 @@ def extract_from_news(days: int = NEWS_LOOKBACK_DAYS) -> int:
 def run() -> int:
     load_seeds()
     n = 0
-    for step in (run_quotes, run_edgar, run_money_news):
+    for step in (run_quotes, run_fundamentals, run_edgar, run_money_news):
         try:
             n += step()
         except Exception as e:  # noqa: BLE001 - one source failing must not hide the others

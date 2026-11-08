@@ -1,0 +1,346 @@
+# Nazar sector: Travel Tech. Who is behind each name, tickers (Yahoo), SEC CIKs, Wikipedia titles, seeded financials.
+# INR values are in crore; other currencies in millions (JPY/CNY in millions too). confidence: filing | reported | estimate.
+# The financials collector adds filing and news figures on top of these seeds.
+
+companies:
+- brand: MakeMyTrip
+  entity: MakeMyTrip Ltd.
+  hq: Gurugram, India
+  founded: 2000
+  ownership: listed
+  ticker: MMYT
+  sec_cik: 1495153
+  wikipedia: MakeMyTrip
+  investors:
+  - Trip.com Group (reduced stake 2025)
+  - Naspers (historical)
+  notes: India's largest OTA by bookings; Nasdaq-listed; owns Goibibo and redBus.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 978
+    currency: USD
+    unit: million
+    source: SEC 20-F
+    confidence: filing
+  - metric: net_profit
+    period: FY25
+    value: 95
+    currency: USD
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: ixigo
+  entity: Le Travenues Technology Ltd.
+  hq: Gurugram, India
+  founded: 2007
+  ownership: listed
+  ticker: IXIGO.NS
+  wikipedia: Ixigo
+  investors:
+  - Peak XV
+  - Elevation Capital
+  - Info Edge (historical)
+  notes: Listed June 2024; strongest in rail and tier-2 users; AbhiBus for buses.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 914
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 60
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: EaseMyTrip
+  entity: Easy Trip Planners Ltd.
+  hq: New Delhi, India
+  founded: 2008
+  ownership: listed
+  ticker: EASEMYTRIP.NS
+  wikipedia: EaseMyTrip
+  notes: No-convenience-fee positioning; diversifying into hotels, charters, medical tourism.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 587
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 37
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Yatra
+  entity: Yatra Online Ltd.
+  hq: Gurugram, India
+  founded: 2006
+  ownership: listed
+  ticker: YATRA.NS
+  wikipedia: Yatra Online
+  notes: Largest corporate-travel book among Indian OTAs; dual-listed (NSE and Nasdaq).
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 793
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 34
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Cleartrip
+  entity: Cleartrip Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2006
+  ownership: subsidiary
+  wikipedia: Cleartrip
+  investors:
+  - Flipkart (Walmart)
+  notes: Acquired by Flipkart in 2021; Big Billion Days travel deals.
+- brand: OYO
+  entity: PRISM (formerly Oravel Stays Ltd.)
+  hq: Gurugram, India
+  founded: 2013
+  ownership: private
+  wikipedia: OYO Rooms
+  investors:
+  - SoftBank
+  - Peak XV
+  - Lightspeed
+  - Airbnb
+  notes: Profitable since FY24; bought Motel 6 (G6) in the US; IPO refiled in 2025.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 6463
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 623
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: IRCTC
+  entity: Indian Railway Catering and Tourism Corporation Ltd.
+  hq: New Delhi, India
+  founded: 1999
+  ownership: listed
+  ticker: IRCTC.NS
+  wikipedia: Indian Railway Catering and Tourism Corporation
+  notes: Monopoly online rail-ticketing; every OTA's rail product rides on it.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 4675
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 1315
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: IndiGo
+  entity: InterGlobe Aviation Ltd.
+  hq: Gurugram, India
+  founded: 2006
+  ownership: listed
+  ticker: INDIGO.NS
+  wikipedia: IndiGo
+  notes: About 64% domestic share; the largest Airbus customer; long-haul push with A350s and Norse leases.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 80803
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_profit
+    period: FY25
+    value: 7258
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Air India
+  entity: Air India Ltd. (Tata Group)
+  hq: Gurugram, India
+  founded: 1932
+  ownership: private
+  wikipedia: Air India
+  investors:
+  - Tata Sons
+  - Singapore Airlines (25.1%)
+  notes: Vistara merged in Nov 2024; 470-aircraft order; AI171 crash (June 2025) reset its safety agenda.
+  financials:
+  - metric: revenue
+    period: FY25
+    value: 78000
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+  - metric: net_loss
+    period: FY25
+    value: 3900
+    currency: INR
+    unit: crore
+    source: Business press reporting of filings and company statements
+    confidence: estimate
+- brand: Akasa Air
+  entity: SNV Aviation Pvt. Ltd.
+  hq: Mumbai, India
+  founded: 2021
+  ownership: private
+  wikipedia: Akasa Air
+  investors:
+  - Jhunjhunwala family
+  - Premji Invest
+  - Claypond
+  - 360 ONE
+  notes: Youngest Indian airline; 226 Boeing 737 MAX on order; international from 2024.
+- brand: redBus
+  entity: Ibibo Group (MakeMyTrip)
+  hq: Bengaluru, India
+  founded: 2006
+  ownership: subsidiary
+  wikipedia: RedBus
+  notes: Dominant bus marketplace; expanding in Southeast Asia and Latin America.
+- brand: Booking.com
+  entity: Booking Holdings Inc.
+  hq: Norwalk, United States
+  founded: 1997
+  ownership: listed
+  ticker: BKNG
+  sec_cik: 1075531
+  wikipedia: Booking Holdings
+  notes: World's largest OTA by bookings; Agoda is its Asia brand and a strong India hotel player.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 23739
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Agoda
+  entity: Agoda Company Pte. Ltd.
+  hq: Singapore
+  founded: 2005
+  ownership: subsidiary
+  wikipedia: Agoda
+  notes: Aggressive hotel pricing in India; app-first inventory.
+- brand: Expedia
+  entity: Expedia Group, Inc.
+  hq: Seattle, United States
+  founded: 1996
+  ownership: listed
+  ticker: EXPE
+  sec_cik: 1324424
+  wikipedia: Expedia Group
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 13690
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Airbnb
+  entity: Airbnb, Inc.
+  hq: San Francisco, United States
+  founded: 2008
+  ownership: listed
+  ticker: ABNB
+  sec_cik: 1559720
+  wikipedia: Airbnb
+  notes: India is a top-10 growth market; relaunched Experiences and Services in 2025.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 11102
+    currency: USD
+    unit: million
+    source: SEC 10-K
+    confidence: filing
+- brand: Trip.com
+  entity: Trip.com Group Ltd.
+  hq: Shanghai, China
+  founded: 1999
+  ownership: listed
+  ticker: TCOM
+  wikipedia: Trip.com Group
+  notes: Owns Skyscanner; sold most of its MakeMyTrip stake in 2025.
+  financials:
+  - metric: revenue
+    period: '2024'
+    value: 53294
+    currency: CNY
+    unit: million
+    source: Business press reporting of filings and company statements
+    confidence: reported
+- brand: Skyscanner
+  entity: Skyscanner Ltd.
+  hq: Edinburgh, United Kingdom
+  founded: 2003
+  ownership: subsidiary
+  wikipedia: Skyscanner
+- brand: Hopper
+  entity: Hopper Inc.
+  hq: Montreal, Canada
+  founded: 2007
+  ownership: private
+  wikipedia: Hopper (company)
+  investors:
+  - Capital One
+  - Goldman Sachs
+  - GPI Capital
+  notes: Fintech products (price freeze, cancel-for-any-reason) that Indian OTAs copy.
+- brand: Thrillophilia
+  entity: Thrillophilia Adventure Tours Pvt. Ltd.
+  hq: Jaipur, India
+  founded: 2009
+  ownership: private
+  notes: Largest Indian experiences marketplace; bootstrapped to profitability.
+- brand: Treebo
+  entity: Ruptub Solutions Pvt. Ltd.
+  hq: Bengaluru, India
+  founded: 2015
+  ownership: private
+  investors:
+  - Matrix Partners
+  - SAIF
+  - Bertelsmann
+  notes: OYO's closest Indian budget-hotel rival; hotel SaaS arm.
+money_terms:
+- revenue FY25
+- net loss FY25
+- net profit FY25
+- funding round
+- valuation
+- IPO DRHP
+- acquisition
+- quarterly results

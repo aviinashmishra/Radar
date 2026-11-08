@@ -1,0 +1,781 @@
+# Nazar sector: Automotive & EV (auto). Same schema as config/competitors.yaml (the IoT radar), read by the radar package
+# with RADAR_CONFIG pointing here. No brand is marked `self: true`, so the analysis is written for a neutral reader
+# competing in the sector (set `self: true` on a brand, or `perspective:`, to change whose seat it is written from).
+# `vocab` tunes news relevance and scoring (radar/relevance.py, radar/enrich.py); `voice_themes` the review themes;
+# `world` is shown on the Nazar directory. Edit freely: the radar re-reads this file on restart.
+
+key: auto
+label: Automotive & EV
+sector: 'Automotive and electric mobility, India and world: electric two-wheelers, electric cars, SUVs and small cars, premium, commercial vehicles, ride-hailing and charging networks'
+currency: INR
+cloud_repo: aviinashmishra/Radar
+segments:
+- key: ev2w
+  name: Electric two-wheelers
+  show: true
+  keywords: electric scooter|e-?scooter|electric two|ev two|electric bike|e-?bike|electric motorcycle|\bS1\b|rizta|chetak electric|iqube|vida
+- key: ev4w
+  name: Electric cars
+  show: true
+  keywords: electric car|electric suv|\bev\b|electric vehicle|\bbev\b|nexon\.ev|punch\.ev|curvv\.ev|windsor|be 6|xev 9e|model y|model 3|seal|atto 3|emax
+- key: suv
+  name: SUVs & crossovers
+  show: true
+  keywords: \bsuv\b|crossover|compact suv|creta|scorpio|thar|xuv|nexon|brezza|grand vitara|seltos|sonet|punch|harrier|safari|fortuner
+- key: hatch
+  name: Hatchbacks & sedans
+  show: true
+  keywords: hatchback|sedan|small car|entry car|swift|baleno|wagon ?r|alto|tiago|altroz|i20|verna|city\b|dzire
+- key: premium
+  name: Premium & luxury
+  show: true
+  keywords: luxury|premium car|\bbmw\b|mercedes|audi|jaguar|land rover|volvo|lexus|porsche
+- key: cv
+  name: Commercial vehicles & tractors
+  show: true
+  keywords: truck|\bbus\b|buses|commercial vehicle|\bcv\b|tractor|three-?wheeler|e-?rickshaw|cargo
+- key: mobility
+  name: Ride-hailing & mobility
+  show: true
+  keywords: ride-?hailing|\bcab\b|cabs|taxi|bike taxi|ride ?sharing|auto-?rickshaw|carpool|driver partner|robotaxi
+- key: charging
+  name: Charging & batteries
+  show: true
+  keywords: charging station|fast charg|battery swap|charger network|charge point|gigafactory|cell plant|battery pack
+festivals:
+- name: Republic Day sales
+  month: 1
+  day: 20
+- name: Union Budget
+  month: 2
+  day: 1
+- name: Holi
+  month: 3
+  day: 10
+- name: Financial year end
+  month: 3
+  day: 25
+- name: Independence Day sales
+  month: 8
+  day: 10
+- name: Navratri / festive season start
+  month: 9
+  day: 20
+- name: Dussehra
+  month: 10
+  day: 1
+- name: Diwali / Dhanteras
+  month: 10
+  day: 15
+- name: Black Friday / Cyber Monday
+  month: 11
+  day: 24
+- name: Christmas / New Year
+  month: 12
+  day: 20
+- name: Bharat Mobility Global Expo
+  month: 1
+  day: 17
+- name: Monthly sales data (SIAM/FADA)
+  month: 6
+  day: 1
+brands:
+- name: Tata Motors
+  origin: Indian
+  tier: core
+  country: India
+  kind: OEM (cars, EVs, CVs)
+  segments:
+  - ev4w
+  - suv
+  - hatch
+  - cv
+  website: https://www.tatamotors.com
+  news_terms:
+  - Tata Motors
+  - Tata.ev
+  - Tata Nexon EV
+  aliases:
+  - Nexon
+  - Punch
+  - Harrier
+  - Safari
+  - Tiago
+  - Altroz
+  - Curvv
+  - Tata.ev
+  - Tata Passenger Electric Mobility
+  exclude:
+  - Tata Steel
+  - Tata Power
+  - Tata Consultancy
+  - TCS
+  watch_pages:
+  - https://www.tatamotors.com/newsroom/
+  - https://ev.tatamotors.com/
+- name: Mahindra
+  origin: Indian
+  tier: core
+  country: India
+  kind: OEM (SUVs, EVs, tractors)
+  segments:
+  - suv
+  - ev4w
+  - cv
+  website: https://auto.mahindra.com
+  news_terms:
+  - Mahindra SUV
+  - Mahindra Electric
+  - Mahindra BE 6
+  aliases:
+  - Scorpio
+  - Thar
+  - XUV700
+  - XUV 3XO
+  - BE 6
+  - XEV 9e
+  - Bolero
+  - Mahindra & Mahindra
+  exclude:
+  - Mahindra Finance
+  - Tech Mahindra
+  - Mahindra Holidays
+  - Mahindra Lifespace
+  watch_pages:
+  - https://auto.mahindra.com/
+- name: Maruti Suzuki
+  origin: Indian
+  tier: core
+  country: India
+  kind: OEM (small cars, SUVs)
+  segments:
+  - hatch
+  - suv
+  - ev4w
+  website: https://www.marutisuzuki.com
+  news_terms:
+  - Maruti Suzuki
+  - Maruti e Vitara
+  aliases:
+  - Swift
+  - Baleno
+  - Brezza
+  - Grand Vitara
+  - Fronx
+  - WagonR
+  - Ertiga
+  - e Vitara
+  - Dzire
+  - Nexa
+  - Arena
+  watch_pages:
+  - https://www.marutisuzuki.com/corporate/media/press-releases
+- name: Hyundai India
+  origin: Indian
+  tier: core
+  country: India
+  kind: OEM
+  segments:
+  - suv
+  - hatch
+  - ev4w
+  website: https://www.hyundai.com/in/en
+  news_terms:
+  - Hyundai Motor India
+  - Hyundai Creta
+  aliases:
+  - Creta
+  - Venue
+  - Exter
+  - Alcazar
+  - Ioniq
+  - Verna
+  - i20
+  - Hyundai Motor India
+  watch_pages:
+  - https://www.hyundai.com/in/en
+- name: Ola Electric
+  origin: Indian
+  tier: core
+  country: India
+  kind: EV two-wheeler OEM, cells
+  segments:
+  - ev2w
+  - charging
+  website: https://www.olaelectric.com
+  news_terms:
+  - Ola Electric
+  - Ola S1
+  - Ola Roadster
+  aliases:
+  - Ola S1
+  - S1 Pro
+  - S1 X
+  - Roadster
+  - Bharat Cell
+  - Krutrim Battery
+  - Ola Gig
+  exclude:
+  - Ola Cabs
+  - Ola Consumer
+  - Ola Krutrim
+  - ANI Technologies
+  watch_pages:
+  - https://www.olaelectric.com/
+- name: Ather Energy
+  origin: Indian
+  tier: core
+  country: India
+  kind: EV two-wheeler OEM
+  segments:
+  - ev2w
+  - charging
+  website: https://www.atherenergy.com
+  news_terms:
+  - Ather Energy
+  - Ather Rizta
+  - Ather 450
+  aliases:
+  - Rizta
+  - Ather 450
+  - 450X
+  - 450 Apex
+  - Ather Grid
+  - Atherstack
+  watch_pages:
+  - https://www.atherenergy.com/
+- name: TVS Motor
+  origin: Indian
+  tier: core
+  country: India
+  kind: Two-wheeler OEM
+  segments:
+  - ev2w
+  - cv
+  website: https://www.tvsmotor.com
+  news_terms:
+  - TVS Motor
+  - TVS iQube
+  aliases:
+  - iQube
+  - Apache
+  - Jupiter 110
+  - Ntorq
+  - Raider
+  - TVS King
+  - Norton
+  exclude:
+  - TVS Supply Chain
+  - TVS Srichakra
+  - Sundaram
+  watch_pages:
+  - https://www.tvsmotor.com/
+- name: Bajaj Auto
+  origin: Indian
+  tier: core
+  country: India
+  kind: Two-wheeler and three-wheeler OEM
+  segments:
+  - ev2w
+  - cv
+  website: https://www.bajajauto.com
+  news_terms:
+  - Bajaj Auto
+  - Bajaj Chetak
+  aliases:
+  - Chetak
+  - Pulsar
+  - Dominar
+  - GoGo
+  - Bajaj Freedom
+  - Triumph Speed
+  exclude:
+  - Bajaj Finance
+  - Bajaj Finserv
+  - Bajaj Electricals
+  - Bajaj Housing
+  watch_pages:
+  - https://www.bajajauto.com/
+- name: Hero MotoCorp
+  origin: Indian
+  tier: core
+  country: India
+  kind: Two-wheeler OEM
+  segments:
+  - ev2w
+  website: https://www.heromotocorp.com
+  news_terms:
+  - Hero MotoCorp
+  - Hero Vida
+  aliases:
+  - Vida
+  - Splendor
+  - Xpulse
+  - Hero MotoCorp
+  - Vida VX2
+  - Hero Harley
+  - X440
+  exclude:
+  - Hero Electric
+  - Hero Cycles
+  - Hero FinCorp
+  - superhero
+  watch_pages:
+  - https://www.heromotocorp.com/
+  ambiguous: true
+- name: Royal Enfield
+  origin: Indian
+  tier: core
+  country: India
+  kind: Motorcycle OEM
+  segments:
+  - premium
+  website: https://www.royalenfield.com
+  news_terms:
+  - Royal Enfield
+  - Eicher Motors
+  aliases:
+  - Classic 350
+  - Hunter 350
+  - Himalayan
+  - Bullet
+  - Flying Flea
+  - Guerrilla
+  - Meteor
+  - Eicher Motors
+  watch_pages:
+  - https://www.royalenfield.com/in/en/home/
+- name: JSW MG Motor
+  origin: Indian
+  tier: core
+  country: India
+  kind: OEM (EVs)
+  segments:
+  - ev4w
+  - suv
+  website: https://www.mgmotor.co.in
+  news_terms:
+  - MG Motor India
+  - MG Windsor
+  - JSW MG Motor
+  aliases:
+  - Windsor
+  - Comet EV
+  - ZS EV
+  - Hector
+  - Gloster
+  - Cyberster
+  - MG M9
+  - MG Select
+  exclude:
+  - MG Road
+  - Morris Garages UK
+  - MG Hector Sports
+  watch_pages:
+  - https://www.mgmotor.co.in/
+- name: Kia India
+  origin: Indian
+  tier: core
+  country: India
+  kind: OEM
+  segments:
+  - suv
+  - ev4w
+  website: https://www.kia.com/in
+  news_terms:
+  - Kia India
+  - Kia Syros
+  aliases:
+  - Seltos
+  - Sonet
+  - Carens
+  - Syros
+  - EV6
+  - EV9
+  - Kia India
+  watch_pages:
+  - https://www.kia.com/in/
+  ambiguous: true
+- name: Toyota
+  origin: Global
+  tier: adjacent
+  country: Japan
+  kind: OEM
+  segments:
+  - suv
+  - premium
+  website: https://www.toyotabharat.com
+  news_terms:
+  - Toyota Kirloskar
+  - Toyota India
+  aliases:
+  - Innova
+  - Fortuner
+  - Hycross
+  - Urban Cruiser
+  - Toyota Kirloskar
+  - Glanza
+  - Hyryder
+  - Camry
+  - Land Cruiser
+  watch_pages:
+  - https://www.toyotabharat.com/
+- name: Tesla
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: EV OEM
+  segments:
+  - ev4w
+  - charging
+  website: https://www.tesla.com/en_in
+  news_terms:
+  - Tesla India
+  - Tesla Model Y India
+  aliases:
+  - Model Y
+  - Model 3
+  - Cybertruck
+  - Supercharger
+  - Robotaxi
+  - Optimus
+  - FSD
+  exclude:
+  - Nikola Tesla
+  - Tesla coil
+  - Tesla Power
+  apps:
+  - com.teslamotors.tesla
+  watch_pages:
+  - https://www.tesla.com/en_in
+- name: BYD
+  origin: Global
+  tier: adjacent
+  country: China
+  kind: EV and battery OEM
+  segments:
+  - ev4w
+  - charging
+  website: https://www.bydautoindia.com
+  news_terms:
+  - BYD India
+  - BYD electric
+  aliases:
+  - Atto 3
+  - Seal
+  - eMax 7
+  - Sealion
+  - Blade Battery
+  - Denza
+  watch_pages:
+  - https://www.bydautoindia.com/
+- name: VinFast
+  origin: Global
+  tier: adjacent
+  country: Vietnam
+  kind: EV OEM
+  segments:
+  - ev4w
+  website: https://vinfastauto.in
+  news_terms:
+  - VinFast India
+  aliases:
+  - VF 6
+  - VF 7
+  - VF6
+  - VF7
+  - Thoothukudi plant
+  watch_pages:
+  - https://vinfastauto.in/
+- name: Hyundai Motor
+  origin: Global
+  tier: adjacent
+  country: South Korea
+  kind: OEM group
+  segments:
+  - ev4w
+  - suv
+  website: https://www.hyundai.com
+  news_terms:
+  - Hyundai Motor Group
+  - Hyundai Ioniq
+  aliases:
+  - Ioniq 5
+  - Ioniq 6
+  - Ioniq 9
+  - Hyundai Motor Group
+  - Genesis
+  exclude:
+  - Hyundai Motor India
+  - Hyundai Heavy
+- name: Volkswagen Group
+  origin: Global
+  tier: adjacent
+  country: Germany
+  kind: OEM group
+  segments:
+  - suv
+  - premium
+  - ev4w
+  website: https://www.volkswagen.co.in
+  news_terms:
+  - Volkswagen India
+  - Skoda India
+  - Skoda Kylaq
+  aliases:
+  - Skoda
+  - Kylaq
+  - Kushaq
+  - Slavia
+  - Taigun
+  - Virtus
+  - Tiguan
+  - ID.4
+  - Audi India
+  - Porsche India
+- name: Mercedes-Benz
+  origin: Global
+  tier: adjacent
+  country: Germany
+  kind: Luxury OEM
+  segments:
+  - premium
+  - ev4w
+  website: https://www.mercedes-benz.co.in
+  news_terms:
+  - Mercedes-Benz India
+  aliases:
+  - EQS
+  - GLC
+  - GLE
+  - E-Class
+  - Maybach
+  - AMG
+  - Mercedes-Benz India
+- name: BMW
+  origin: Global
+  tier: adjacent
+  country: Germany
+  kind: Luxury OEM
+  segments:
+  - premium
+  - ev4w
+  website: https://www.bmw.in
+  news_terms:
+  - BMW India
+  aliases:
+  - BMW iX
+  - BMW i7
+  - X1
+  - X3
+  - X5
+  - Mini Cooper
+  - BMW Motorrad
+  - BMW Group India
+- name: Ford
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: OEM
+  segments:
+  - suv
+  - cv
+  website: https://www.ford.com
+  news_terms:
+  - Ford India return
+  - Ford Chennai plant
+  aliases:
+  - Ford Motor
+  - Mustang
+  - Endeavour
+  - Everest
+  - F-150
+  - Ford Chennai
+  exclude:
+  - Harrison Ford
+  - Tom Ford
+  - Rob Ford
+  - Ford Foundation
+  ambiguous: true
+- name: Uber
+  origin: Global
+  tier: adjacent
+  country: United States
+  kind: Ride-hailing platform
+  segments:
+  - mobility
+  website: https://www.uber.com/in/en/
+  news_terms:
+  - Uber India
+  - Uber Moto
+  aliases:
+  - Uber Moto
+  - Uber Auto
+  - Uber Intercity
+  - Uber Shuttle
+  - Uber Eats
+  exclude:
+  - Uber Eats India
+  - Ubersuggest
+  - über
+  apps:
+  - com.ubercab
+  watch_pages:
+  - https://www.uber.com/newsroom/
+  ambiguous: true
+- name: Ola Cabs
+  origin: Indian
+  tier: core
+  country: India
+  kind: Ride-hailing platform
+  segments:
+  - mobility
+  website: https://www.olacabs.com
+  news_terms:
+  - Ola Cabs
+  - Ola Consumer
+  aliases:
+  - Ola Consumer
+  - ANI Technologies
+  - Ola Bike
+  - Ola Auto
+  - Ola Money
+  exclude:
+  - Ola Electric
+  - Ola Krutrim
+  - Hola
+  apps:
+  - com.olacabs.customer
+  ambiguous: true
+- name: Rapido
+  origin: Indian
+  tier: core
+  country: India
+  kind: Bike-taxi and ride-hailing platform
+  segments:
+  - mobility
+  - cv
+  website: https://www.rapido.bike
+  news_terms:
+  - Rapido bike taxi
+  - Rapido cabs
+  aliases:
+  - Rapido Ownly
+  - Rapido Bike
+  - Rapido Auto
+  - Roppen
+  apps:
+  - com.rapido.passenger
+  watch_pages:
+  - https://www.rapido.bike/
+sector_news_terms:
+- electric scooter India launch
+- EV sales India month
+- SUV launch India
+- FADA retail sales
+- EV policy India
+- Tesla India
+- two-wheeler sales India
+feeds:
+- brand: Sector
+  kind: industry
+  url: https://www.rushlane.com/feed
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://auto.economictimes.indiatimes.com/rss/topstories
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://electrek.co/feed/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://insideevs.com/rss/articles/all/
+  filter: sector
+- brand: Sector
+  kind: industry
+  url: https://www.autocarindia.com/rss/all
+  filter: sector
+reddit:
+  subreddits:
+  - CarsIndia
+  - indianbikes
+  - electricvehicles
+  - teslamotors
+  searches:
+  - Ola Electric
+  - Ather
+  - Tata EV
+  - Mahindra BE 6
+  - Tesla India
+  - Maruti
+  - Royal Enfield
+price_bands:
+- 0
+- 100000
+- 200000
+- 500000
+- 1000000
+- 2000000
+- 5000000
+- 100000000
+youtube_queries:
+- review
+- launch
+search_seeds:
+- '{brand} '
+- '{brand} price'
+- best electric scooter
+- best suv under
+- ev vs petrol
+vocab:
+  sector: \bev\b|electric (vehicle|car|scooter|bike|two)|e-?scooter|\bsuv\b|hatchback|sedan|car ?maker|automaker|auto ?maker|two-?wheeler|motorcycle|scooter|tractor|truck|\bbus(es)?\b|ride-?hailing|robotaxi|charging|battery|gigafactory|tata
+    motors|mahindra|maruti|hyundai|kia|toyota|tesla|byd|ola electric|ather|tvs|bajaj|hero|royal enfield|\bmg\b|vinfast|rivian|volkswagen|skoda|mercedes|bmw|audi|uber|rapido|fada|siam\b
+  category: \bev\b|electric|\bsuv\b|\bcar\b|cars\b|scooter|bike|motorcycle|vehicle|auto|dealer|launch|variant|mileage|range|charging|battery|two-?wheeler|four-?wheeler|sales|units|bookings|plant|recall|model|cab|ride|driver
+  hot: launch|unveil|introduc|debut|funding|raises|acqui|\bipo\b|partner|price cut|slash|record|market share|lawsuit|\bban(ned)?\b|recall|regulat|layoff|shuts? down|exits?|enters? india|expands?|bookings
+    open|deliveries begin|new plant|recall|fire incident|price hike|fame|pm e-drive|gst
+  core: \bev\b|electric|scooter|\bsuv\b|car\b
+  noise: diecast|hot wheels|toy|model kit|wallpaper|forza|gta|need for speed|movie|film|rc car
+  ambiguous:
+  - Hero
+  - Kia
+  - Ford
+  - Uber
+  - Ola
+  noise_note: Toys, games, films and generic traffic stories score 1-3. Monthly sales numbers, launches, recalls, pricing and policy (FAME, PM E-DRIVE, GST, import duty) matter most.
+voice_themes:
+- key: range
+  rx: range|\bkm\b|kilomet|mileage|charge time|charging|real range
+- key: service
+  rx: service|workshop|dealer|spare|parts|warranty|wait(ing)? for|appointment
+- key: quality
+  rx: build|quality|rattl|paint|fit and finish|defect|fire|recall|breakdown|stopped
+- key: software
+  rx: software|\bapp\b|\bota\b|update|bluetooth|infotainment|bug|screen|lag|connect
+- key: comfort
+  rx: comfort|seat|ride quality|suspension|\bnvh\b|cabin noise|space|legroom
+- key: price
+  rx: price|value|expensive|overpriced|discount|resale|\bemi\b|insurance cost|on-?road
+- key: performance
+  rx: performance|pickup|acceleration|power|speed|torque|handling|top speed
+- key: safety
+  rx: safety|airbag|brake|ncap|crash|adas|\babs\b|star rating
+- key: delivery
+  rx: delivery|waiting period|booking|refund|cancel|dealer experience|test ride|test drive
+world:
+  regulators:
+  - MoRTH
+  - MHI (PM E-DRIVE)
+  - ARAI
+  - Bharat NCAP
+  trackers:
+  - SIAM
+  - FADA
+  - Vahan
+  - JATO
+  watch_events:
+  - Bharat Mobility Global Expo (Jan)
+  - Union Budget (1 Feb)
+  - monthly Vahan retail data (1st of month)
+perspective: ''
