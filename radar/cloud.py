@@ -64,6 +64,7 @@ class NoSnapshot(Exception):
 
 # ---------------------------------------------------------------- GitHub helpers
 _last_write = [0.0]
+_reset_waited = [False]   # wait for the API budget's reset at most once per process
 
 
 def _gh(method: str, path_or_url: str, **kw) -> requests.Response:
@@ -87,6 +88,14 @@ def _gh(method: str, path_or_url: str, **kw) -> requests.Response:
             time.sleep(5 * 2 ** attempt)
             continue
         limited = r.status_code == 429 or (r.status_code == 403 and ("rate limit" in r.text.lower() or "retry-after" in r.headers))
+        if limited and r.headers.get("x-ratelimit-remaining") == "0" and not _reset_waited[0]:
+            # the token's hourly budget is spent: wait for GitHub's reset once (a run's work is worth 25 minutes), then go on
+            reset = int(r.headers.get("x-ratelimit-reset") or 0) - time.time() + 5
+            if 0 < reset <= 1500:
+                _reset_waited[0] = True
+                _warn(f"GitHub API budget spent; waiting {reset / 60:.0f} min for its reset")
+                time.sleep(reset)
+                continue
         if not (limited or r.status_code >= 500) or attempt == 4:
             return r
         wait = int(r.headers.get("retry-after") or 0) or 5 * 2 ** attempt
@@ -336,6 +345,16 @@ def _own_slugs() -> set[str]:
     return out
 
 
+def _public_snapshot() -> bytes | None:
+    """The snapshot through the public release download (github.com, not the API): works while the token's API budget
+    is spent, for a public repository."""
+    try:
+        r = requests.get(public_url(DB_ASSET), timeout=180)
+    except requests.RequestException:
+        return None
+    return r.content if r.status_code == 200 and r.content[:2] == b"\x1f\x8b" else None
+
+
 def pull() -> bool:
     """Start of a workflow run: restore the published database and the newest screenshot of each brand."""
     try:
@@ -343,11 +362,19 @@ def pull() -> bool:
         asset = next((a for a in (rel or {}).get("assets", []) if a["name"] == DB_ASSET), None)
         if not asset:
             raise NoSnapshot("no snapshot published yet")
+        blob = _asset_bytes(asset)
     except NoSnapshot as e:
         print(f"{e}: this run starts a fresh database")
         _output("restored", "false")
         return False
-    blob = _asset_bytes(asset)
+    except Exception as e:  # noqa: BLE001 - the API refused (usually its hourly budget): take the public download
+        blob = _public_snapshot()
+        if blob is None:
+            raise
+        _warn(f"GitHub API unavailable ({str(e)[:120]}); restored {DB_ASSET} from the public download, screenshots skipped")
+        install(blob)
+        _output("restored", "true")
+        return True
     install(blob)
     newest: dict[str, dict] = {}
     own = _own_slugs()
