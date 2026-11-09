@@ -1,11 +1,13 @@
 """Cross-sector reads. Every function walks the loaded sectors, queries each sector's own SQLite through its package,
 tags rows with the sector, and merges. A sector that fails is skipped, never fatal."""
 from __future__ import annotations
+import contextvars
 import json
 import logging
 import threading
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from . import engine
 
@@ -42,12 +44,31 @@ def _safe(sec: engine.Sector, fn, default):
 
 
 # ---------------------------------------------------------------- sectors overview
-_OVERVIEW: dict = {"rows": None, "at": 0.0, "lock": threading.Lock(), "refreshing": False}
+_OVERVIEW: dict = {"rows": None, "at": 0.0, "ver": None, "lock": threading.Lock(), "refreshing": False}
 OVERVIEW_TTL = 60.0   # the per-sector summary walks ten databases (~15 s); serve the last one and refresh behind the scenes
+HOSTED_OVERVIEW_TTL = 300.0   # cloud: the data only changes with a new snapshot (that recomputes at once); this is for the 24 h windows
+
+
+def _data_version() -> tuple:
+    """Which snapshot each sector serves (cloud mode). A summary computed from other data (or from the empty databases an
+    instance starts with, before any snapshot has landed) is stale the moment this changes."""
+    if not engine.HOSTED:
+        return ()
+    return tuple(sec.sub("cloud").state()["key"] for sec in engine.sectors())
 
 
 def sectors_overview() -> list[dict]:
-    """Cached: the first call computes synchronously, later calls answer at once and refresh in the background when stale."""
+    """Cached. Locally the first call computes synchronously and later calls answer at once, refreshing in the background
+    when stale. In cloud mode it recomputes synchronously whenever a sector's snapshot changes: a serverless instance
+    freezes once the answer is sent, so a background refresh would never land and the hub would keep showing zeros."""
+    if engine.HOSTED:
+        ver = _data_version()
+        if _OVERVIEW["rows"] is None or _OVERVIEW["ver"] != ver or time.time() - _OVERVIEW["at"] > HOSTED_OVERVIEW_TTL:
+            with _OVERVIEW["lock"]:
+                ver = _data_version()
+                if _OVERVIEW["rows"] is None or _OVERVIEW["ver"] != ver or time.time() - _OVERVIEW["at"] > HOSTED_OVERVIEW_TTL:
+                    _OVERVIEW.update(rows=_sectors_overview(), at=time.time(), ver=ver)
+        return _OVERVIEW["rows"]
     rows, age = _OVERVIEW["rows"], time.time() - _OVERVIEW["at"]
     if rows is None:
         with _OVERVIEW["lock"]:
@@ -69,40 +90,66 @@ def sectors_overview() -> list[dict]:
 
 
 def _sectors_overview() -> list[dict]:
-    out = []
-    for sec in engine.sectors():
-        def one(sec=sec):
-            db = sec.db
-            base = "FROM events WHERE enriched>0 AND kind<>'baseline'"
-            e24 = db.q1(f"SELECT COUNT(*) c {base} AND created_at>=datetime('now','-1 day')")["c"]
-            e7 = db.q1(f"SELECT COUNT(*) c {base} AND created_at>=datetime('now','-7 day')")["c"]
-            news7 = db.q1(f"SELECT COUNT(*) c {base} AND kind IN ('news','press') AND created_at>=datetime('now','-7 day')")["c"]
-            sig7 = db.q1("SELECT COUNT(*) c FROM signals WHERE created_at>=datetime('now','-7 day')")["c"]
-            top = db.q1(f"SELECT id, brand, kind, title, importance, so_what, counter_move, url, created_at {base} AND importance>=5 "
-                        f"AND brand NOT IN ('Sector','NewEntrant') AND created_at>=datetime('now','-3 day') ORDER BY importance DESC, id DESC LIMIT 1")
-            hot = db.q(f"SELECT brand, COUNT(*) c, MAX(importance) m {base} AND brand NOT IN ('Sector','NewEntrant') AND created_at>=datetime('now','-7 day') "
-                       f"GROUP BY brand ORDER BY c DESC LIMIT 3")
-            days = {r["d"]: r["c"] for r in db.q(f"SELECT substr(created_at,1,10) d, COUNT(*) c {base} AND created_at>=date('now','-13 day') GROUP BY d")}
-            today = datetime.now(timezone.utc).date()
-            spark = [days.get((today - timedelta(days=13 - i)).isoformat(), 0) for i in range(14)]
-            quotes = db.q1("SELECT COUNT(DISTINCT ticker) c FROM quotes")["c"]
-            voice = db.q1("SELECT COUNT(*) c FROM voice")["c"] if db.q1("SELECT name FROM sqlite_master WHERE name='voice'") else 0
-            products = db.q1("SELECT COUNT(*) c FROM products")["c"]
-            total = db.q1("SELECT COUNT(*) c FROM events")["c"]
-            runs = {t: db.kv_get(f"last_run:{t}") for t in ("fast", "medium", "slow", "all")}
-            last = max((r["at"] for r in runs.values() if r and r.get("at")), default=None)
+    """One summary row per sector. The sectors are separate databases, so they are read in parallel (each task gets a copy
+    of the caller's context: the browser's seat per sector lives in context variables)."""
+    secs = engine.sectors()
+    with ThreadPoolExecutor(max_workers=max(1, len(secs)), thread_name_prefix="nazar-overview") as ex:
+        futures = [ex.submit(contextvars.copy_context().run, _overview_row, sec) for sec in secs]
+        return [f.result() for f in futures]
+
+
+def _snapshot(sec: engine.Sector) -> dict | None:
+    """Cloud mode: what this instance loaded for the sector, so the hub can say why a sector is empty."""
+    if not engine.HOSTED:
+        return None
+    st = sec.sub("cloud").state()
+    published = None
+    try:
+        published = (sec.db.kv_get("snapshot") or {}).get("at")
+    except Exception:  # noqa: BLE001
+        pass
+    return {"loaded": st["key"] is not None, "loaded_at": st["loaded_at"], "published_at": published, "error": st["error"]}
+
+
+def _overview_row(sec: engine.Sector) -> dict:
+    try:
+        return _overview_one(sec)
+    except Exception as e:  # noqa: BLE001 - one broken sector never blanks the hub
+        log.warning("%s: %s", sec.key, e)
+        return {**sec.public(), "error": "unavailable", "events_24h": 0, "events_7d": 0, "news_7d": 0, "signals_7d": 0,
+                "spark": [0] * 14, "hot": [], "top": None, "snapshot": _snapshot(sec)}
+
+
+def _overview_one(sec: engine.Sector) -> dict:
+    db = sec.db
+    base = "FROM events WHERE enriched>0 AND kind<>'baseline'"
+    e24 = db.q1(f"SELECT COUNT(*) c {base} AND created_at>=datetime('now','-1 day')")["c"]
+    e7 = db.q1(f"SELECT COUNT(*) c {base} AND created_at>=datetime('now','-7 day')")["c"]
+    news7 = db.q1(f"SELECT COUNT(*) c {base} AND kind IN ('news','press') AND created_at>=datetime('now','-7 day')")["c"]
+    sig7 = db.q1("SELECT COUNT(*) c FROM signals WHERE created_at>=datetime('now','-7 day')")["c"]
+    top = db.q1(f"SELECT id, brand, kind, title, importance, so_what, counter_move, url, created_at {base} AND importance>=5 "
+                f"AND brand NOT IN ('Sector','NewEntrant') AND created_at>=datetime('now','-3 day') ORDER BY importance DESC, id DESC LIMIT 1")
+    hot = db.q(f"SELECT brand, COUNT(*) c, MAX(importance) m {base} AND brand NOT IN ('Sector','NewEntrant') AND created_at>=datetime('now','-7 day') "
+               f"GROUP BY brand ORDER BY c DESC LIMIT 3")
+    days = {r["d"]: r["c"] for r in db.q(f"SELECT substr(created_at,1,10) d, COUNT(*) c {base} AND created_at>=date('now','-13 day') GROUP BY d")}
+    today = datetime.now(timezone.utc).date()
+    spark = [days.get((today - timedelta(days=13 - i)).isoformat(), 0) for i in range(14)]
+    quotes = db.q1("SELECT COUNT(DISTINCT ticker) c FROM quotes")["c"]
+    voice = db.q1("SELECT COUNT(*) c FROM voice")["c"] if db.q1("SELECT name FROM sqlite_master WHERE name='voice'") else 0
+    products = db.q1("SELECT COUNT(*) c FROM products")["c"]
+    total = db.q1("SELECT COUNT(*) c FROM events")["c"]
+    runs = {t: db.kv_get(f"last_run:{t}") for t in ("fast", "medium", "slow", "all")}
+    last = max((r["at"] for r in runs.values() if r and r.get("at")), default=None)
+    pressure = None
+    if sec.settings.self_brand:   # the money model only means something from a seat
+        try:
+            p = sec.sub("market").pressure(7)
+            pressure = {"risk": p.get("total_risk"), "upside": p.get("total_upside")}
+        except Exception:  # noqa: BLE001
             pressure = None
-            try:
-                mk = sec.sub("market")
-                p = mk.pressure(7)
-                pressure = {"risk": p.get("total_risk"), "upside": p.get("total_upside")} if sec.settings.self_brand else None
-            except Exception:  # noqa: BLE001
-                pressure = None
-            return {**sec.public(), "events_24h": e24, "events_7d": e7, "news_7d": news7, "signals_7d": sig7, "events_total": total,
-                    "top": top, "hot": hot, "spark": spark, "quotes": quotes, "voice": voice, "products": products, "last_run": last,
-                    "primed": sec.primed, "pressure": pressure, "db_mb": round(sec.db_path.stat().st_size / 1e6, 1) if sec.db_path.exists() else 0}
-        out.append(_safe(sec, one, {**sec.public(), "error": "unavailable", "events_24h": 0, "events_7d": 0, "news_7d": 0, "signals_7d": 0, "spark": [0] * 14, "hot": [], "top": None}))
-    return out
+    return {**sec.public(), "events_24h": e24, "events_7d": e7, "news_7d": news7, "signals_7d": sig7, "events_total": total,
+            "top": top, "hot": hot, "spark": spark, "quotes": quotes, "voice": voice, "products": products, "last_run": last,
+            "primed": sec.primed, "pressure": pressure, "snapshot": _snapshot(sec), "db_mb": round(sec.db_path.stat().st_size / 1e6, 1) if sec.db_path.exists() else 0}
 
 
 # ---------------------------------------------------------------- pulse (cross-sector feed)
@@ -142,16 +189,24 @@ def pulse(min_importance: int = 5, limit: int = 120, since: str = "", sector: st
 _IDX: dict = {"at": 0.0, "rows": [], "busy": False}
 
 
+_IDX_LOCK = threading.Lock()
+
+
 def _refresh_indices() -> None:
     try:
         fin = engine.primary().sub("collectors.financials")
-        rows = []
-        for t, name in INDICES:
-            try:
-                q = fin.fetch_quote(t)
+
+        def one(t: str):
+            try:   # cloud: all at once with a short timeout (the answer waits for them); locally: the polite 1 s gap
+                return fin.fetch_quote(t, min_gap=0.05, timeout=8) if engine.HOSTED else fin.fetch_quote(t)
             except Exception as e:  # noqa: BLE001
                 log.info("index %s failed: %s", t, e)
-                q = None
+                return None
+        workers = len(INDICES) if engine.HOSTED else 1
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="nazar-index") as ex:
+            quotes = list(ex.map(one, [t for t, _ in INDICES]))
+        rows = []
+        for (t, name), q in zip(INDICES, quotes):
             if q:
                 rows.append({"ticker": t, "name": name, "close": q["close"], "prev_close": q["prev_close"], "change_pct": q["change_pct"],
                              "currency": q["currency"], "series": (q.get("closes") or [])[-30:], "day": q["day"]})
@@ -162,11 +217,23 @@ def _refresh_indices() -> None:
         _IDX["busy"] = False
 
 
+INDEX_WAIT = 6.0   # cloud: how long a request waits for the first index quotes before answering without them
+
+
 def indices() -> list[dict]:
-    """World indices, rupee, crude, gold, bitcoin: refreshed in the background every 15 minutes."""
-    if time.time() - _IDX["at"] > 900 and not _IDX["busy"]:
-        _IDX["busy"] = True
-        threading.Thread(target=_refresh_indices, daemon=True, name="nazar-indices").start()
+    """World indices, rupee, crude, gold, bitcoin: refreshed in the background every 15 minutes. In cloud mode the first
+    request of an instance also waits a few seconds for them: a serverless instance only runs threads while a request is
+    in flight, so a fetch left to the background would otherwise land requests later (or never, on a short-lived one)."""
+    if time.time() - _IDX["at"] <= 900:
+        return _IDX["rows"]
+    with _IDX_LOCK:
+        if not _IDX["busy"] and time.time() - _IDX["at"] > 900:
+            _IDX["busy"] = True
+            _IDX["thread"] = threading.Thread(target=_refresh_indices, daemon=True, name="nazar-indices")
+            _IDX["thread"].start()
+    t = _IDX.get("thread")
+    if engine.HOSTED and not _IDX["rows"] and t is not None:
+        t.join(timeout=INDEX_WAIT)
     return _IDX["rows"]
 
 
@@ -346,4 +413,5 @@ def run(sector: str | None, tier: str) -> dict:
 
 
 def health() -> dict:
-    return {"ok": True, "sectors": [{"key": s.key, "scheduler": s.scheduler, "primed": s.primed, "db": str(s.db_path)} for s in engine.sectors()]}
+    return {"ok": True, "hosted": engine.HOSTED,
+            "sectors": [{"key": s.key, "scheduler": s.scheduler, "primed": s.primed, "db": str(s.db_path), "snapshot": _snapshot(s)} for s in engine.sectors()]}

@@ -53,8 +53,8 @@ def load_seeds() -> int:
 
 
 # ---------------------------------------------------------------- quotes
-def fetch_quote(ticker: str) -> dict | None:
-    r = get(YAHOO.format(t=ticker), timeout=30, min_gap=1.0,
+def fetch_quote(ticker: str, min_gap: float = 1.0, timeout: int = 30) -> dict | None:
+    r = get(YAHOO.format(t=ticker), timeout=timeout, min_gap=min_gap,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"})
     if r.status_code != 200:
         return None

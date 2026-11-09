@@ -88,7 +88,8 @@ def _gh(method: str, path_or_url: str, **kw) -> requests.Response:
             time.sleep(5 * 2 ** attempt)
             continue
         limited = r.status_code == 429 or (r.status_code == 403 and ("rate limit" in r.text.lower() or "retry-after" in r.headers))
-        if limited and r.headers.get("x-ratelimit-remaining") == "0" and not _reset_waited[0]:
+        # (never on the dashboard: a serverless request cannot wait 25 minutes, it would time out instead)
+        if limited and r.headers.get("x-ratelimit-remaining") == "0" and not _reset_waited[0] and not HOSTED:
             # the token's hourly budget is spent: wait for GitHub's reset once (a run's work is worth 25 minutes), then go on
             reset = int(r.headers.get("x-ratelimit-reset") or 0) - time.time() + 5
             if 0 < reset <= 1500:
@@ -191,19 +192,28 @@ def install(blob: bytes) -> None:
         db.connect()
 
 
+def _fetch_api(current: str | None) -> tuple[str, bytes | None]:
+    """Private repos: the API says which upload is current without downloading it (costs API budget on every check)."""
+    rel = _release()
+    asset = next((a for a in (rel or {}).get("assets", []) if a["name"] == DB_ASSET), None)
+    if not asset:
+        raise NoSnapshot(f"no {DB_ASSET} on the '{TAG}' release of {REPO} yet: the first workflow run has not finished")
+    key = f"{asset['id']}:{asset['updated_at']}"
+    return (key, None) if key == current else (key, _asset_bytes(asset))
+
+
 def _fetch(current: str | None) -> tuple[str, bytes | None]:
-    """(key, gzipped db) of the published snapshot; the bytes are None when the key has not changed."""
+    """(key, gzipped db) of the published snapshot; the bytes are None when the key has not changed.
+
+    The public download address comes first even when GITHUB_TOKEN is set: it costs no API budget, and ten sectors
+    checking once a minute on every Vercel instance would otherwise spend the token's hourly budget (after which every
+    check failed and the dashboards served empty databases). The API is the fallback for a private repo."""
     if not REPO:
         raise NoSnapshot("RADAR_REPO is not set (owner/name of the GitHub repo that runs the workflow)")
-    if TOKEN:  # works for private repos; the API says which upload is current without downloading it
-        rel = _release()
-        asset = next((a for a in (rel or {}).get("assets", []) if a["name"] == DB_ASSET), None)
-        if not asset:
-            raise NoSnapshot(f"no {DB_ASSET} on the '{TAG}' release of {REPO} yet: the first workflow run has not finished")
-        key = f"{asset['id']}:{asset['updated_at']}"
-        return (key, None) if key == current else (key, _asset_bytes(asset))
     r = requests.get(public_url(DB_ASSET), allow_redirects=False, timeout=20)
     if r.status_code == 404:
+        if TOKEN:
+            return _fetch_api(current)
         raise NoSnapshot(f"no {DB_ASSET} published for {REPO} yet (or the repo is private: set GITHUB_TOKEN)")
     if r.is_redirect:  # github.com redirects each upload to its own storage address
         loc = r.headers["Location"]
@@ -228,13 +238,17 @@ def refresh(force: bool = False) -> None:
         return
     loaded = _state["key"] is not None
     wait = TTL if loaded else min(TTL, 15)
-    if not force and time.time() - _state["checked"] < wait:
+    if loaded and not force and time.time() - _state["checked"] < wait:
         return
-    # the first load blocks every request until it lands; later checks run once while others serve the current copy
+    # The first load blocks every request until it lands. A request that arrives while it downloads waits for it too:
+    # returning early there (the check is "recent") let the browser's parallel calls read the still-empty database, and
+    # the hub drew zeros. Later checks run once while other requests serve the current copy.
     if not _refresh_lock.acquire(blocking=not loaded):
         return
     try:
-        if not force and time.time() - _state["checked"] < wait:
+        if not loaded and _state["key"] is not None:   # landed while this request waited
+            return
+        if not force and time.time() - _state["checked"] < wait:   # (unloaded: the last attempt just failed; retry later)
             return
         _state["checked"] = time.time()
         key, blob = _fetch(_state["key"])
@@ -250,6 +264,11 @@ def refresh(force: bool = False) -> None:
         log.warning(_state["error"])
     finally:
         _refresh_lock.release()
+
+
+def state() -> dict:
+    """This instance's snapshot: which upload is loaded (None until the first download lands), when, and the last error."""
+    return {"key": _state["key"], "loaded_at": _state["loaded_at"], "error": _state["error"], "asset": DB_ASSET}
 
 
 def info() -> dict | None:
@@ -288,11 +307,11 @@ def dispatch(tier: str, sector: str | None = None) -> dict:
 def shot(name: str) -> bytes:
     """A screenshot from the `data` release. Served through the app because GitHub sends release files as
     downloads (Content-Disposition: attachment), which would make a click save the file instead of showing it."""
-    if not TOKEN:
-        r = requests.get(public_url(name), timeout=30)
-        if r.status_code == 404:
-            raise NoSnapshot(name)
+    r = requests.get(public_url(name), timeout=30)   # public repo: no API budget spent (see _fetch)
+    if r.status_code != 404:
         return _ok(r).content
+    if not TOKEN:
+        raise NoSnapshot(name)
     asset = next((a for a in (_release() or {}).get("assets", []) if a["name"] == name), None)
     if not asset:
         raise NoSnapshot(name)

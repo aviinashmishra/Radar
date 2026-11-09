@@ -167,7 +167,7 @@ function head(t,s){return`<div class="hd"><h1>${t}</h1><div class="sub">${s||""}
 /* ---------- Eye ---------- */
 async function vEye(v){SECTORS=await api("/nazar/api/sectors");const S=SECTORS;const sum=k=>S.reduce((a,s)=>a+(s[k]||0),0);const brands=sum("brands"),listed=sum("listed");
   const hot=S.filter(s=>s.top).sort((a,b)=>(b.top.importance-a.top.importance)||(b.top.created_at>a.top.created_at?1:-1));
-  const warming=S.filter(s=>!s.events_total||s.events_total<5).length;
+  const unloaded=S.filter(s=>s.snapshot&&!s.snapshot.loaded),warming=unloaded.length?0:S.filter(s=>!s.events_total||s.events_total<5).length;
   v.innerHTML=`${head(`One eye on <em>every market</em>`,`${S.length} sectors · ${fmt(brands)} companies · ${listed} listed · ${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}`)}
   <div class="kpis">
     <div class="kpi"><div class="l">Moves · 24h</div><div class="v num">${fmt(sum("events_24h"))}</div><div class="s">${fmt(sum("events_7d"))} this week</div></div>
@@ -181,7 +181,7 @@ async function vEye(v){SECTORS=await api("/nazar/api/sectors");const S=SECTORS;c
     <div class="card"><h2>The iris <span class="hint">brighter = busier · dots = hottest companies · click to enter</span></h2>${iris(S)}</div>
     <div class="card"><h2>What Nazar sees now <span class="hint">top move per sector · 3 days</span></h2>
       ${hot.length?hot.map(s=>`<div class="story" data-go="${esc(s.key)}" data-brand="${esc(s.top.brand)}"><div class="meta">${secChip(s)}${pill(s.top.importance)}<b>${esc(s.top.brand)}</b><span>${esc(kind(s.top.kind))}</span><span style="margin-left:auto">${ago(s.top.created_at)}</span></div><div class="t">${esc(s.top.title)}</div>${s.top.so_what?`<div class="why">${esc(s.top.so_what)}</div>`:""}</div>`).join(""):
-        `<div class="empty">Nazar is warming up: the first sweep of each sector is running. Scored moves appear here within minutes; the full first pass takes a couple of hours.</div>`}
+        (unloaded.length?`<div class="empty">The cloud data did not load for ${unloaded.length} sector${unloaded.length>1?"s":""}${unloaded[0].snapshot.error?`: ${esc(unloaded[0].snapshot.error)}`:""}. It retries every minute; reload in a moment.</div>`:`<div class="empty">Nazar is warming up: the first sweep of each sector is running. Scored moves appear here within minutes; the full first pass takes a couple of hours.</div>`)}
       ${warming?`<div class="muted xs" style="margin-top:10px">${warming} sector${warming>1?"s are":" is"} still on its first sweep.</div>`:""}
     </div>
   </div>
@@ -193,7 +193,7 @@ function sectorCard(s){const sched={running:"live",external:"live (shared radar)
     <div class="st"><span><b>${fmt(s.events_24h)}</b>moves 24h</span><span><b>${fmt(s.news_7d)}</b>news 7d</span><span><b>${fmt(s.brands)}</b>companies</span><span><b>${s.listed}</b>listed</span>${s.pressure&&s.pressure.risk?`<span><b>₹${fmt(s.pressure.risk/1e5)} L</b>at risk / month</span>`:""}</div>
     <div>${(s.hot||[]).map(h=>`<span class="chip" data-go="${esc(s.key)}" data-brand="${esc(h.brand)}">${esc(h.brand)} <span class="muted">${h.c}</span></span>`).join("")||'<span class="muted xs">no scored moves yet</span>'}</div>
     ${s.top?`<div class="top">${pill(s.top.importance)} <b>${esc(s.top.brand)}</b> · ${esc(s.top.title.slice(0,110))}</div>`:""}
-    <div class="row xs muted"><span>● ${sched}</span><span>${s.last_run?`swept ${ago(s.last_run)} ago`:"first sweep running"}</span><span class="grow"></span><a href="/s/${esc(s.key)}" class="ink2">Open dashboard →</a></div>
+    <div class="row xs muted"><span>● ${sched}</span><span>${s.snapshot&&!s.snapshot.loaded?"cloud data not loaded yet":s.last_run?`swept ${ago(s.last_run)} ago`:"first sweep running"}</span><span class="grow"></span><a href="/s/${esc(s.key)}" class="ink2">Open dashboard →</a></div>
   </div>`;}
 
 /* ---------- Pulse ---------- */
