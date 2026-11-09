@@ -326,6 +326,16 @@ def heartbeat(act: bool) -> dict:
 
 
 # ---------------------------------------------------------------- workflow CLI
+def _own_slugs() -> set[str]:
+    """Screenshot file prefixes of this sector's brands: every sector shares the `data` release, and restoring or
+    pruning all 228 companies' images from every job would run into GitHub's API rate limits."""
+    out = set()
+    for b in settings.brands:
+        low = b.name.lower()
+        out |= {re.sub(r"[^a-z0-9]+", "-", low).strip("-"), low.replace(" ", "-")}
+    return out
+
+
 def pull() -> bool:
     """Start of a workflow run: restore the published database and the newest screenshot of each brand."""
     try:
@@ -340,14 +350,18 @@ def pull() -> bool:
     blob = _asset_bytes(asset)
     install(blob)
     newest: dict[str, dict] = {}
+    own = _own_slugs()
     for a in rel["assets"]:
         m = SHOT_RX.match(a["name"])
-        if m and m["day"] > newest.get(m["slug"], {}).get("day", ""):
+        if m and m["slug"] in own and m["day"] > newest.get(m["slug"], {}).get("day", ""):
             newest[m["slug"]] = {"day": m["day"], "asset": a}
     shots = settings.db_path.parent / "shots"
     shots.mkdir(parents=True, exist_ok=True)
-    for v in newest.values():  # yesterday's capture is what today's is diffed against
-        (shots / v["asset"]["name"]).write_bytes(_asset_bytes(v["asset"]))
+    for v in newest.values():  # yesterday's capture is what today's is diffed against; an image never fails the restore
+        try:
+            (shots / v["asset"]["name"]).write_bytes(_asset_bytes(v["asset"]))
+        except Exception as e:  # noqa: BLE001
+            _warn(f"screenshot {v['asset']['name']} not restored: {e}")
     print(f"restored {DB_ASSET} ({len(blob) / 1e6:.1f} MB gzipped) and {len(newest)} screenshots")
     _output("restored", "true")
     return True
@@ -378,9 +392,10 @@ def push() -> None:
             except Exception as e:  # noqa: BLE001
                 failed += 1
                 _warn(f"screenshot {p.name} not uploaded: {e}")
+    own = _own_slugs()
     for a in rel["assets"]:
         m = SHOT_RX.match(a["name"])
-        if m and m["day"] < cutoff:
+        if m and m["slug"] in own and m["day"] < cutoff:
             try:
                 _delete_asset(a)
                 pruned += 1
