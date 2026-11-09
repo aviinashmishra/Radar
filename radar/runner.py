@@ -128,11 +128,15 @@ def main() -> None:
     ap.add_argument("--tier", choices=["fast", "medium", "slow", "all"], default="all")
     ap.add_argument("--loop", action="store_true", help="run forever on the tier schedule")
     ap.add_argument("--brief", choices=["1", "7"], help="write and push a 1-day or 7-day brief, then exit")
+    ap.add_argument("--collect", help="comma-separated collectors to run once, then exit (e.g. social,research)")
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     try:
         if a.brief:
             print(brief.write(days=int(a.brief)))
+        elif a.collect:
+            for name in [x.strip() for x in a.collect.split(",") if x.strip()]:
+                print(name, run_one(name))
         elif a.loop:
             loop()
         else:

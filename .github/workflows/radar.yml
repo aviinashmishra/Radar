@@ -28,7 +28,7 @@ on:
 jobs:
   radar:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       max-parallel: 3         # polite to the shared sources (Google News, Yahoo, app stores)
@@ -118,7 +118,7 @@ jobs:
           )
           if [ "$RESTORED" != "true" ]; then tier=all          # first run: build the whole database
           elif [ "$EVENT" = "workflow_dispatch" ]; then tier="$INPUT_TIER"
-          elif [ "$backfill" = "yes" ]; then tier=all
+          elif [ "$backfill" = "yes" ]; then tier=backfill    # only the new layers: minutes, not a whole sweep
           elif [ "$EVENT" = "push" ]; then tier=medium        # a code push refreshes news and social straight away
           elif [ "$SCHEDULE" = "*/15 * * * *" ]; then tier=fast
           elif [ "$SCHEDULE" = "5 */1 * * *" ]; then tier=medium
@@ -131,8 +131,11 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Sweep
-        if: steps.want.outputs.run == 'true'
+        if: steps.want.outputs.run == 'true' && steps.tier.outputs.tier != 'backfill'
         run: python -m radar.runner --once --tier ${{ steps.tier.outputs.tier }}
+      - name: Backfill the newer layers (social, research, site tech)
+        if: steps.want.outputs.run == 'true' && steps.tier.outputs.tier == 'backfill'
+        run: python -m radar.runner --collect social,research,techstack
       - name: Daily brief
         if: steps.want.outputs.run == 'true' && github.event.schedule == '30 3 * * *'
         run: python -m radar.runner --brief 1
