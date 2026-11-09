@@ -41,6 +41,10 @@ def kick(force: bool = False) -> dict:
     """Make sure this sector's social read is happening: a page that finds nothing (or data older than 3 hours) starts it
     in the background at once instead of waiting for the sweep queue. Returns the live progress for the page."""
     from .collectors import social as col
+    try:
+        col.revalidate()   # once per rules version: stored posts that no longer pass the relevance rules are dropped
+    except Exception:  # noqa: BLE001
+        pass
     prog = db.kv_get("social:progress") or {}
     if not _hosted():
         last = (db.kv_get("social:status:bluesky") or {}).get("at") or ""

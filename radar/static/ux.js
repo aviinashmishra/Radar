@@ -15,7 +15,10 @@ const base=()=>(location.hash.replace(/^#\/?/,"").split("/")[0]||"today");
 /* ---------- 1. folding long lists ---------- */
 const FOLDS=[["#acts",".act",6,"actions"],["#sigs",".act",5,"signals"],["#stories",".story",10,"stories"],["#rows",".fr",50,"changes"],["#t-tl",".fr",40,"events"],["#segpulse",".fr",15,"events"],
              ["#t-nw .card",".story",8,"stories"],["h2 + .grid.g2",".card",8,"brands"],["#vlist",".xq",40,"items"],["#t-rv .card",".xq",8,"quotes"],
-             [".grid",".card:has(> .answer)",2,"older briefs"]];
+             [".grid",".card:has(> .answer)",2,"older briefs"],
+             /* Social (social.js): threads, the replies inside each thread, the post stream, live web and short video */
+             ['[data-panel="threads"] > .col',".card",5,"conversations"],['[data-panel="threads"] .card > .col',".act",6,"replies"],
+             ['[data-panel="posts"] > .card',".act",15,"posts"],['[data-panel="web"] .card > .col',".act",15,"stories"],['[data-panel="shorts"] .card > .grid',".card",12,"videos"]];
 /* long written text (briefs, reports, AI reads) clamps to a readable height with "read more" */
 function clampLong(root){
   for(const el of qa("#view .card > .answer, #view .xrep",root)){

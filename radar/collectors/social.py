@@ -77,17 +77,68 @@ def _num(s) -> int:
     return int(v * mult)
 
 
+RULES_VERSION = 2   # bump when the rules below change: stored posts and comments are re-checked once
+BUSINESS = re.compile(r"\b(app|apps|order(?:ed|s)?|deliver\w*|customer\w*|users?|service|support|refund\w*|complain\w*|price\w*|pricing|fees?|"
+                      r"discount\w*|offers?|sale|launch\w*|ceo|founder\w*|startup|funding|raised?|ipo|shares?|stock|valuation|revenue|profit|"
+                      r"loss|layoffs?|hiring|brand|company|product\w*|store|stores|buy|bought|review\w*|rating|subscription|outage|down|"
+                      r"update|feature\w*|market|competitor\w*|rival\w*|acquir\w*|partner\w*|deal|users?)\b", re.I)
+
+
+def _strong(text: str, b) -> bool:
+    """Unmistakable: the company's @handle or #hashtag, its web domain, or its own styled casing (PhonePe, boAt, MakeMyTrip)."""
+    tag = re.sub(r"[^a-z0-9]", "", b.name.lower())
+    if tag and re.search(rf"(?i)[#@]{re.escape(tag)}\b", text.replace(" ", "")):
+        return True
+    host = urlparse(b.website or b.shopify or "").netloc.replace("www.", "")
+    if host and host in text.lower():
+        return True
+    handle = ((db.kv_get(f"socials:{b.name}") or {}).get("x") or "")
+    if handle and re.search(rf"(?i)@{re.escape(handle)}\b", text):
+        return True
+    if any(re.search(rf"(?i)(?<![A-Za-z0-9]){re.escape(a)}(?![A-Za-z0-9])", text) for a in b.aliases if len(a) >= 3):
+        return True   # a product line that can only mean this company (ColorFit, Galaxy Watch, Airdopes)
+    styled = b.name[1:] != b.name[1:].lower() and not b.name.isupper()
+    return bool(styled and re.search(rf"(?<![A-Za-z]){re.escape(b.name)}(?![A-Za-z])", text))
+
+
 def _about(text: str, b, *, always_context: bool = False) -> bool:
-    """The text is about company b: named (relevance rules), and for everyday-word names (Affirm, Hero, Jupiter) or short
-    video titles also on-sector once the company's own name is taken out (the sector vocabulary includes the names)."""
+    """The text is about company b. Community posts are short, so a bare name is not enough ("Sir Adrian Boult", the game
+    "Aster Pebble"): the name (relevance rules) plus either an unmistakable signal (handle, hashtag, domain, styled casing),
+    sector context with the name taken out, or for a distinctive core company business context (an order, the app, a
+    price, a launch). Everyday-word names, global companies and short-video titles need the sector context."""
+    from ..relevance import AMBIGUOUS
     if not relevant(text, b):
         return False
-    if not (always_context or b.ambiguous):
+    if _strong(text, b):
         return True
     rest = re.sub(rf"(?i)#?\b{re.escape(b.name)}\b", " ", text)
     for a in b.aliases:
         rest = re.sub(rf"(?i)#?\b{re.escape(a)}\b", " ", rest)
-    return relevant(rest, None)
+    on_sector = relevant(rest, None)
+    if always_context or b.ambiguous or b.tier == "adjacent" or b.name.lower() in AMBIGUOUS:
+        return on_sector
+    return on_sector or bool(BUSINESS.search(rest))
+
+
+def revalidate() -> int:
+    """Re-check stored community posts and comments against the current rules once per RULES_VERSION; drop the misfits."""
+    if int(db.kv_get("social:rules_version") or 0) >= RULES_VERSION:
+        return 0
+    dropped = 0
+    by_name = {b.name: b for b in settings.brands}
+    rows = db.q("SELECT platform, post_id, brand, title, text FROM social_posts WHERE platform IN ('bluesky','lemmy','mastodon','hn','web','producthunt','youtube') "
+                "AND kind<>'mention'")
+    bad = [r for r in rows if r["brand"] in by_name and not _about(f"{r['title'] or ''} {r['text'] or ''}", by_name[r["brand"]],
+                                                                    always_context=r["platform"] == "youtube" and by_name[r["brand"]].tier == "adjacent")
+]
+    with db.tx() as c:
+        for r in bad:
+            c.execute("DELETE FROM social_posts WHERE platform=? AND post_id=?", (r["platform"], r["post_id"]))
+            c.execute("DELETE FROM social_comments WHERE platform=? AND post_id=?", (r["platform"], r["post_id"]))
+            dropped += 1
+    db.kv_set("social:rules_version", RULES_VERSION)
+    log.info("social: %d stored posts no longer pass the relevance rules, removed", dropped)
+    return dropped
 
 
 def _sent(text: str) -> float:
@@ -787,6 +838,10 @@ def run() -> int:
 def _run() -> int:
     from ..schema_ext import ensure
     ensure()
+    try:
+        revalidate()
+    except Exception as e:  # noqa: BLE001
+        log.warning("social revalidate failed: %s", e)
     socials: dict = {}
 
     def load_handles() -> int:
