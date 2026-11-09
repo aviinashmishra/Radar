@@ -81,6 +81,7 @@ brands:
     segments: [earbuds, watch, neckband, speaker]
     news_terms: ["Boult Audio", "GoBoult"]
     apps: ["com.crrepa.band.boultfit", "com.HeylinkAudio.boult"]
+    exclude: ["Adrian Boult", "Boult-aux", "Sir Boult"]   # the conductor and the French village share the name
   - name: Crossbeats
     shopify: https://www.crossbeats.com
     segments: [watch, band, earbuds]
