@@ -225,6 +225,7 @@ def start_schedulers(stop: threading.Event) -> None:
         sec.scheduler = "running"
         delay += stagger
     threading.Thread(target=_prime, args=(stop,), daemon=True, name="nazar-primer").start()
+    threading.Thread(target=_prime_social, args=(stop,), daemon=True, name="nazar-social-primer").start()
 
 
 def _prime(stop: threading.Event) -> None:
@@ -251,6 +252,24 @@ def _prime(stop: threading.Event) -> None:
             log.info("primed %s: quotes ok, %d quote events, %d attention events", sec.key, n1, n2)
         except Exception:  # noqa: BLE001
             log.exception("priming %s failed", sec.key)
+
+
+def _prime_social(stop: threading.Event) -> None:
+    """Social and research would otherwise wait for each sector's whole first sweep (news, feeds, reviews ...): start them
+    straight away, a little apart, for every sector that has no social data yet or last read it over 3 hours ago."""
+    if stop.wait(20):
+        return
+    for kind in ("social", "research"):
+        for sec in sectors():
+            if stop.is_set() or sec.scheduler != "running":
+                continue
+            try:
+                s = sec.sub("social")
+                (s.kick if kind == "social" else s.research_kick)()
+            except Exception:  # noqa: BLE001
+                log.exception("starting %s for %s failed", kind, sec.key)
+            if stop.wait(8):
+                return
 
 
 def start_bot(stop: threading.Event) -> None:

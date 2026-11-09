@@ -468,6 +468,23 @@ def social_overview(days: int = 30):
     return social.overview(min(max(days, 1), 365))
 
 
+@app.get("/api/social/progress")
+def social_progress():
+    from . import social
+    return social.progress()
+
+
+@app.post("/api/social/refresh")
+def social_refresh():
+    """Read every platform for this sector now (the page's Refresh button). Cloud: the worker's medium tier."""
+    from . import social
+    if cloud.HOSTED:
+        if msg := cloud.public_lock():
+            return {"state": "locked", "message": msg}
+        return {"state": "dispatched", **cloud.dispatch("medium", settings.sector_key or None)}
+    return social.kick(force=True)
+
+
 @app.get("/api/social/posts")
 def social_posts(platform: str = "", brand: str = "", kind: str = "", days: int = 30, limit: int = 120, q: str = ""):
     from . import social
@@ -500,6 +517,17 @@ def social_reply(body: ReplyIn):
     if "error" in out:
         raise HTTPException(404, out["error"])
     return out
+
+
+@app.post("/api/research/refresh")
+def research_refresh():
+    from . import social
+    if cloud.HOSTED:
+        if msg := cloud.public_lock():
+            return {"state": "locked", "message": msg}
+        return {"state": "dispatched", **cloud.dispatch("slow", settings.sector_key or None)}
+    p = social.research_kick(force=True)
+    return {"state": "running" if p.get("running") else "idle", **p}
 
 
 @app.get("/api/research")

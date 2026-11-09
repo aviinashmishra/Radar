@@ -32,6 +32,52 @@ def _ensure() -> None:
     ensure()
 
 
+def _hosted() -> bool:
+    import os
+    return bool(os.environ.get("VERCEL")) or os.environ.get("RADAR_HOSTED") == "1"
+
+
+def kick(force: bool = False) -> dict:
+    """Make sure this sector's social read is happening: a page that finds nothing (or data older than 3 hours) starts it
+    in the background at once instead of waiting for the sweep queue. Returns the live progress for the page."""
+    from .collectors import social as col
+    prog = db.kv_get("social:progress") or {}
+    if not _hosted():
+        last = (db.kv_get("social:status:bluesky") or {}).get("at") or ""
+        empty = not db.q1("SELECT 1 FROM social_posts LIMIT 1")
+        stale = last < (datetime.now(timezone.utc) - timedelta(hours=3)).replace(microsecond=0).isoformat()
+        if (force or empty or stale) and not col.running():
+            col.start_background()
+            prog = {"running": True, "step": "starting", "done": []}
+    prog["running"] = bool(prog.get("running")) and (col.running() or _hosted())
+    prog["hosted"] = _hosted()
+    return prog
+
+
+def research_kick(force: bool = False) -> dict:
+    from .collectors import research as col
+    prog = db.kv_get("research:progress") or {}
+    if not _hosted() and (force or not db.q1("SELECT 1 FROM papers LIMIT 1")) and not col.running():
+        col.start_background()
+        prog = {"running": True}
+    prog["running"] = bool(prog.get("running")) and col.running()
+    prog["hosted"] = _hosted()
+    return prog
+
+
+def progress() -> dict:
+    """Cheap poll for the page while a read runs: which platforms are done, how many posts so far."""
+    _ensure()
+    from .collectors import social as col
+    prog = db.kv_get("social:progress") or {}
+    prog["running"] = bool(prog.get("running")) and col.running()
+    prog["posts"] = db.q1("SELECT COUNT(*) n FROM social_posts")["n"]
+    prog["comments"] = db.q1("SELECT COUNT(*) n FROM social_comments")["n"]
+    from .collectors import research as rcol
+    prog["research"] = {"running": rcol.running(), "papers": db.q1("SELECT COUNT(*) n FROM papers")["n"]}
+    return prog
+
+
 def platform_status() -> list[dict]:
     """One row per platform: is it live in this sector, what it needs if not, when it last ran."""
     _ensure()
@@ -97,7 +143,7 @@ def overview(days: int = 30) -> dict:
     today = datetime.now(timezone.utc).date()
     spark = [days_map.get((today - timedelta(days=13 - i)).isoformat(), 0) for i in range(14)]
     status = platform_status()
-    return {"days": days, "posts_7d": p7, "comments_7d": c7, "platforms_live": sum(1 for s in status if s["state"] == "live"),
+    return {"progress": kick(), "days": days, "posts_7d": p7, "comments_7d": c7, "platforms_live": sum(1 for s in status if s["state"] == "live"),
             "accounts": db.q1("SELECT COUNT(*) n FROM social_accounts")["n"], "papers": db.q1("SELECT COUNT(*) n FROM papers")["n"],
             "spark": spark, "brands": sorted(by_brand.values(), key=lambda b: -b["posts"]), "top": top, "status": status, "self": me}
 
@@ -176,7 +222,7 @@ def research(days: int = 730, brand: str = "", relation: str = "") -> dict:
         per[r["brand"]][r["relation"] if r["relation"] in ("authored", "about") else "about"] += r["n"]
         per[r["brand"]]["cited"] += r["c"] or 0
     topics = db.q("SELECT topic, COUNT(*) n FROM papers WHERE published>=? AND topic<>'' GROUP BY topic ORDER BY n DESC LIMIT 12", (since,))
-    return {"papers": rows, "by_brand": sorted(({"brand": k, **v} for k, v in per.items() if k != "Sector"), key=lambda x: -(x["authored"] * 3 + x["about"])),
+    return {"progress": research_kick(), "papers": rows, "by_brand": sorted(({"brand": k, **v} for k, v in per.items() if k != "Sector"), key=lambda x: -(x["authored"] * 3 + x["about"])),
             "topics": topics, "authored": sum(v["authored"] for v in per.values()), "about": sum(v["about"] for k, v in per.items() if k != "Sector"),
             "sector": sum(1 for r in rows if r["relation"] == "sector"), "institutions": db.q1("SELECT COUNT(*) n FROM kv WHERE k LIKE 'research_inst:%' AND v LIKE '%\"id\": \"I%'")["n"]}
 

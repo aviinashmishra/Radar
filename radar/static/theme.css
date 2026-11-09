@@ -169,6 +169,19 @@ a.chip:hover{text-decoration:none;border-color:var(--axis);background:var(--glas
 .act{border-radius:18px;padding:14px 16px;display:grid;gap:6px;position:relative;transition:opacity .25s,transform .25s var(--ease),box-shadow .25s var(--ease)} .act:hover{transform:translateY(-1px);box-shadow:var(--shadow-lift)} .act.gone{opacity:.35}
 .act .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap} .act .meta b{color:var(--ink);font-weight:600}
 .act .t{font-weight:600;font-size:14px;line-height:1.4} .act .why{color:var(--ink-2);font-size:13px} .act .btns{display:flex;gap:6px;margin-top:2px;align-items:center;flex-wrap:wrap}
+/* comment threads (social.js): a reply drafted under a comment; the box is invisible until it holds a draft */
+.replybox:empty{display:none}
+.replybox{margin-top:8px;padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px dashed var(--axis);display:grid;gap:6px}
+.replybox textarea{width:100%;min-height:76px;resize:vertical;line-height:1.45;font-size:13px;margin:0!important}
+.replybox .row{flex-wrap:wrap;row-gap:6px;margin:0!important}
+.replybox .row .small{flex:1 1 200px}
+.act .btns .small{margin-left:auto}
+.act .t a{color:inherit;text-decoration:none}
+.act .t a:hover{color:var(--accent)}
+.card details>summary{cursor:pointer;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px}
+.card details>summary::-webkit-details-marker{display:none}
+.card details>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .18s}
+.card details[open]>summary::before{transform:rotate(45deg)}
 .imp{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px;cursor:help} .dotc{width:8px;height:8px;border-radius:50%;flex:none}
 .answer{white-space:pre-wrap;font-size:13px;line-height:1.6}
 

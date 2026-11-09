@@ -756,33 +756,71 @@ def run_web() -> int:
 
 
 # ---------------------------------------------------------------- the collector
+import threading as _threading
+_RUNNING = _threading.Lock()   # one social read per sector at a time (the scheduler, the page and the hub primer share it)
+STEP_LABEL = {"bluesky": "Bluesky", "hn": "Hacker News", "web": "Live web", "lemmy": "Lemmy", "mastodon": "Mastodon", "shorts": "YouTube Shorts",
+              "reddit": "Reddit threads", "handles": "company accounts", "x": "X", "owned": "WhatsApp, Substack, Telegram", "meta": "Instagram, Facebook"}
+
+
+def running() -> bool:
+    return _RUNNING.locked()
+
+
+def start_background() -> bool:
+    """Read every platform now, off the request path; False when a read is already going on in this sector."""
+    if _RUNNING.locked():
+        return False
+    _threading.Thread(target=run, daemon=True, name="radar-social").start()
+    return True
+
+
 @tracked("social")
 def run() -> int:
+    if not _RUNNING.acquire(blocking=False):
+        return 0   # another read of this sector is in progress
+    try:
+        return _run()
+    finally:
+        _RUNNING.release()
+
+
+def _run() -> int:
     from ..schema_ext import ensure
     ensure()
-    socials = {}
-    for b in settings.brands:
-        try:
-            socials[b.name] = handles(b)
-        except Exception as e:  # noqa: BLE001
-            log.info("handles %s failed: %s", b.name, e)
-            socials[b.name] = {}
-    steps = [("x", lambda: run_x(socials), 0), ("bluesky", run_bluesky, 0), ("hn", run_hn, 0), ("reddit", run_reddit, 0),
-             ("lemmy", run_lemmy, 1), ("mastodon", run_mastodon, 1), ("web", run_web, 0), ("shorts", run_shorts, SLOW_EVERY_H),
+    socials: dict = {}
+
+    def load_handles() -> int:
+        for b in settings.brands:
+            try:
+                socials[b.name] = handles(b)
+            except Exception as e:  # noqa: BLE001
+                log.info("handles %s failed: %s", b.name, e)
+                socials[b.name] = {}
+        return 0
+    # quickest platforms first, so a page opened during the first read fills within a minute
+    steps = [("bluesky", run_bluesky, 0), ("hn", run_hn, 0), ("web", run_web, 0), ("lemmy", run_lemmy, 1), ("mastodon", run_mastodon, 1),
+             ("shorts", run_shorts, SLOW_EVERY_H), ("reddit", run_reddit, 0), ("handles", load_handles, 0), ("x", lambda: run_x(socials), 0),
              ("owned", lambda: run_owned(socials), SLOW_EVERY_H), ("meta", lambda: run_meta(socials), SLOW_EVERY_H)]
     n = 0
     SEEDED.clear()
     SEEDED.update({name: bool(db.kv_get(f"social:step:{name}")) for name, _, _ in steps})
+    done: list = []
+    db.kv_set("social:progress", {"running": True, "started": db.now(), "step": None, "done": done})
     for name, fn, every_h in steps:
         if every_h and not _due(name, every_h):
             continue
+        db.kv_set("social:progress", {"running": True, "step": STEP_LABEL.get(name, name), "done": done})
         t = time.time()
         try:
             got = fn()
             n += got
-            db.kv_set(f"social:status:{name}", {"at": db.now(), "ok": True, "new": got, "seconds": round(time.time() - t)})
+            if name != "handles":
+                db.kv_set(f"social:status:{name}", {"at": db.now(), "ok": True, "new": got, "seconds": round(time.time() - t)})
             _done(name)
+            done.append({"step": STEP_LABEL.get(name, name), "new": got})
         except Exception as e:  # noqa: BLE001 - one platform failing never stops the others
             log.warning("social step %s failed: %s", name, e)
             db.kv_set(f"social:status:{name}", {"at": db.now(), "ok": False, "error": str(e)[:200]})
+            done.append({"step": STEP_LABEL.get(name, name), "error": str(e)[:120]})
+    db.kv_set("social:progress", {"running": False, "finished": db.now(), "done": done, "new": n})
     return n
