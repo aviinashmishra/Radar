@@ -21,7 +21,8 @@ _last_hit: dict[str, float] = getattr(_sys, "_radar_last_hit", None) or {}
 _sys._radar_last_hit = _last_hit
 _lock = getattr(_sys, "_radar_hit_lock", None) or __import__("threading").Lock()
 _sys._radar_hit_lock = _lock
-RETRY_429 = {"www.reddit.com": 30, "en.wikipedia.org": 8, "wikimedia.org": 8, "play.google.com": 20, "news.google.com": 15, "itunes.apple.com": 5}
+RETRY_429 = {"www.reddit.com": 30, "en.wikipedia.org": 8, "wikimedia.org": 8, "play.google.com": 20, "news.google.com": 15, "itunes.apple.com": 5,
+             "api.gdeltproject.org": 10, "api.openalex.org": 5, "export.arxiv.org": 10, "hn.algolia.com": 5, "api.bsky.app": 10}
 
 
 def get(url: str, *, timeout: int = 25, min_gap: float = 1.0, **kw) -> requests.Response:

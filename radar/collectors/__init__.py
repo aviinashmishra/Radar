@@ -12,11 +12,15 @@ Tiers (see runner.py):
                           App Store / Play / Amazon reviews), regions (Google Trends by state, place mentions)
   slow (first)          : resolve (App Store ids, Play packages, Wikipedia titles, SEC CIKs for brands whose config
                           does not name them; cached in kv, re-checked every 14 days)
+  social       X, Bluesky, Hacker News, Reddit threads, Lemmy, Mastodon, YouTube Shorts, WhatsApp, Substack, Telegram,
+               live web (GDELT), Product Hunt; Instagram / Facebook with a Meta token (every medium sweep)
+  research     papers by and about each company (OpenAlex, arXiv) and the sector's most cited recent research (daily)
 """
 from . import (shopify, watchlist, news, reddit, feeds, youtube, searchdemand, trends, pagewatch, techstack, reviews, appstore,  # noqa: F401
-               screenshots, ads, newstores, financials, attention, channels, sales, qcommerce, voice, regions, resolve)
+               screenshots, ads, newstores, financials, attention, channels, sales, qcommerce, voice, regions, resolve,
+               social, research)
 
 FAST = [shopify]
-MEDIUM = [watchlist, news, reddit, feeds, youtube, searchdemand, trends, channels, sales]
-SLOW = [resolve, pagewatch, techstack, reviews, appstore, screenshots, ads, newstores, financials, attention, qcommerce, voice, regions]
+MEDIUM = [watchlist, news, reddit, feeds, youtube, searchdemand, trends, channels, sales, social]   # social after reddit: it threads reddit's posts
+SLOW = [resolve, pagewatch, techstack, reviews, appstore, screenshots, ads, newstores, financials, attention, qcommerce, voice, regions, research]
 ALL = FAST + MEDIUM + SLOW

@@ -32,6 +32,25 @@ CREATE INDEX IF NOT EXISTS ix_sales_day ON sales(day);
 CREATE TABLE IF NOT EXISTS reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT, kind TEXT, period TEXT, title TEXT, body TEXT, data TEXT,
   UNIQUE (kind, period));
+CREATE TABLE IF NOT EXISTS social_posts (
+  platform TEXT NOT NULL, post_id TEXT NOT NULL, brand TEXT, kind TEXT, author TEXT, handle TEXT, official INTEGER DEFAULT 0,
+  title TEXT, text TEXT, url TEXT, thumb TEXT, created TEXT, likes INTEGER DEFAULT 0, replies INTEGER DEFAULT 0,
+  reposts INTEGER DEFAULT 0, views INTEGER DEFAULT 0, sentiment REAL, seen_at TEXT, PRIMARY KEY (platform, post_id));
+CREATE INDEX IF NOT EXISTS ix_social_brand ON social_posts(brand, created);
+CREATE INDEX IF NOT EXISTS ix_social_created ON social_posts(created);
+CREATE TABLE IF NOT EXISTS social_comments (
+  platform TEXT NOT NULL, comment_id TEXT NOT NULL, post_id TEXT, parent_id TEXT, depth INTEGER DEFAULT 0, brand TEXT,
+  author TEXT, text TEXT, created TEXT, likes INTEGER DEFAULT 0, sentiment REAL, url TEXT, seen_at TEXT,
+  PRIMARY KEY (platform, comment_id));
+CREATE INDEX IF NOT EXISTS ix_social_comments_post ON social_comments(platform, post_id);
+CREATE INDEX IF NOT EXISTS ix_social_comments_brand ON social_comments(brand, created);
+CREATE TABLE IF NOT EXISTS social_accounts (
+  brand TEXT NOT NULL, platform TEXT NOT NULL, handle TEXT, url TEXT, followers INTEGER, posts_30d INTEGER, last_post TEXT,
+  status TEXT, note TEXT, checked TEXT, PRIMARY KEY (brand, platform));
+CREATE TABLE IF NOT EXISTS papers (
+  source TEXT NOT NULL, paper_id TEXT NOT NULL, brand TEXT, relation TEXT, title TEXT, venue TEXT, published TEXT,
+  cited_by INTEGER DEFAULT 0, authors TEXT, url TEXT, abstract TEXT, topic TEXT, seen_at TEXT, PRIMARY KEY (source, paper_id));
+CREATE INDEX IF NOT EXISTS ix_papers_brand ON papers(brand, published);
 """
 
 

@@ -461,6 +461,53 @@ def perspective_set(body: PerspectiveIn, response: Response):
     return perspective.state()
 
 
+# ---------------------------------------------------------------- social, web and research layer (radar/social.py)
+@app.get("/api/social")
+def social_overview(days: int = 30):
+    from . import social
+    return social.overview(min(max(days, 1), 365))
+
+
+@app.get("/api/social/posts")
+def social_posts(platform: str = "", brand: str = "", kind: str = "", days: int = 30, limit: int = 120, q: str = ""):
+    from . import social
+    return social.posts(platform, brand, kind, min(max(days, 1), 365), limit, q)
+
+
+@app.get("/api/social/threads")
+def social_threads(platform: str = "", brand: str = "", days: int = 30, limit: int = 25):
+    from . import social
+    return social.threads(platform, brand, min(max(days, 1), 365), limit)
+
+
+@app.get("/api/social/accounts")
+def social_accounts():
+    from . import social
+    return social.accounts()
+
+
+class ReplyIn(BaseModel):
+    platform: str
+    comment_id: str
+
+
+@app.post("/api/social/reply")
+def social_reply(body: ReplyIn):
+    """A reply draft for one comment, from the current seat; the page copies it and opens the comment to post it."""
+    from . import social
+    allow_ai = not (cloud.HOSTED and cloud.public_lock())   # a deployment without a password never spends the AI key
+    out = social.reply_draft(body.platform, body.comment_id, allow_ai=allow_ai)
+    if "error" in out:
+        raise HTTPException(404, out["error"])
+    return out
+
+
+@app.get("/api/research")
+def research_api(days: int = 730, brand: str = "", relation: str = ""):
+    from . import social
+    return social.research(min(max(days, 30), 3650), brand, relation)
+
+
 @app.post("/api/chat")
 def chat_api(body: ChatIn):
     if settings.ai_enabled and (msg := cloud.public_lock()):  # keyword search is free, so it still answers

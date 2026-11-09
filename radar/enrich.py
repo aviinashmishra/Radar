@@ -87,8 +87,12 @@ _KIND_BASE = {"new_product": 6, "sale_started": 8, "price_drop": 5, "price_rise"
               "stock_move": 5, "financial_result": 6, "financial_fact": 6, "attention_spike": 5, "trending_now": 6, "press": 5,
               # marketplace / quick-commerce / voice sensors (collectors channels, qcommerce, voice)
               "channel_undercut": 7, "channel_price_drop": 5, "channel_price_rise": 3, "channel_listed": 4, "channel_delisted": 4,
-              "channel_oos": 4, "channel_back": 3, "channel_rating_drop": 5, "qc_expansion": 6, "voice_wave": 6, "praise_wave": 4}
-_KIND_CAT = {"new_product": "product_launch", "hidden_product": "product_launch", "sale_started": "promotion",
+              "channel_oos": 4, "channel_back": 3, "channel_rating_drop": 5, "qc_expansion": 6, "voice_wave": 6, "praise_wave": 4,
+              # social / web / research layer (collectors social, research)
+              "viral_post": 6, "discussion": 5, "short_video": 5, "live_update": 5, "community_growth": 5, "research": 5}
+_KIND_CAT = {"viral_post": "marketing", "discussion": "reviews_buzz", "short_video": "marketing", "live_update": "other",
+             "community_growth": "marketing", "research": "product_launch",
+             "new_product": "product_launch", "hidden_product": "product_launch", "sale_started": "promotion",
              "price_drop": "pricing", "price_rise": "pricing", "discount_started": "promotion", "discount_ended": "promotion",
              "stock_out": "stock", "restock": "stock", "delisted": "product_launch", "new_collection": "promotion",
              "bestseller_move": "reviews_buzz", "news": "other", "social": "reviews_buzz", "video": "marketing",

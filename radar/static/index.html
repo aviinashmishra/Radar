@@ -83,6 +83,8 @@ tr[data-fb]:hover td,tr[data-vb]:hover td,tr[data-go]:hover td,tr[style*="cursor
 <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v9l6 6"/></symbol>
 <symbol id="i-news" viewBox="0 0 24 24"><path d="M4 5h13v14H4zM17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 13h7M7 16h4"/></symbol>
 <symbol id="i-money" viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 5-7 4 4"/><path d="M3 21h18"/></symbol>
+<symbol id="i-social" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.9l7.6-3.8M8.2 13.1l7.6 3.8"/></symbol>
+<symbol id="i-paper" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M8 7h8M8 11h6"/></symbol>
 </defs></svg>
 
 <div class="shell">
@@ -94,7 +96,9 @@ tr[data-fb]:hover td,tr[data-vb]:hover td,tr[data-go]:hover td,tr[style*="cursor
     <div class="grp">Intelligence</div>
     <a class="item" href="#/news"><svg class="i"><use href="#i-news"/></svg><span>News</span></a>
     <a class="item" href="#/voice"><svg class="i"><use href="#i-chat"/></svg><span>Reviews</span></a>
+    <a class="item" href="#/social"><svg class="i"><use href="#i-social"/></svg><span>Social</span></a>
     <a class="item" href="#/financials"><svg class="i"><use href="#i-money"/></svg><span>Financials</span></a>
+    <a class="item" href="#/research"><svg class="i"><use href="#i-paper"/></svg><span>Research</span></a>
     <a class="item" href="#/market"><svg class="i"><use href="#i-globe"/></svg><span>Market</span></a>
     <div class="grp">Competition</div>
     <a class="item" href="#/brands"><svg class="i"><use href="#i-brands"/></svg><span>Brands</span></a>
@@ -206,7 +210,7 @@ const param=()=>decodeURIComponent((location.hash.replace(/^#\/?/,"").split("/")
 window.addEventListener("hashchange",render);
 async function render(){const r=route();NAV++;$$("#nav a.item").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#/"+r));const v=$("#view");v.innerHTML='<div class="skel"><div class="ks"><div class="sk k"></div><div class="sk k"></div><div class="sk k"></div><div class="sk k"></div></div><div class="sk c"></div><div class="sk c" style="height:140px"></div><span class="sr">Loading…</span></div>';
   try{STATS=STATS||await api("/api/stats");const lr=STATS.last_runs.fast||STATS.last_runs.all;$("#sweep").textContent=lr?`stores swept ${ago(lr.at)}`:"no sweep yet";
-    await ({today:vToday,feed:vFeed,news:vNews,financials:vFinancials,brands:vBrands,brand:vBrand,segments:vSegments,segment:vSegments,pricing:vPricing,market:vMarket,briefs:vBriefs,channels:(...a)=>vChannels(...a),voice:(...a)=>vVoice(...a),regions:(...a)=>vRegions(...a),reports:(...a)=>vReports(...a),strategy:(...a)=>vStrategy(...a),settings:vSettings}[r]||vToday)(v);}
+    await ({today:vToday,feed:vFeed,news:vNews,financials:vFinancials,brands:vBrands,brand:vBrand,segments:vSegments,segment:vSegments,pricing:vPricing,market:vMarket,briefs:vBriefs,channels:(...a)=>vChannels(...a),voice:(...a)=>vVoice(...a),regions:(...a)=>vRegions(...a),reports:(...a)=>vReports(...a),strategy:(...a)=>vStrategy(...a),social:(...a)=>vSocial(...a),research:(...a)=>vResearch(...a),settings:vSettings}[r]||vToday)(v);}
   catch(e){if(e instanceof Stale)return;const is404=/ 404$/.test(e.message);v.innerHTML=`<div class="card"><b>Could not load.</b><div class="muted small">${esc(e.message)}</div>${is404?`<div class="small" style="margin-top:8px">This route is missing on the running server, which usually means the server started before the radar was updated. ${STATS&&STATS.hosted?"In cloud mode, push the update so Vercel redeploys.":'<button class="sm" data-restart>Restart the server</button>'}</div>`:""}</div>`;}
   buildBanner();}
 function head(t,s){$("#title").textContent=t;$("#subtitle").innerHTML=s||"";}
@@ -383,6 +387,7 @@ setInterval(async()=>{try{STATS=await api("/api/stats");const lr=STATS.last_runs
 /* render() and the live connection start at the end of the intel script below, once every view is defined */
 </script>
 <script src="/static/ext.js"></script>
+<script src="/static/social.js"></script>
 <script id="radar-intel">
 /* ---------- intel layer: news, financials, market size, impact ---------- */
 const cr=n=>n==null?"–":Math.abs(n)>=1e7?"₹"+(n/1e7).toLocaleString("en-IN",{maximumFractionDigits:1})+" cr":Math.abs(n)>=1e5?"₹"+(n/1e5).toLocaleString("en-IN",{maximumFractionDigits:1})+" L":"₹"+fmt(n);
