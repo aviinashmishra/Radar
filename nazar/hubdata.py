@@ -393,7 +393,11 @@ def search(q: str, limit: int = 40) -> dict:
 def ask(question: str, sector: str | None) -> dict:
     sec = engine.get(sector)
     chat = sec.sub("chat")
-    res = chat.ask(question)
+    # the public hosted site never spends the AI key (same rule as a sector's /api/chat); keyword search is free
+    if sec.settings.ai_enabled and (msg := sec.sub("cloud").public_lock()):
+        res = {"answer": chat._fallback(question), "mode": "locked", "note": msg}
+    else:
+        res = chat.ask(question)
     res["sector"] = sec.key
     res["sector_label"] = sec.label
     return res
@@ -402,6 +406,8 @@ def ask(question: str, sector: str | None) -> dict:
 def run(sector: str | None, tier: str) -> dict:
     sec = engine.get(sector)
     if engine.HOSTED:
+        if msg := sec.sub("cloud").public_lock():   # public site: visitors cannot start sweeps
+            return {"ok": False, "message": msg}
         r = sec.sub("cloud").dispatch(tier, sec.key)
         return {"ok": bool(r.get("started")), "message": f"{sec.label}: {r.get('message')}", "url": r.get("url")}
     if sec.scheduler == "external":

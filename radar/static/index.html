@@ -346,8 +346,8 @@ function cloudCard(H){const a=(u,t)=>`<a href="${esc(u)}" target="_blank" rel="n
   return`<div class="card"><h2>Cloud <span class="hint">Vercel dashboard · GitHub Actions worker</span></h2><table>
    <tr><td>Data</td><td>${H.published_at?`updated ${ago(H.published_at)}${H.tier?` · ${esc(H.tier)} tier`:""}${H.run_url?` · ${a(H.run_url,"run log")}`:""}`:'<span style="color:var(--s8)">no snapshot yet</span>'}${H.error?`<div class="small" style="color:var(--s8)">${esc(H.error)}</div>`:""}</td></tr>
    <tr><td>Worker</td><td>${H.repo?`${a(H.actions_url,H.repo+" · Actions")} · ${a(H.release_url,"snapshot files")}`:'<span style="color:var(--s8)">set RADAR_REPO (owner/name) in the Vercel project</span>'}</td></tr>
-   <tr><td>Password</td><td>${H.password?'<span class="pill i0">on</span>':'<span style="color:var(--s8)">off · anyone with the link can look; AI answers and Run stay off until RADAR_PASSWORD is set</span>'}</td></tr>
-   <tr><td>Run from here</td><td>${H.can_run?'<span class="pill i0">on</span> <span class="small muted">queues a GitHub Actions run</span>':'<span class="muted">add GITHUB_TOKEN (fine-grained, Actions: write) to the Vercel project</span>'}</td></tr>
+   <tr><td>Access</td><td><span class="pill i0">public</span> <span class="small muted">anyone with the link can look; AI answers and Run are off here so visitors cannot spend credits</span></td></tr>
+   <tr><td>Run from here</td><td><span class="muted">off on the public site · ${H.actions_url?a(H.actions_url,"start a sweep on GitHub Actions"):"sweeps run on GitHub Actions"}</span></td></tr>
    ${H.telegram_webhook?'<tr><td>Telegram bot</td><td><button class="sm" id="tgc">Connect the bot to this site</button></td></tr>':""}
   </table><div class="small muted" style="margin-top:8px">Done / Later is remembered per browser here. To change what is tracked, edit config/competitors.yaml on GitHub: the push starts a sweep.</div></div>`;}
 async function vSettings(v){head("Settings","runs, integrations, exports");const [s,ids]=await Promise.all([api("/api/stats"),api("/api/ids").catch(()=>({}))]);STATS=s;const H=s.hosted;

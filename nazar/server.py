@@ -137,6 +137,8 @@ async def api_ask(body: AskIn):
 @hub.post("/nazar/api/run")
 async def api_run(sector: str = "", tier: str = Query("medium", pattern="^(fast|medium|slow|all)$")):
     if sector == "all":
+        if engine.HOSTED and engine.primary().sub("cloud").public_lock():   # one "off here" note, not one per sector
+            return [hubdata.run(None, tier)]
         return [hubdata.run(s.key, tier) for s in engine.sectors()]
     return hubdata.run(sector or None, tier)
 
@@ -341,11 +343,7 @@ class Nazar:
         return await self._sector_request(scope, receive, send, path)
 
     async def _hub_request(self, scope, receive, send, path):
-        if engine.HOSTED:   # sector requests have the radar's own gate
-            pc = engine.primary().sub("cloud")
-            auth = next((v.decode("latin-1") for k, v in scope.get("headers") or [] if k == b"authorization"), None)
-            if path not in ("/nazar/api/health", "/favicon.ico") and pc.needs_password(path) and not pc.authorized(auth):
-                return await _plain(send, 401, "Password required", [(b"www-authenticate", b'Basic realm="Nazar", charset="UTF-8"')])
+        if engine.HOSTED:   # open to everyone: no password on the hub or the sectors
             if path.startswith("/nazar/api/"):   # every sector's latest snapshot before a cross-sector answer (one cheap check per minute each)
                 await asyncio.gather(*(run_in_threadpool(sec.sub("cloud").refresh) for sec in engine.sectors()))
         return await self.hub(scope, receive, send)
@@ -366,13 +364,6 @@ class Nazar:
         finally:
             if token is not None:
                 cfg.SEAT.reset(token)
-
-
-async def _plain(send, status: int, text: str, extra: list[tuple[bytes, bytes]] | None = None) -> None:
-    body = text.encode("utf-8")
-    await send({"type": "http.response.start", "status": status,
-                "headers": [(b"content-type", b"text/plain; charset=utf-8"), (b"content-length", str(len(body)).encode())] + (extra or [])})
-    await send({"type": "http.response.body", "body": body})
 
 
 app = Nazar(hub)

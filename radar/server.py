@@ -3,7 +3,6 @@
     python -m radar.server            -> http://127.0.0.1:8080  (scheduler runs inside, nothing else to start)
     RADAR_NO_SCHEDULER=1              -> API only (use when GitHub Actions / cron runs the collectors)
     on Vercel (app.py)                -> cloud mode: serves the snapshot GitHub Actions publishes (see cloud.py)
-    RADAR_PASSWORD=...                -> browser asks for a password (any user name) before showing anything
 """
 from __future__ import annotations
 import asyncio
@@ -61,11 +60,8 @@ app = FastAPI(title="Pebble Competitor Radar", version="1.2", lifespan=lifespan)
 
 @app.middleware("http")
 async def gate(request: Request, call_next):
-    """Password check (when RADAR_PASSWORD is set), and in cloud mode the latest snapshot before answering."""
+    """Open to everyone (no password); in cloud mode the latest snapshot before answering."""
     path = request.url.path
-    if cloud.needs_password(path) and not cloud.authorized(request.headers.get("authorization")):
-        return Response("Password required", status_code=401,
-                        headers={"WWW-Authenticate": 'Basic realm="Pebble Radar", charset="UTF-8"'})
     if cloud.HOSTED and path != "/favicon.ico":
         await run_in_threadpool(cloud.refresh)
     raw = request.cookies.get(SEAT_COOKIE)      # this browser's seat for this sector; absent = the server's default
@@ -512,7 +508,7 @@ class ReplyIn(BaseModel):
 def social_reply(body: ReplyIn):
     """A reply draft for one comment, from the current seat; the page copies it and opens the comment to post it."""
     from . import social
-    allow_ai = not (cloud.HOSTED and cloud.public_lock())   # a deployment without a password never spends the AI key
+    allow_ai = not (cloud.HOSTED and cloud.public_lock())   # the public hosted site never spends the AI key
     out = social.reply_draft(body.platform, body.comment_id, allow_ai=allow_ai)
     if "error" in out:
         raise HTTPException(404, out["error"])

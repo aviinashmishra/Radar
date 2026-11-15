@@ -105,7 +105,6 @@ Optional keys in `.env` (copy `.env.example`):
 | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | Push alerts for events scored >= `ALERT_THRESHOLD` (default 6) and all signals |
 | `WEBHOOK_URL` | Same alerts to a Discord or Slack incoming webhook |
 | `META_ACCESS_TOKEN` | Meta Ad Library collector (new creatives, ad longevity) |
-| `RADAR_PASSWORD` | The browser asks for this password (any user name) before showing anything. Use it whenever the dashboard is reachable by others. |
 
 ## Deploy to Vercel (cloud, no server to keep running)
 
@@ -134,12 +133,13 @@ bot. So the radar runs in two halves that need no server of their own:
    variables > Actions): `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, ...
 2. On [vercel.com/new](https://vercel.com/new), import the repository. Vercel detects FastAPI from `app.py`;
    keep the defaults.
-3. Under the project's **Settings > Environment Variables**, add at least `RADAR_PASSWORD`, then redeploy.
+3. The site is public: anyone with the link can look, no password. Ask-the-Radar AI answers, Run and AI briefs are
+   switched off on the hosted site so visitors cannot spend your credits; sweeps run on GitHub Actions on their schedule.
+   Optional settings go under the project's **Settings > Environment Variables** (then redeploy).
 
 | Vercel variable | Needed? | What it does |
 |---|---|---|
-| `RADAR_PASSWORD` | strongly recommended | Password prompt (any user name). Without it the dashboard is public, and Ask-the-Radar AI answers, Run and AI briefs are switched off so strangers cannot spend your credits. |
-| `GITHUB_TOKEN` | optional | [Fine-grained token](https://github.com/settings/personal-access-tokens/new) for this one repo with **Actions: Read and write**: the Run buttons and Telegram `/run` start a workflow run. If the repo is private, also give it **Contents: Read** (the dashboard then reads the snapshot through the API). |
+| `GITHUB_TOKEN` | optional | [Fine-grained token](https://github.com/settings/personal-access-tokens/new) for this one repo with **Actions: Read and write**: Telegram `/run` and the heartbeat start a workflow run (the site's Run buttons stay off on the public site). If the repo is private, also give it **Contents: Read** (the dashboard then reads the snapshot through the API). |
 | `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` | optional | AI answers in Ask the Radar and AI-written briefs on demand. Scoring happens on GitHub Actions, so the repo secret is what matters for that. |
 | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | optional | Two-way bot without a server: Settings > **Connect the bot to this site** registers a webhook. It answers only your chat. (A webhook replaces polling, so the local server's bot stops answering until you call `POST /api/telegram/connect?off=1`.) |
 | `CRON_SECRET` | optional | A daily Vercel cron calls `/api/cron/heartbeat`; with this set, a snapshot older than 3 hours sends a Telegram / webhook warning and, with `GITHUB_TOKEN`, restarts the worker. |
@@ -315,7 +315,7 @@ radar/alerts.py           Telegram / webhook / console
 radar/brief.py            daily and weekly brief
 radar/chat.py             Ask the Radar (tool-use loop)
 radar/runner.py           scheduler and CLI
-radar/server.py           FastAPI: dashboard, SSE stream, JSON API, password gate
+radar/server.py           FastAPI: dashboard, SSE stream, JSON API
 radar/cloud.py            cloud mode: snapshot pull / push, Vercel refresh, GitHub dispatch, webhook, heartbeat
 radar/static/theme.css    design system shared by the hub and every sector dashboard (tokens, light/dark, components)
 radar/static/index.html   dashboard shell and the core views; long pages (Market, Financials, Pricing, Reviews, Channels, Strategy) are tabbed

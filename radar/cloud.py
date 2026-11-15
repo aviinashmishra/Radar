@@ -16,10 +16,8 @@ and the Telegram bot answers through a webhook instead of polling.
 """
 from __future__ import annotations
 import argparse
-import base64
 import gzip
 import hashlib
-import hmac
 import logging
 import os
 import re
@@ -43,7 +41,6 @@ BRANCH = os.environ.get("RADAR_BRANCH", "main")
 TAG = os.environ.get("RADAR_DATA_TAG", "data")
 WORKFLOW = os.environ.get("RADAR_WORKFLOW", "radar.yml")
 TOKEN = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or ""
-PASSWORD = os.environ.get("RADAR_PASSWORD", "")
 API = os.environ.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
 WEB = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
 TTL = int(os.environ.get("RADAR_SNAPSHOT_TTL", "60"))
@@ -278,17 +275,17 @@ def info() -> dict | None:
     snap = db.kv_get("snapshot") or {}
     return {"repo": REPO, "published_at": snap.get("at"), "tier": snap.get("tier"), "run_url": snap.get("run_url"),
             "loaded_at": _state["loaded_at"], "error": _state["error"], "can_run": bool(TOKEN and REPO),
-            "password": bool(PASSWORD), "telegram_webhook": bool(settings.telegram_token),
+            "telegram_webhook": bool(settings.telegram_token),
             "release_url": f"{WEB}/{REPO}/releases/tag/{TAG}" if REPO else None,
             "actions_url": f"{WEB}/{REPO}/actions/workflows/{WORKFLOW}" if REPO else None}
 
 
 # ---------------------------------------------------------------- hosted actions
 def public_lock() -> str | None:
-    """On a deployment without a password, anything that spends AI credits or starts work is switched off."""
-    if HOSTED and not PASSWORD:
-        return ("This deployment has no password, so actions that use your AI key or start sweeps are off. "
-                "Set RADAR_PASSWORD in the Vercel project settings and redeploy.")
+    """The hosted site is open to everyone, so anything that spends AI credits or starts work is switched off there."""
+    if HOSTED:
+        return ("The live site is open to everyone, so actions that use the AI key or start sweeps are off here. "
+                "Sweeps run on GitHub Actions on their own schedule (or start one from the repo's Actions tab).")
     return None
 
 
@@ -316,26 +313,6 @@ def shot(name: str) -> bytes:
     if not asset:
         raise NoSnapshot(name)
     return _asset_bytes(asset)
-
-
-def authorized(header: str | None) -> bool:
-    """HTTP Basic auth against RADAR_PASSWORD (any user name). Always true when no password is set."""
-    if not PASSWORD:
-        return True
-    if not header or not header.lower().startswith("basic "):
-        return False
-    try:
-        pw = base64.b64decode(header[6:].strip()).decode("utf-8", "replace").partition(":")[2]
-    except Exception:  # noqa: BLE001
-        return False
-    return hmac.compare_digest(pw.encode(), PASSWORD.encode())
-
-
-OPEN_PATHS = {"/api/health", "/favicon.ico", "/api/telegram/webhook"}  # each checks its own secret where needed
-
-
-def needs_password(path: str) -> bool:
-    return bool(PASSWORD) and path not in OPEN_PATHS and not path.startswith("/api/cron/")
 
 
 def heartbeat(act: bool) -> dict:
