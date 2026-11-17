@@ -13,7 +13,8 @@ Tiers (see runner.py):
   slow (first)          : resolve (App Store ids, Play packages, Wikipedia titles, SEC CIKs for brands whose config
                           does not name them; cached in kv, re-checked every 14 days)
   social       X, Bluesky, Hacker News, Reddit threads, Lemmy, Mastodon, YouTube Shorts, WhatsApp, Substack, Telegram,
-               live web (GDELT), Product Hunt; Instagram / Facebook with a Meta token (every medium sweep)
+               live web (GDELT), Product Hunt; X / Instagram / Facebook posts, videos and Reels about each company through
+               a search key + the platforms' embeds (socialindex.py); whole Meta feeds with a Graph token (every medium sweep)
   research     papers by and about each company (OpenAlex, arXiv) and the sector's most cited recent research (daily)
 """
 from . import (shopify, watchlist, news, reddit, feeds, youtube, searchdemand, trends, pagewatch, techstack, reviews, appstore,  # noqa: F401

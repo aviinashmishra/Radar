@@ -50,6 +50,10 @@ jobs:
       INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}   # optional: Instagram followers, posts and Reels (Graph API business_discovery)
       INSTAGRAM_BUSINESS_ID: ${{ secrets.INSTAGRAM_BUSINESS_ID }}
       FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}     # optional: Facebook page followers and posts (Page Public Content Access)
+      BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}      # optional (one of the two): finds X, Instagram and Facebook posts and Reels naming each company
+      SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+      SOCIAL_SEARCH_DAILY: ${{ vars.SOCIAL_SEARCH_DAILY || '30' }}   # searches per sector per day
+      X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}    # optional: X API v2 recent search and reply threads
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}

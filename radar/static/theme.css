@@ -119,6 +119,7 @@ tr.go{cursor:pointer} tr.go:hover td{background:var(--accent-soft)} tr:hover td:
 .pill.i9{background:var(--critical);color:#fff;box-shadow:0 4px 12px -6px var(--critical)} .pill.i7{background:var(--serious);color:#111} .pill.i5{background:var(--warn);color:#111} .pill.i0{background:var(--surface-2);color:var(--ink-2)}
 .chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--ink-2);background:var(--glass-2);margin:2px 3px 2px 0;white-space:nowrap;line-height:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;transition:border-color .15s,background .15s}
 .story .pubs .chip{max-width:240px}
+.vtile{width:100%;aspect-ratio:16/10;border-radius:12px;display:grid;place-items:center;font-size:26px;color:var(--c,var(--accent));background:linear-gradient(135deg,color-mix(in srgb,var(--c,var(--accent)) 22%,transparent),color-mix(in srgb,var(--c,var(--accent)) 6%,var(--glass-2)));border:1px solid color-mix(in srgb,var(--c,var(--accent)) 30%,var(--line))}
 .chip i{width:7px;height:7px;border-radius:50%;background:var(--c,var(--accent));display:inline-block;box-shadow:0 0 0 2px color-mix(in srgb,var(--c,var(--accent)) 22%,transparent)}
 .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)} .chip.btn{cursor:pointer} .chip.btn:hover{border-color:var(--axis);background:var(--glass-strong)}
 a.chip:hover{text-decoration:none;border-color:var(--axis);background:var(--glass-strong)}

@@ -4,7 +4,8 @@ Where each platform comes from (no login anywhere; the two Meta platforms use th
 
   handles     each company's own accounts, read off the links on its website (kv socials:<brand>, weekly);
               companies.yaml `socials:` overrides them
-  X           the public embed timeline of the company's handle: posts, likes, replies, reposts, followers
+  X           the public embed timeline of the company's handle: posts, likes, replies, reposts, followers; and every
+              post naming the company, found through the public web index, filled from X's embed (socialindex.py)
   Bluesky     public search for posts naming the company, plus whole reply threads of the busiest ones
   Hacker News stories about the company and every comment and reply under them; comments that mention it elsewhere
   Reddit      posts the reddit collector found, with their comment trees (reply nesting kept)
@@ -16,8 +17,11 @@ Where each platform comes from (no login anywhere; the two Meta platforms use th
   Telegram    the company's public channel preview (where the network allows it)
   Web (live)  GDELT: articles from news sites worldwide in the last hours, live blogs flagged
   Product Hunt launches that name a tracked company
-  Instagram   followers, posts and Reels through business_discovery (INSTAGRAM_ACCESS_TOKEN + INSTAGRAM_BUSINESS_ID)
-  Facebook    page followers and posts (FACEBOOK_ACCESS_TOKEN, or META_ACCESS_TOKEN with page read access)
+  Instagram   posts and Reels by and about each company (likes, comments, captions) and followers, found through the
+              public web index (socialindex.py); with INSTAGRAM_ACCESS_TOKEN + INSTAGRAM_BUSINESS_ID, whole feeds
+              through business_discovery
+  Facebook    posts, videos and Reels by and about each company through the web index, numbers from Facebook's own
+              video embed, followers from its page embed; with FACEBOOK_ACCESS_TOKEN (or META_ACCESS_TOKEN), page feeds
 
 Posts land in social_posts, comments and replies in social_comments (parent_id + depth keep the thread shape),
 accounts in social_accounts. Notable items (a post going viral, a hot thread, a live blog) also become events, so they
@@ -187,7 +191,10 @@ def post(platform: str, post_id: str, brand: str, kind: str, *, author: str = ""
         new = c.execute("SELECT 1 FROM social_posts WHERE platform=? AND post_id=?", (platform, post_id)).fetchone() is None
         c.execute("INSERT INTO social_posts(platform,post_id,brand,kind,author,handle,official,title,text,url,thumb,created,likes,replies,"
                   "reposts,views,sentiment,seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(platform,post_id) DO UPDATE SET "
-                  "likes=excluded.likes, replies=excluded.replies, reposts=excluded.reposts, views=MAX(views, excluded.views), seen_at=excluded.seen_at",
+                  "likes=MAX(likes, excluded.likes), replies=MAX(replies, excluded.replies), reposts=MAX(reposts, excluded.reposts), "
+                  "views=MAX(views, excluded.views), official=MAX(official, excluded.official), "
+                  "thumb=CASE WHEN excluded.thumb<>'' THEN excluded.thumb ELSE thumb END, "
+                  "text=CASE WHEN length(excluded.text)>length(COALESCE(text,'')) THEN excluded.text ELSE text END, seen_at=excluded.seen_at",
                   (platform, str(post_id)[:300], brand, kind, (author or "")[:120], (handle or "")[:120], int(bool(official)), (title or "")[:300],
                    text[:2000], url or "", thumb or "", created or _iso(None), int(likes or 0), int(replies or 0), int(reposts or 0),
                    int(views or 0), _sent(f"{title} {text}"), db.now()))
@@ -261,6 +268,8 @@ def _discover(site: str) -> dict:
     for platform, rx in LINKS.items():
         found = Counter(m.rstrip("/.").split("?")[0] for m in re.findall(rx, body, re.I))
         for h, _ in found.most_common():
+            if h.isdigit() and len(h) < 10:   # a year or a counter in a link ("facebook.com/2008"), not an account
+                continue
             if h.lower() not in SKIP.get(platform, set()):
                 out[platform] = h
                 break
@@ -669,24 +678,37 @@ def run_owned(socials: dict) -> int:
 GRAPH = "https://graph.facebook.com/v21.0/"
 
 
+def _index_live(brand: str, platform: str) -> bool:
+    """The web index (socialindex.py) already has this account's audience: a failed Graph read must not hide it."""
+    return bool(db.q1("SELECT 1 FROM social_accounts WHERE brand=? AND platform=? AND status='live'", (brand, platform)))
+
+
 def run_meta(socials: dict) -> int:
     n = 0
     ig_token, ig_user = os.environ.get("INSTAGRAM_ACCESS_TOKEN"), os.environ.get("INSTAGRAM_BUSINESS_ID")
     fb_token = os.environ.get("FACEBOOK_ACCESS_TOKEN") or os.environ.get("META_ACCESS_TOKEN")
+    if not (ig_token and ig_user) or not fb_token:   # earlier sweeps marked these; the web index reads them now
+        with db.tx() as c:
+            for p, ok in (("instagram", ig_token and ig_user), ("facebook", fb_token)):
+                if not ok:
+                    c.execute("UPDATE social_accounts SET status='found', note='read through the public web index (no login)' "
+                              "WHERE status='needs_token' AND platform=?", (p,))
     for b in settings.brands:
         s = socials.get(b.name, {})
         if s.get("instagram"):
             h = s["instagram"]
             if not (ig_token and ig_user):
-                account(b.name, "instagram", h, profile_url("instagram", h), status="needs_token",
-                        note="Instagram shows profiles only to signed-in users: set INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_BUSINESS_ID")
+                if not db.q1("SELECT 1 FROM social_accounts WHERE brand=? AND platform='instagram'", (b.name,)):
+                    account(b.name, "instagram", h, profile_url("instagram", h), status="found", note="read through the public web index (no login)")
             else:
                 fields = (f"business_discovery.username({h}){{followers_count,media_count,media.limit(15){{id,caption,media_type,media_product_type,"
                           "like_count,comments_count,timestamp,permalink,thumbnail_url,media_url}}")
                 d = _jget(GRAPH + ig_user, params={"fields": fields, "access_token": ig_token}, min_gap=1.0)
                 bd = (d or {}).get("business_discovery")
                 if not bd:
-                    account(b.name, "instagram", h, profile_url("instagram", h), status="unreachable", note="Graph API did not return this account")
+                    if not _index_live(b.name, "instagram"):
+                        account(b.name, "instagram", h, profile_url("instagram", h), status="found",
+                                note="Graph API did not return this account; read through the public web index")
                 else:
                     recent = 0
                     for m in (bd.get("media") or {}).get("data", []):
@@ -699,14 +721,15 @@ def run_meta(socials: dict) -> int:
         if s.get("facebook"):
             h = s["facebook"]
             if not fb_token:
-                account(b.name, "facebook", h, profile_url("facebook", h), status="needs_token",
-                        note="Facebook pages need a Graph API token: set FACEBOOK_ACCESS_TOKEN (Page Public Content Access)")
+                if not db.q1("SELECT 1 FROM social_accounts WHERE brand=? AND platform='facebook'", (b.name,)):
+                    account(b.name, "facebook", h, profile_url("facebook", h), status="found", note="read through the public web index (no login)")
             else:
                 d = _jget(GRAPH + h, params={"fields": "name,followers_count,fan_count,posts.limit(10){id,message,created_time,permalink_url,shares,"
                                                        "comments.limit(0).summary(true),reactions.limit(0).summary(true)}", "access_token": fb_token}, min_gap=1.0)
                 if not d:
-                    account(b.name, "facebook", h, profile_url("facebook", h), status="needs_token",
-                            note="the token cannot read this page (needs Page Public Content Access)")
+                    if not _index_live(b.name, "facebook"):
+                        account(b.name, "facebook", h, profile_url("facebook", h), status="found",
+                                note="the Meta token cannot read this page (needs Page Public Content Access); read through the public web index")
                 else:
                     for p in (d.get("posts") or {}).get("data", []):
                         n += post("facebook", p["id"], b.name, "post", author=d.get("name") or h, handle=h, official=True, text=p.get("message") or "",
@@ -810,7 +833,8 @@ def run_web() -> int:
 import threading as _threading
 _RUNNING = _threading.Lock()   # one social read per sector at a time (the scheduler, the page and the hub primer share it)
 STEP_LABEL = {"bluesky": "Bluesky", "hn": "Hacker News", "web": "Live web", "lemmy": "Lemmy", "mastodon": "Mastodon", "shorts": "YouTube Shorts",
-              "reddit": "Reddit threads", "handles": "company accounts", "x": "X", "owned": "WhatsApp, Substack, Telegram", "meta": "Instagram, Facebook"}
+              "reddit": "Reddit threads", "handles": "company accounts", "x": "X timelines", "index": "X, Instagram, Facebook (posts, Reels)",
+              "owned": "WhatsApp, Substack, Telegram", "meta": "Instagram, Facebook (Graph API)"}
 
 
 def running() -> bool:
@@ -853,9 +877,12 @@ def _run() -> int:
                 socials[b.name] = {}
         return 0
     # quickest platforms first, so a page opened during the first read fills within a minute
+    def run_index() -> int:
+        from . import socialindex
+        return socialindex.run(socials)
     steps = [("bluesky", run_bluesky, 0), ("hn", run_hn, 0), ("web", run_web, 0), ("lemmy", run_lemmy, 1), ("mastodon", run_mastodon, 1),
              ("shorts", run_shorts, SLOW_EVERY_H), ("reddit", run_reddit, 0), ("handles", load_handles, 0), ("x", lambda: run_x(socials), 0),
-             ("owned", lambda: run_owned(socials), SLOW_EVERY_H), ("meta", lambda: run_meta(socials), SLOW_EVERY_H)]
+             ("index", run_index, 0), ("owned", lambda: run_owned(socials), SLOW_EVERY_H), ("meta", lambda: run_meta(socials), SLOW_EVERY_H)]
     n = 0
     SEEDED.clear()
     SEEDED.update({name: bool(db.kv_get(f"social:step:{name}")) for name, _, _ in steps})

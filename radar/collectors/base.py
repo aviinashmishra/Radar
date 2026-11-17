@@ -14,6 +14,15 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PebbleRadar/1.0 (+competitive-in
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept-Language": "en-IN,en;q=0.8"})
 
+# IPv4 first. requests tries a host's IPv6 address before its IPv4 one and has no fallback race, so a network whose IPv6
+# route to a host is broken stalls every call for a minute (Yahoo search and Yahoo Finance from the office line: IPv6
+# never answers, IPv4 answers in a second). Every public source read here has an IPv4 address. RADAR_IPV6=1 opts out.
+import os as _os
+if _os.environ.get("RADAR_IPV6") != "1":
+    import socket as _socket
+    import urllib3.util.connection as _uconn
+    _uconn.allowed_gai_family = lambda: _socket.AF_INET
+
 # Nazar loads this package once per sector, so the per-host clock lives on `sys`: ten sectors polling Reddit, Google
 # News or Wikipedia at once then still look like one polite client instead of ten (which is what earned the 429s).
 import sys as _sys

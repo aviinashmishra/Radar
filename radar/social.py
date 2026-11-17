@@ -17,6 +17,7 @@ from .config import settings
 from .collectors.social import PLATFORM_LABEL
 
 ENGAGE = "(likes + 2*replies + 3*reposts + views/100.0)"   # one comparable number across platforms
+POSTS = "kind<>'context'"   # 'context' rows are only the header of a conversation (an X post a complaint replies to)
 
 
 def _since(days: int) -> str:
@@ -82,26 +83,46 @@ def progress() -> dict:
     return prog
 
 
+def index_info() -> dict:
+    """Search key, today's searches left, last error: as the worker that ran the step saw it (the hosted page has no keys)."""
+    from .collectors import socialindex
+    return (_hosted() and db.kv_get("social:index_info")) or socialindex.status()
+
+
 def platform_status() -> list[dict]:
     """One row per platform: is it live in this sector, what it needs if not, when it last ran."""
     _ensure()
-    posts = {r["platform"]: r for r in db.q("SELECT platform, COUNT(*) n, MAX(seen_at) last FROM social_posts GROUP BY platform")}
+    posts = {r["platform"]: r for r in db.q(f"SELECT platform, COUNT(*) n, MAX(seen_at) last FROM social_posts WHERE {POSTS} GROUP BY platform")}
     comments = {r["platform"]: r["n"] for r in db.q("SELECT platform, COUNT(*) n FROM social_comments GROUP BY platform")}
     accts = defaultdict(lambda: defaultdict(int))
     for r in db.q("SELECT platform, status, COUNT(*) n FROM social_accounts GROUP BY platform, status"):
         accts[r["platform"]][r["status"]] = r["n"]
-    step_of = {"x": "x", "bluesky": "bluesky", "hn": "hn", "reddit": "reddit", "lemmy": "lemmy", "mastodon": "mastodon", "web": "web",
+    step_of = {"x": ("x", "index"), "bluesky": "bluesky", "hn": "hn", "reddit": "reddit", "lemmy": "lemmy", "mastodon": "mastodon", "web": "web",
                "producthunt": "web", "youtube": "shorts", "whatsapp": "owned", "substack": "owned", "telegram": "owned",
-               "instagram": "meta", "facebook": "meta", "linkedin": "owned", "threads": "owned"}
+               "instagram": ("index", "meta"), "facebook": ("index", "meta"), "linkedin": "owned", "threads": "owned"}
+    info = index_info()
+    engine = {"brave": "Brave Search", "serper": "Google search (Serper)"}.get(info.get("provider") or "", "")
+    nokey = "add a search key (BRAVE_API_KEY or SERPER_API_KEY) to find every post and Reel naming each company"
+    via = {"x": "company timelines from X's embed timeline"
+                + (f"; every post naming each company through {engine}, numbers from X's embeds" if engine else f" · {nokey}")
+                + (" · X API search on" if info.get("x_api") else ""),
+           "instagram": (f"posts and Reels through {engine} (likes, comments, captions), followers from the same index" if engine
+                         else f"read earlier · {nokey}"),
+           "facebook": "followers from Facebook's page embed"
+                + (f"; posts, videos and Reels through {engine}, numbers from Facebook's video embed" if engine else f" · {nokey}")}
     out = []
     for p, label in PLATFORM_LABEL.items():
-        st = db.kv_get(f"social:status:{step_of.get(p, p)}") or {}
+        steps = step_of.get(p, p)
+        sts = [db.kv_get(f"social:status:{k}") or {} for k in ((steps,) if isinstance(steps, str) else steps)]
+        st = max(sts, key=lambda x: x.get("at") or "")   # the platform's most recent read, whichever step it was
         a = accts.get(p, {})
         n_posts = (posts.get(p) or {}).get("n", 0) if posts.get(p) else 0
-        if a.get("needs_token"):
+        if a.get("needs_token") and not (n_posts or a.get("live")):
             state, why = "needs_token", "sign-in wall: add a Meta Graph API token to read it"
+        elif p in ("x", "instagram", "facebook") and not engine and not (n_posts or a.get("live")):
+            state, why = "needs_key", ("Instagram shows nothing to anonymous readers: " if p == "instagram" else "") + nokey
         elif n_posts or a.get("live"):
-            state, why = "live", ""
+            state, why = "live", via.get(p, "")
         elif p in ("linkedin", "threads") and a.get("found"):
             state, why = "links", "no public feed: profiles linked from each company"
         elif a.get("unreachable"):
@@ -121,7 +142,7 @@ def overview(days: int = 30) -> dict:
     _ensure()
     since = _since(days)
     me = _me()
-    rows = db.q(f"SELECT brand, platform, COUNT(*) n, SUM({ENGAGE}) eng, AVG(sentiment) s FROM social_posts WHERE created>=? AND brand NOT IN ('Sector') "
+    rows = db.q(f"SELECT brand, platform, COUNT(*) n, SUM({ENGAGE}) eng, AVG(sentiment) s FROM social_posts WHERE created>=? AND brand NOT IN ('Sector') AND {POSTS} "
                 "GROUP BY brand, platform", (since,))
     by_brand: dict[str, dict] = {}
     for r in rows:
@@ -140,25 +161,30 @@ def overview(days: int = 30) -> dict:
     for b in by_brand.values():
         b["share_pct"] = round(b["posts"] * 100 / total, 1)
     c7 = db.q1("SELECT COUNT(*) n FROM social_comments WHERE created>=?", (_since(7),))["n"]
-    p7 = db.q1("SELECT COUNT(*) n FROM social_posts WHERE created>=?", (_since(7),))["n"]
-    top = db.q(f"SELECT *, {ENGAGE} eng FROM social_posts WHERE created>=? ORDER BY eng DESC LIMIT 12", (_since(14),))
-    day_rows = db.q("SELECT substr(created,1,10) d, COUNT(*) n FROM social_posts WHERE created>=? GROUP BY d", (_since(14),))
+    p7 = db.q1(f"SELECT COUNT(*) n FROM social_posts WHERE created>=? AND {POSTS}", (_since(7),))["n"]
+    top = db.q(f"SELECT *, {ENGAGE} eng FROM social_posts WHERE created>=? AND {POSTS} ORDER BY eng DESC LIMIT 12", (_since(14),))
+    day_rows = db.q(f"SELECT substr(created,1,10) d, COUNT(*) n FROM social_posts WHERE created>=? AND {POSTS} GROUP BY d", (_since(14),))
     days_map = {r["d"]: r["n"] for r in day_rows}
     today = datetime.now(timezone.utc).date()
     spark = [days_map.get((today - timedelta(days=13 - i)).isoformat(), 0) for i in range(14)]
     status = platform_status()
     return {"progress": kick(), "days": days, "posts_7d": p7, "comments_7d": c7, "platforms_live": sum(1 for s in status if s["state"] == "live"),
             "accounts": db.q1("SELECT COUNT(*) n FROM social_accounts")["n"], "papers": db.q1("SELECT COUNT(*) n FROM papers")["n"],
-            "spark": spark, "brands": sorted(by_brand.values(), key=lambda b: -b["posts"]), "top": top, "status": status, "self": me}
+            "spark": spark, "brands": sorted(by_brand.values(), key=lambda b: -b["posts"]), "top": top, "status": status, "self": me,
+            "index": index_info()}
 
 
 def posts(platform: str = "", brand: str = "", kind: str = "", days: int = 30, limit: int = 120, q: str = "") -> list[dict]:
     _ensure()
-    sql, args = f"SELECT *, {ENGAGE} eng FROM social_posts WHERE created>=?", [_since(days)]
-    for col, val in (("platform", platform), ("brand", brand), ("kind", kind)):
+    sql, args = f"SELECT *, {ENGAGE} eng FROM social_posts WHERE created>=? AND {POSTS}", [_since(days)]
+    for col, val in (("platform", platform), ("brand", brand)):
         if val:
             sql += f" AND {col}=?"
             args.append(val)
+    kinds = [k for k in (kind or "").split(",") if k.strip()]   # "reel,short,video": every short-video kind at once
+    if kinds:
+        sql += f" AND kind IN ({','.join('?' * len(kinds))})"
+        args += [k.strip() for k in kinds]
     if q:
         sql += " AND (title LIKE ? OR text LIKE ?)"
         args += [f"%{q}%", f"%{q}%"]
@@ -265,7 +291,8 @@ def hub_summary(days: int = 7) -> dict:
     """Small per-sector numbers for the Nazar hub."""
     _ensure()
     since = _since(days)
-    return {"posts": db.q1("SELECT COUNT(*) n FROM social_posts WHERE created>=?", (since,))["n"],
+    return {"posts": db.q1(f"SELECT COUNT(*) n FROM social_posts WHERE created>=? AND {POSTS}", (since,))["n"],
             "comments": db.q1("SELECT COUNT(*) n FROM social_comments WHERE created>=?", (since,))["n"],
             "papers": db.q1("SELECT COUNT(*) n FROM papers")["n"],
-            "top": db.q(f"SELECT platform, brand, title, text, url, created, {ENGAGE} eng FROM social_posts WHERE created>=? ORDER BY eng DESC LIMIT 5", (since,))}
+            "top": db.q(f"SELECT platform, brand, title, text, url, created, {ENGAGE} eng FROM social_posts WHERE created>=? AND {POSTS} "
+                        "ORDER BY eng DESC LIMIT 5", (since,))}
