@@ -59,14 +59,28 @@ FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle 
            '<circle cx="28" cy="27" r="2.2" fill="#fff"/></svg>')
 
 
+def _public() -> bool:
+    """The hosted deployment is the public site (radar/cloud.PUBLIC): pages hide the operator's controls."""
+    return engine.HOSTED and os.environ.get("NAZAR_PUBLIC", "1") != "0"
+
+
 @hub.get("/", response_class=HTMLResponse)
 def home():
-    return HTMLResponse((STATIC / "index.html").read_text(encoding="utf-8"), headers={"Cache-Control": "no-cache"})
+    html = (STATIC / "index.html").read_text(encoding="utf-8")
+    if _public():
+        html = html.replace("<html ", '<html data-public="1" ', 1)
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 
 
 @hub.get("/favicon.ico", include_in_schema=False)
 def favicon():
     return Response(FAVICON, media_type="image/svg+xml")
+
+
+@hub.get("/robots.txt", include_in_schema=False)
+def robots():
+    # pages are for people and search engines; the JSON API, exports and screenshots are not worth crawling
+    return Response("User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /nazar/api/\nDisallow: /shots/\n", media_type="text/plain")
 
 
 @hub.get("/nazar/static/{name}", include_in_schema=False)
@@ -207,6 +221,24 @@ def api_health():
     return h
 
 
+NOT_FOUND = """<!doctype html><html lang="en" data-theme="auto"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not found · Nazar</title><link rel="icon" href="/favicon.ico"><link rel="stylesheet" href="/nazar/static/theme.css">
+<style>body{min-height:100vh;display:grid;place-items:center;padding:16px}.card{max-width:440px;text-align:center;display:grid;gap:12px;padding:32px}
+h1{font-size:22px;letter-spacing:-.02em}a.btn{justify-self:center;padding:9px 18px;border-radius:999px;background:var(--accent);color:var(--accent-ink,#fff);font-weight:600}
+a.btn:hover{text-decoration:none}</style>
+<script>try{var t=localStorage.getItem("theme")||"auto";document.documentElement.dataset.theme=t;document.documentElement.dataset.dark=matchMedia("(prefers-color-scheme: dark)").matches?"1":"0"}catch(e){}</script></head>
+<body><div class="card"><h1>This page is not here</h1><div class="muted">The link may be old, or the address has a typo. Every sector and company is one search away from the home page.</div>
+<a class="btn" href="/">Go to Nazar</a></div></body></html>"""
+
+
+@hub.get("/{rest:path}", include_in_schema=False)
+def not_found(rest: str):
+    """Last route: an unknown page gets a page back (unknown API paths keep their JSON 404)."""
+    if rest.startswith("nazar/"):
+        raise HTTPException(404)
+    return HTMLResponse(NOT_FOUND, status_code=404)
+
+
 # ---------------------------------------------------------------- dispatcher: sector apps behind one origin
 def _cookie(scope, name: str) -> str | None:
     for k, v in scope.get("headers") or []:
@@ -240,6 +272,75 @@ def _ui_rules(sec: engine.Sector) -> list[tuple[re.Pattern, str]]:
             rules += [(re.compile(r"\bPebble's\b"), "home brand's"), (re.compile(r"\bPebble\b"), "home brand")]
         _UI_RULES_CACHE[key] = rules
     return _UI_RULES_CACHE[key]
+
+
+# ---------------------------------------------------------------- reading a sector from another seat
+# The worker writes each event's "why it matters" (so_what) and "what to do" (counter_move) for the sector's YAML home
+# brand: in IoT that is Pebble ("compare against Pebble's nearest model"). A visitor reading IoT neutrally, or as
+# another company, should not get Pebble's to-do list: as another company the advice is re-addressed to that company;
+# neutrally the clauses that address Pebble are dropped (the rest of the sentence stays). Rows about Pebble itself
+# keep their text, and quoted text (a search query, a review) is never touched.
+_ADVICE_KEYS = ("so_what", "counter_move")
+_CLAUSE = re.compile(r"(?<=[.;:])\s+")
+_QUOTED = re.compile(r'"[^"]*"|“[^”]*”')
+
+
+def _drop_home_clauses(text: str, home_rx: re.Pattern) -> str:
+    parts = _CLAUSE.split(text)
+    keep = [p for p in parts if not home_rx.search(_QUOTED.sub("", p))]
+    if len(keep) == len(parts):
+        return text
+    for i in range(len(keep) - 1):   # "winning on; [dropped]. Quote: ..." -> "winning on. Quote: ..."
+        if keep[i].endswith(";") and keep[i + 1][:1].isupper():
+            keep[i] = keep[i][:-1] + "."
+    out = " ".join(keep).strip()
+    return re.sub(r"[;:,]$", ".", out)
+
+
+def _reseat(obj, home: str, seat: str | None, home_rx: re.Pattern):
+    if isinstance(obj, list):
+        for x in obj:
+            _reseat(x, home, seat, home_rx)
+    elif isinstance(obj, dict):
+        if obj.get("brand") != home:
+            # a signal (no "source") keeps its advice in "detail"; an event's detail may be raw text (an article, a review):
+            # neutrally its home-addressed clauses go too, but it is never re-addressed to another company
+            signal = "source" not in obj
+            for k in _ADVICE_KEYS + (("detail",) if "detail" in obj else ()):
+                v = obj.get(k)
+                if isinstance(v, str) and home in v:
+                    if seat:
+                        if k != "detail" or signal:
+                            obj[k] = home_rx.sub(seat, v)
+                    else:
+                        obj[k] = _drop_home_clauses(v, home_rx)
+        if isinstance(obj.get("body"), str) and "period" in obj and home in obj["body"]:   # a written brief: its "->" lines are moves
+            lines = obj["body"].split("\n")
+            if seat:
+                obj["body"] = "\n".join(home_rx.sub(seat, ln) if ln.lstrip().startswith("->") else ln for ln in lines)
+            else:
+                obj["body"] = "\n".join(ln for ln in lines if not (ln.lstrip().startswith("->") and home_rx.search(ln)))
+        for v in obj.values():
+            if isinstance(v, (dict, list)):
+                _reseat(v, home, seat, home_rx)
+
+
+def _seat_rewrite(sec: engine.Sector, payload):
+    """Re-address a sector's stored advice to the current seat (see above). Returns True when anything may have changed."""
+    home = sec.settings.config_self
+    seat = sec.settings.self_brand.name if sec.settings.self_brand else None
+    if not home or seat == home:
+        return False
+    _reseat(payload, home, seat, re.compile(rf"\b{re.escape(home)}\b"))
+    return True
+
+
+_RADAR_NAME = re.compile(r"\bPebble (Competitor )?Radar\b", re.I)   # the old product name inside stored briefs and report titles
+_PUBLIC_TEXT = [(re.compile(r", model in config/market\.yaml"), ", model estimate"),
+                (re.compile(r"\(see market\.yaml for the assumptions\)"), "(a model estimate)"),
+                (re.compile(r"config/market\.yaml, config/companies\.yaml"), "seeded industry estimates"),
+                (re.compile(r"config/market\.yaml \(pebble\.revenue_cr\)"), "company estimate"),
+                (re.compile(r"(in )?config/(market|companies|channels|competitors)\.yaml"), "")]
 
 
 def _sectors_json() -> str:
@@ -310,7 +411,73 @@ class _Rewriter:
         elif self.mode == "json":
             if not sec.primary and "Pebble" in text:
                 text = sec.settings.localize(text) or text
+            home = sec.settings.config_self
+            if home and home in text and not self.path.startswith("/api/export"):
+                try:
+                    data = json.loads(text)
+                    if _seat_rewrite(sec, data):
+                        text = json.dumps(data, ensure_ascii=False)
+                except ValueError:
+                    pass
+            text = _RADAR_NAME.sub("Nazar", text)
+            if _public() and ".yaml" in text:   # stored briefs and reports cite the operator's config files
+                for rx, rep in _PUBLIC_TEXT:
+                    text = rx.sub(rep, text)
         return text.encode("utf-8")
+
+
+def _sector_by_key(key) -> engine.Sector | None:
+    return next((s for s in engine.sectors() if s.key == key), None) if isinstance(key, str) else None
+
+
+def _hub_reseat(obj) -> None:
+    """Cross-sector answers carry rows from every sector: re-address each sector's advice to that sector's seat."""
+    if isinstance(obj, list):
+        for x in obj:
+            _hub_reseat(x)
+        return
+    if not isinstance(obj, dict):
+        return
+    sec = _sector_by_key(obj["key"]) if "top" in obj and isinstance(obj.get("key"), str) else _sector_by_key(obj.get("sector"))
+    if sec is not None and sec.settings.config_self:
+        _seat_rewrite(sec, obj)
+        return
+    for v in obj.values():
+        if isinstance(v, (dict, list)):
+            _hub_reseat(v)
+
+
+class _HubJson:
+    """Buffers a hub JSON answer and passes it through _hub_reseat."""
+
+    def __init__(self, send):
+        self._send, self.start, self.buf, self.json = send, None, bytearray(), False
+
+    async def send(self, message):
+        if message["type"] == "http.response.start":
+            self.json = any(k.lower() == b"content-type" and b"application/json" in v.lower() for k, v in message.get("headers") or [])
+            if self.json:
+                self.start = message
+                return
+            return await self._send(message)
+        if message["type"] == "http.response.body" and self.json:
+            self.buf += message.get("body", b"")
+            if message.get("more_body"):
+                return
+            body = bytes(self.buf)
+            if any(s.settings.config_self and s.settings.config_self.encode() in body for s in engine.sectors()):
+                try:
+                    data = json.loads(body)
+                    _hub_reseat(data)
+                    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                except ValueError:
+                    pass
+            headers = [(k, v) for k, v in self.start["headers"] if k.lower() != b"content-length"] + [(b"content-length", str(len(body)).encode())]
+            await self._send({**self.start, "headers": headers})
+            await self._send({"type": "http.response.body", "body": body, "more_body": False})
+            self.json = False
+            return
+        await self._send(message)
 
 
 class Nazar:
@@ -346,6 +513,8 @@ class Nazar:
         if engine.HOSTED:   # open to everyone: no password on the hub or the sectors
             if path.startswith("/nazar/api/"):   # every sector's latest snapshot before a cross-sector answer (one cheap check per minute each)
                 await asyncio.gather(*(run_in_threadpool(sec.sub("cloud").refresh) for sec in engine.sectors()))
+        if path.startswith("/nazar/api/") and path != "/nazar/api/health":
+            send = _HubJson(send).send
         return await self.hub(scope, receive, send)
 
     async def _sector_request(self, scope, receive, send, path):

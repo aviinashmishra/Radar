@@ -33,6 +33,9 @@ from .config import settings
 log = logging.getLogger("radar.cloud")
 
 HOSTED = bool(os.environ.get("VERCEL")) or os.environ.get("RADAR_HOSTED") == "1"
+# The hosted site is the public one: anyone with the link reads it, so the pages leave out the operator's controls
+# (Run, refresh, settings, AI-key and config hints) and the API leaves out the worker's internals.
+PUBLIC = HOSTED and os.environ.get("NAZAR_PUBLIC", "1") != "0"
 REPO = (os.environ.get("RADAR_REPO") or os.environ.get("GITHUB_REPOSITORY")
         or ("{}/{}".format(os.environ["VERCEL_GIT_REPO_OWNER"], os.environ["VERCEL_GIT_REPO_SLUG"])
             if os.environ.get("VERCEL_GIT_REPO_OWNER") and os.environ.get("VERCEL_GIT_REPO_SLUG") else "")
@@ -273,6 +276,9 @@ def info() -> dict | None:
     if not HOSTED:
         return None
     snap = db.kv_get("snapshot") or {}
+    if PUBLIC:   # visitors see how fresh the data is, not where the worker runs
+        return {"public": True, "published_at": snap.get("at"), "loaded_at": _state["loaded_at"],
+                "error": "refresh delayed" if _state["error"] else None}
     return {"repo": REPO, "published_at": snap.get("at"), "tier": snap.get("tier"), "run_url": snap.get("run_url"),
             "loaded_at": _state["loaded_at"], "error": _state["error"], "can_run": bool(TOKEN and REPO),
             "telegram_webhook": bool(settings.telegram_token),
@@ -283,6 +289,8 @@ def info() -> dict | None:
 # ---------------------------------------------------------------- hosted actions
 def public_lock() -> str | None:
     """The hosted site is open to everyone, so anything that spends AI credits or starts work is switched off there."""
+    if PUBLIC:
+        return "This is the public site: the data refreshes on its own through the day, so there is nothing to start here."
     if HOSTED:
         return ("The live site is open to everyone, so actions that use the AI key or start sweeps are off here. "
                 "Sweeps run on GitHub Actions on their own schedule (or start one from the repo's Actions tab).")

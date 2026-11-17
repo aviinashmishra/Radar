@@ -34,8 +34,14 @@ TABLES = {
 }
 
 
-def csv_bytes(table: str) -> bytes:
-    rows = db.q(TABLES[table])
+# what the public site lets anyone download (About the data): market-side tables, newest rows first where it matters,
+# capped so a download stays well under a serverless response limit
+PUBLIC_TABLES = ("events", "news", "signals", "financials", "quotes", "products", "app_metrics")
+PUBLIC_ROWS = 5000
+
+
+def csv_bytes(table: str, limit: int | None = None) -> bytes:
+    rows = db.q(f"SELECT * FROM ({TABLES[table]}) LIMIT {int(limit)}" if limit else TABLES[table])
     buf = io.StringIO()
     if rows:
         w = csv.DictWriter(buf, fieldnames=list(rows[0].keys()))

@@ -4,13 +4,16 @@
   const N = window.NAZAR; if (!N) return;
   const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   document.documentElement.style.setProperty("--sector", N.color || "#2a6fe0");
+  /* the page's CSS keys off the seat: a neutral reader gets no brand to-do lines, and ₹ figures need first-party data */
+  document.documentElement.dataset.seat = N.self ? "brand" : "neutral";
+  document.documentElement.dataset.own = N.own_data ? "1" : "0";
   const eye = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0f2a5c"/><circle cx="32" cy="32" r="21" fill="#fff"/><circle cx="32" cy="32" r="13" fill="#2a78d6"/><circle cx="32" cy="32" r="6" fill="#0b0b0b"/><circle cx="28" cy="27" r="2.2" fill="#fff"/></svg>';
   const bar = document.createElement("div");
   bar.className = "nz-bar";
   bar.setAttribute("role", "navigation"); bar.setAttribute("aria-label", "Nazar sectors");
   /* whose seat the dashboard is written from: Neutral or any company of the sector (stored per sector, default neutral) */
   const who = `<label class="nz-who" title="Read this sector as a neutral analyst, or as one company (its risks, price matches and own-sales panels)">
-      <span class="nz-who-l">${N.self ? "written for" : "view"}</span>
+      <span class="nz-who-l">${N.self ? "written for" : "view as"}</span>
       <select class="nz-persp" aria-label="Written for"><option value="">${esc(N.self ? "Neutral" : "Neutral view")}</option>${N.self ? `<option value="${esc(N.self)}" selected>${esc(N.self)}</option>` : ""}</select>
     </label>`;
   bar.innerHTML = `<a class="nz-eye" href="/" title="Nazar: all sectors">${eye}<span>Nazar</span></a>
@@ -23,8 +26,14 @@
     if (!st) return;
     const cur = st.self || "";
     sel.innerHTML = `<option value="">Neutral view</option>` + (st.options || []).map(o => `<option value="${esc(o.name)}" ${o.name === cur ? "selected" : ""}>${esc(o.name)}</option>`).join("");
-    bar.querySelector(".nz-who-l").textContent = cur ? "written for" : "view";
+    bar.querySelector(".nz-who-l").textContent = cur ? "written for" : "view as";
   }).catch(() => {});
+  /* "pick a company" links on the pages open this picker */
+  document.addEventListener("click", e => {
+    const a = e.target.closest("[data-pickseat]"); if (!a) return;
+    e.preventDefault(); sel.scrollIntoView({ block: "nearest" }); sel.focus();
+    try { sel.showPicker(); } catch (_) { sel.classList.add("nz-flash"); setTimeout(() => sel.classList.remove("nz-flash"), 1600); }
+  });
   sel.onchange = async () => {
     sel.disabled = true;
     try {

@@ -162,6 +162,11 @@ a.chip:hover{text-decoration:none;border-color:var(--axis);background:var(--glas
 .fr:hover{background:var(--glass-2)} .fr .ago{color:var(--muted);font-size:12px;padding-top:2px;white-space:nowrap}
 .fr>div{min-width:0;overflow-wrap:anywhere} .fr .b{font-weight:600} .fr .k{color:var(--muted);font-size:12px} .fr .x{display:none;grid-column:1/-1;padding:4px 6px 8px 94px;color:var(--ink-2);font-size:13px} .fr.open .x{display:block}
 .move{font-size:13px;color:var(--ink-2);padding-left:12px;border-left:3px solid var(--s3);border-radius:2px}
+/* the public site (<html data-public="1">, set by the hosted server): the operator's controls are not shown, and a
+   neutral reader (data-seat set by the Nazar bar) gets no "what to do" lines or ₹-at-risk figures written for a brand */
+html[data-public="1"] .op{display:none!important}
+html[data-public="1"][data-seat="neutral"] .move,html[data-public="1"][data-seat="neutral"] .seat-only{display:none!important}
+html[data-public="1"]:not([data-own="1"]) .impact{display:none!important}
 @media(max-width:600px){.fr{grid-template-columns:auto auto 1fr} .fr>span.k{display:none} .fr .x{padding-left:6px}}
 .newpill{position:sticky;top:8px;z-index:3;display:none;margin:0 auto 8px;width:max-content;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-radius:999px;padding:5px 14px;font-size:12px;cursor:pointer;box-shadow:0 10px 24px -12px var(--accent)}
 .story{padding:11px 0;border-bottom:1px solid var(--line);display:grid;gap:5px;min-width:0} .story:last-child{border-bottom:0}

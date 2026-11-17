@@ -19,3 +19,4 @@
 .nz-persp:hover{border-color:color-mix(in srgb,var(--sector,#2a6fe0) 45%,transparent)} .nz-persp:focus{outline:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--sector,#2a6fe0) 22%,transparent)}
 .nz-persp:disabled{opacity:.6;cursor:progress}
 @media(max-width:860px){.nz-who-l{display:none} .nz-who{padding-left:2px;background:none;border:0} .nz-eye span{display:none}} @media(max-width:520px){.nz-persp{max-width:110px}}
+.nz-persp.nz-flash{animation:nzflash .5s ease 3} @keyframes nzflash{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--sector,#2a6fe0) 40%,transparent)}}

@@ -11,7 +11,7 @@ sectors:
   short: IoT
   icon: ⌚
   color: '#2a78d6'
-  tagline: 'Pebble''s home turf: screenless bands, smart rings, smartwatches, earbuds, speakers'
+  tagline: 'Screenless bands, smart rings, smartwatches, earbuds and speakers: the wrist and the ear'
   config: config/competitors.yaml
   db: data/radar.db
   snapshot: radar.db.gz

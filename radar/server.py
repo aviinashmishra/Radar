@@ -132,7 +132,13 @@ def _relaunch() -> None:
 @app.get("/", response_class=HTMLResponse)
 def index():
     # the dashboard is one file that changes with every update: never let a browser keep an old copy
-    return HTMLResponse((STATIC / "index.html").read_text(encoding="utf-8"), headers={"Cache-Control": "no-cache"})
+    return HTMLResponse(public_page((STATIC / "index.html").read_text(encoding="utf-8")), headers={"Cache-Control": "no-cache"})
+
+
+def public_page(html: str) -> str:
+    """Mark the page as the public site (data-public on <html>): its CSS and scripts then leave out the operator's
+    controls (Run, refresh buttons, Settings, AI-key and config hints). Locally the page stays the operator's console."""
+    return html.replace("<html ", '<html data-public="1" ', 1) if cloud.PUBLIC else html
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -147,6 +153,15 @@ FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect wi
 
 @app.get("/api/stats")
 def stats():
+    out = _stats()
+    if cloud.PUBLIC:   # the public site: no collector log, model names or bot settings; AI features are off there
+        for k in ("runs", "model", "provider", "telegram", "threshold"):
+            out.pop(k, None)
+        out.update(ai=False, public=True, build={"stale": False, "hosted": True})
+    return out
+
+
+def _stats() -> dict:
     me = settings.self_brand.name if settings.self_brand else ""
     return {
         "brands": [{"name": b.name, "self": b.self_brand, "shopify": b.shopify} for b in settings.brands],
@@ -626,9 +641,10 @@ def shot(name: str):
 
 @app.get("/api/export/{table}.csv")
 def export_csv(table: str):
-    if table not in exports.TABLES:
-        raise HTTPException(404, f"unknown table; choose one of {', '.join(exports.TABLES)}")
-    return Response(exports.csv_bytes(table), media_type="text/csv",
+    tables = exports.PUBLIC_TABLES if cloud.PUBLIC else exports.TABLES   # the public site offers the market data only
+    if table not in tables:
+        raise HTTPException(404, f"unknown table; choose one of {', '.join(tables)}")
+    return Response(exports.csv_bytes(table, limit=exports.PUBLIC_ROWS if cloud.PUBLIC else None), media_type="text/csv",
                     headers={"Content-Disposition": f"attachment; filename=radar_{table}.csv"})
 
 

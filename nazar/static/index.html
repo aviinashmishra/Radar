@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nazar</title>
-<meta name="description" content="Nazar: one eye on every market. Live competitive intelligence across sectors, India and world.">
+<meta name="description" content="Nazar: one eye on every market. Live competitive intelligence across 10 sectors in India and the world: news, prices, reviews, social, filings and share prices for 228 companies.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Nazar"><meta property="og:title" content="Nazar · one eye on every market">
+<meta property="og:description" content="Live competitive intelligence across 10 sectors in India and the world: what every company launched, priced, said and was told, scored and in one place.">
+<meta name="twitter:card" content="summary"><meta name="theme-color" content="#0f2a5c">
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -70,7 +73,10 @@ td{vertical-align:middle}
 .tabs{position:static}
 #view{animation:fade .3s var(--ease)} @keyframes fade{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.track,#view{animation:none}}
-footer{position:relative;z-index:1;color:var(--muted);font-size:12px;text-align:center;padding:30px 20px 40px}
+footer{position:relative;z-index:1;color:var(--muted);font-size:12px;text-align:center;padding:30px 20px 40px} footer a{color:var(--ink-2)}
+/* the public site: no operator controls, no brand to-do lines on the cross-sector feed */
+html[data-public="1"] .op,html[data-public="1"] .move,html[data-public="1"] .impact{display:none!important}
+.about h3{font-size:14px;margin:0 0 4px} .about p{margin:0 0 10px;line-height:1.6;color:var(--ink-2);font-size:13.5px}
 @media(max-width:500px){#mt td>div.muted.xs{display:none}}
 </style>
 </head>
@@ -78,7 +84,7 @@ footer{position:relative;z-index:1;color:var(--muted);font-size:12px;text-align:
 <header class="top">
   <a class="logo" href="#/"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0f2a5c"/><circle cx="32" cy="32" r="21" fill="#ffffff"/><circle cx="32" cy="32" r="13" fill="#2a78d6"/><circle cx="32" cy="32" r="6" fill="#0b0b0b"/><circle cx="28" cy="27" r="2.2" fill="#fff"/></svg>Nazar</a>
   <nav class="topnav" id="tabs" aria-label="Pages">
-    <a href="#/">Eye</a><a href="#/pulse">Pulse</a><a href="#/markets">Markets</a><a href="#/universe">Universe</a><a href="#/themes">Themes</a><a href="#/lens">India · World</a><a href="#/sectors">Sectors</a>
+    <a href="#/">Eye</a><a href="#/pulse">Pulse</a><a href="#/markets">Markets</a><a href="#/universe">Universe</a><a href="#/themes">Themes</a><a href="#/lens">India · World</a><a href="#/sectors">Sectors</a><a href="#/about">About</a>
   </nav>
   <div class="search" id="searchbtn" role="button" tabindex="0"><span>Search companies, moves, or ask Nazar…</span><kbd>Ctrl K</kbd></div>
   <span class="clock" id="clock"></span>
@@ -87,7 +93,7 @@ footer{position:relative;z-index:1;color:var(--muted);font-size:12px;text-align:
 <div id="buildbar"></div>
 <div class="tape empty" id="tape"><div class="track">loading the market tape…</div></div>
 <main><div id="view"></div></main>
-<footer>Nazar reads public sources only: stores, news feeds, app stores, filings, Wikipedia, Google Trends, Yahoo Finance, Reddit, YouTube. Estimates are marked as estimates. <span id="foot"></span></footer>
+<footer>Nazar reads public sources only: stores, news feeds, app stores, filings, Wikipedia, Google Trends, Yahoo Finance, Reddit, YouTube. Estimates are marked as estimates. Not investment advice. <a href="#/about">About Nazar</a> <span id="foot"></span></footer>
 
 <div class="tip" id="tip"></div>
 <div class="ov" id="ov"><div class="pal">
@@ -115,6 +121,8 @@ const api=async(p,o)=>{const n=NAV;const r=await fetch(p,o);if(!r.ok)throw new E
 const post=(p,b)=>api(p,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b||{})});
 const toast=m=>{const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",Math.max(2200,m.length*45));};
 let SECTORS=[];const secOf=k=>SECTORS.find(s=>s.key===k)||{};
+const PUBLIC=document.documentElement.dataset.public==="1";   /* the public site: operator controls (sweeps, restart, AI-key notes) are left out */
+const SCHED={running:"live",cloud:"live",external:"live",off:"paused",crashed:"stopped"};
 const secChip=(s,on)=>`<span class="chip ${on?"on":""}" style="--c:${esc(s.color)}"><i></i>${esc(s.short||s.label)}</span>`;
 const openBrand=(sector,name)=>{location.href=`/s/${encodeURIComponent(sector)}#/brand/${encodeURIComponent(name)}`;};
 const openSector=(sector,route)=>{location.href=`/s/${encodeURIComponent(sector)}#/${route||"today"}`;};
@@ -158,9 +166,10 @@ tapeLoad();setInterval(tapeLoad,5*60*1000);
 const route=()=>(location.hash.replace(/^#\/?/,"")||"eye").split("/")[0]||"eye";
 const param=()=>decodeURIComponent((location.hash.replace(/^#\/?/,"").split("/")[1]||""));
 addEventListener("hashchange",render);
-async function render(){const r=route();NAV++;$$("#tabs a").forEach(a=>a.classList.toggle("on",(a.getAttribute("href")==="#/"+(r==="eye"?"":r))));const v=$("#view");v.innerHTML='<div class="skel"><div class="sk" style="height:70px"></div><div class="sk" style="height:360px"></div></div>';
+let LASTR=null;
+async function render(){const r=route();NAV++;if(LASTR!==null&&LASTR!==r)scrollTo(0,0);LASTR=r;$$("#tabs a").forEach(a=>a.classList.toggle("on",(a.getAttribute("href")==="#/"+(r==="eye"?"":r))));const v=$("#view");v.innerHTML='<div class="skel"><div class="sk" style="height:70px"></div><div class="sk" style="height:360px"></div></div>';
   try{if(!SECTORS.length)SECTORS=await api("/nazar/api/sectors",{});$("#palsec").innerHTML=SECTORS.map(s=>`<option value="${esc(s.key)}">${esc(s.short||s.label)}</option>`).join("");
-    await ({eye:vEye,pulse:vPulse,markets:vMarkets,universe:vUniverse,themes:vThemes,lens:vLens,sectors:vSectors}[r]||vEye)(v);}
+    await ({eye:vEye,pulse:vPulse,markets:vMarkets,universe:vUniverse,themes:vThemes,lens:vLens,sectors:vSectors,about:vAbout}[r]||vEye)(v);}
   catch(e){if(e instanceof Stale)return;v.innerHTML=`<div class="card"><b>Could not load.</b><div class="muted small">${esc(e.message)}</div></div>`;}}
 function head(t,s){return`<div class="hd"><h1>${t}</h1><div class="sub">${s||""}</div></div>`;}
 
@@ -181,19 +190,19 @@ async function vEye(v){SECTORS=await api("/nazar/api/sectors");const S=SECTORS;c
     <div class="card"><h2>The iris <span class="hint">brighter = busier · dots = hottest companies · click to enter</span></h2>${iris(S)}</div>
     <div class="card"><h2>What Nazar sees now <span class="hint">top move per sector · 3 days</span></h2>
       ${hot.length?hot.map(s=>`<div class="story" data-go="${esc(s.key)}" data-brand="${esc(s.top.brand)}"><div class="meta">${secChip(s)}${pill(s.top.importance)}<b>${esc(s.top.brand)}</b><span>${esc(kind(s.top.kind))}</span><span style="margin-left:auto">${ago(s.top.created_at)}</span></div><div class="t">${esc(s.top.title)}</div>${s.top.so_what?`<div class="why">${esc(s.top.so_what)}</div>`:""}</div>`).join(""):
-        (unloaded.length?`<div class="empty">The cloud data did not load for ${unloaded.length} sector${unloaded.length>1?"s":""}${unloaded[0].snapshot.error?`: ${esc(unloaded[0].snapshot.error)}`:""}. It retries every minute; reload in a moment.</div>`:`<div class="empty">Nazar is warming up: the first sweep of each sector is running. Scored moves appear here within minutes; the full first pass takes a couple of hours.</div>`)}
+        (unloaded.length?`<div class="empty">${PUBLIC?"Loading":"The cloud data did not load for"} ${unloaded.length} sector${unloaded.length>1?"s":""}${!PUBLIC&&unloaded[0].snapshot.error?`: ${esc(unloaded[0].snapshot.error)}`:""}. It retries every minute; reload in a moment.</div>`:`<div class="empty">Nazar is warming up: the first sweep of each sector is running. Scored moves appear here within minutes; the full first pass takes a couple of hours.</div>`)}
       ${warming?`<div class="muted xs" style="margin-top:10px">${warming} sector${warming>1?"s are":" is"} still on its first sweep.</div>`:""}
     </div>
   </div>
   <h2 class="serif" style="font-size:22px;margin:26px 0 12px">Sectors</h2>
   <div class="grid gauto">${S.map(sectorCard).join("")}</div>`;}
-function sectorCard(s){const sched={running:"live",external:"live (shared radar)",off:"paused",crashed:"stopped"}[s.scheduler]||s.scheduler;
+function sectorCard(s){const sched=PUBLIC?"live":({running:"live",external:"live (shared radar)",off:"paused",crashed:"stopped"}[s.scheduler]||s.scheduler);
   return`<div class="card sc" style="--c:${esc(s.color)}" data-go="${esc(s.key)}">
     <div class="row"><div class="ic">${esc(s.icon)}</div><div class="grow"><div class="n">${esc(s.label)}</div><div class="tg">${esc(s.tagline)}</div></div>${spark(s.spark,90,26,s.color)}</div>
     <div class="st"><span><b>${fmt(s.events_24h)}</b>moves 24h</span><span><b>${fmt(s.news_7d)}</b>news 7d</span><span><b>${fmt(s.brands)}</b>companies</span><span><b>${s.listed}</b>listed</span>${s.pressure&&s.pressure.risk?`<span><b>₹${fmt(s.pressure.risk/1e5)} L</b>at risk / month</span>`:""}</div>
     <div>${(s.hot||[]).map(h=>`<span class="chip" data-go="${esc(s.key)}" data-brand="${esc(h.brand)}">${esc(h.brand)} <span class="muted">${h.c}</span></span>`).join("")||'<span class="muted xs">no scored moves yet</span>'}</div>
     ${s.top?`<div class="top">${pill(s.top.importance)} <b>${esc(s.top.brand)}</b> · ${esc(s.top.title.slice(0,110))}</div>`:""}
-    <div class="row xs muted"><span>● ${sched}</span><span>${s.snapshot&&!s.snapshot.loaded?"cloud data not loaded yet":s.last_run?`swept ${ago(s.last_run)} ago`:"first sweep running"}</span><span class="grow"></span><a href="/s/${esc(s.key)}" class="ink2">Open dashboard →</a></div>
+    <div class="row xs muted"><span>● ${sched}</span><span>${s.snapshot&&!s.snapshot.loaded?(PUBLIC?"loading…":"cloud data not loaded yet"):s.last_run?`${PUBLIC?"updated":"swept"} ${ago(s.last_run)} ago`:"first sweep running"}</span><span class="grow"></span><a href="/s/${esc(s.key)}" class="ink2">Open dashboard →</a></div>
   </div>`;}
 
 /* ---------- Pulse ---------- */
@@ -221,7 +230,7 @@ async function vPulse(v){const F=JSON.parse(sessionStorage.getItem("nzpulse")||"
     const nw=fresh.filter(r=>!PULSE_SEEN.has(r.sector+":"+r.id)&&(!f.sectors.length||f.sectors.includes(r.sector)));nw.forEach(r=>{PULSE_SEEN.add(r.sector+":"+r.id);PULSE_NEW.push(r);});
     if(PULSE_NEW.length){const p=$("#newpill");p.style.display="block";p.textContent=`${PULSE_NEW.length} new · click to show`;}}catch(e){}},45000);}
 function feedRow(e){const imp=e.data&&e.data.impact;return`<div class="fr" style="--c:${esc(e.color)}"><span class="bar"></span><span class="ago">${ago(e.created_at)} · ${esc(e.sector_short)}</span>${pill(e.importance)}<div><span class="b">${esc(e.brand)}</span> <span class="k">${esc(kind(e.kind))}${e.data&&e.data.topic?` · ${esc(e.data.topic)}`:""}</span><div>${esc(e.title)} ${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener" class="muted xs">↗</a>`:""}</div></div><span class="k">${esc(e.source)}</span>
-  <div class="x">${e.so_what&&!e.so_what.includes(e.title.slice(0,40))?`<div>${esc(e.so_what)}</div>`:""}${imp?`<div class="muted small">Impact: ${esc(imp.label||"")}</div>`:""}${e.counter_move&&e.counter_move!=="No action"?`<div class="move">${esc(e.counter_move)}</div>`:""}${e.detail?`<div class="muted small" style="margin-top:4px">${esc(e.detail)}</div>`:""}<div class="row" style="margin-top:6px"><a class="small" href="/s/${esc(e.sector)}#/brand/${encodeURIComponent(e.brand)}">${esc(e.brand)} in ${esc(e.sector_label)} →</a></div></div></div>`;}
+  <div class="x">${e.so_what&&!e.so_what.includes(e.title.slice(0,40))?`<div>${esc(e.so_what)}</div>`:""}${imp?`<div class="muted small impact">Impact: ${esc(imp.label||"")}</div>`:""}${e.counter_move&&e.counter_move!=="No action"?`<div class="move">${esc(e.counter_move)}</div>`:""}${e.detail?`<div class="muted small" style="margin-top:4px">${esc(e.detail)}</div>`:""}<div class="row" style="margin-top:6px"><a class="small" href="/s/${esc(e.sector)}#/brand/${encodeURIComponent(e.brand)}">${esc(e.brand)} in ${esc(e.sector_label)} →</a></div></div></div>`;}
 
 /* ---------- Markets ---------- */
 async function vMarkets(v){const t=await api("/nazar/api/tape");const q=t.quotes||[];const F={sector:"",sort:"change"};
@@ -300,20 +309,32 @@ async function vLens(v){const days=+(param()||30);const L=await api(`/nazar/api/
 /* ---------- Sectors (atlas) ---------- */
 async function vSectors(v){const S=SECTORS=await api("/nazar/api/sectors");
   v.innerHTML=`${head(`The <em>atlas</em>`,"each sector is a complete radar: its own companies, sources, database and schedule")}
-  <div class="row wrap" style="margin-bottom:14px"><button class="primary" id="runall">Sweep every sector now</button><span class="muted small">runs the news / feeds / apps tier in each sector; stores and prices run on their own schedule</span></div>
+  <div class="row wrap op" style="margin-bottom:14px"><button class="primary" id="runall">Sweep every sector now</button><span class="muted small">runs the news / feeds / apps tier in each sector; stores and prices run on their own schedule</span></div>
   <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(420px,1fr))">${S.map(s=>`<div class="card" style="--c:${esc(s.color)};border-top:3px solid ${esc(s.color)}">
     <div class="row" style="margin-bottom:10px"><div class="sc" style="display:contents"><div class="ic" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,${esc(s.color)} 18%,var(--surface));border:1px solid color-mix(in srgb,${esc(s.color)} 35%,transparent)">${esc(s.icon)}</div></div><div class="grow"><div style="font-weight:600;font-size:16px">${esc(s.label)}</div><div class="muted small">${esc(s.sector)}</div></div></div>
     <div class="row wrap small" style="gap:14px;margin-bottom:10px"><span><b>${s.brands}</b> companies</span><span><b>${s.indian}</b> 🇮🇳 · <b>${s.global}</b> 🌍</span><span><b>${s.listed}</b> listed</span><span><b>${fmt(s.events_total)}</b> moves on file</span><span><b>${fmt(s.voice)}</b> reviews</span>${s.products?`<span><b>${fmt(s.products)}</b> SKUs</span>`:""}</div>
     <div style="margin-bottom:10px">${(s.segments||[]).map(g=>`<span class="chip">${esc(g.name)}</span>`).join("")}</div>
     ${s.world&&(s.world.regulators||s.world.trackers||s.world.watch_events)?`<div class="ws" style="margin-bottom:12px">${s.world.regulators?`<div class="w"><div class="l">Regulators</div><div class="small">${esc(s.world.regulators.join(" · "))}</div></div>`:""}${s.world.trackers?`<div class="w"><div class="l">Who counts the market</div><div class="small">${esc(s.world.trackers.join(" · "))}</div></div>`:""}${s.world.watch_events?`<div class="w"><div class="l">Dates that move it</div><div class="small">${esc(s.world.watch_events.join(" · "))}</div></div>`:""}</div>`:""}
-    <div class="row wrap"><span class="muted xs">● ${s.scheduler}${s.last_run?` · swept ${ago(s.last_run)} ago`:" · first sweep running"}${s.self_brand?` · written for ${esc(s.self_brand)}`:" · neutral view"}</span><span class="grow"></span><button class="sm" data-run="${esc(s.key)}">Sweep</button><a href="/s/${esc(s.key)}"><button class="sm primary">Open dashboard</button></a></div>
+    <div class="row wrap"><span class="muted xs">● ${PUBLIC?"live":SCHED[s.scheduler]||s.scheduler}${s.last_run?` · ${PUBLIC?"updated":"swept"} ${ago(s.last_run)} ago`:" · first sweep running"}${s.self_brand?` · written for ${esc(s.self_brand)}`:" · neutral view"}</span><span class="grow"></span><button class="sm op" data-run="${esc(s.key)}">Sweep</button><a href="/s/${esc(s.key)}"><button class="sm primary">Open dashboard</button></a></div>
   </div>`).join("")}</div>`;
   v.onclick=async e=>{const b=e.target.closest("[data-run]");if(b){b.disabled=true;const r=await post(`/nazar/api/run?sector=${b.dataset.run}&tier=medium`);toast(r.message);b.disabled=false;}};
   $("#runall").onclick=async()=>{const r=await post("/nazar/api/run?sector=all&tier=medium");toast(r.filter(x=>x.ok).length+" sectors sweeping · "+r.filter(x=>!x.ok).map(x=>x.message).join(" "));};}
 
+/* ---------- About ---------- */
+async function vAbout(v){const S=SECTORS.length?SECTORS:await api("/nazar/api/sectors");const sum=k=>S.reduce((a,s)=>a+(s[k]||0),0);const latest=S.map(s=>s.last_run).filter(Boolean).sort().pop();
+  v.innerHTML=`${head(`About <em>Nazar</em>`,"what it watches, where the data comes from, how to read it")}
+  <div class="grid g2 about">
+   <div class="card"><h2>What it is</h2><p>Nazar keeps one eye on every market: <b>${S.length} sectors</b>, <b>${fmt(sum("brands"))} companies</b> in India and the world, ${fmt(sum("listed"))} of them listed. Each sector is a full radar of its own. It reads what those companies launch, price, publish and get told by their buyers, scores every change from 1 to 10 and groups the changes into stories and signals.</p><p>Start on the <a href="#/">Eye</a> for what moved today, <a href="#/pulse">Pulse</a> for every scored move, or open a sector below for its full dashboard.</p></div>
+   <div class="card"><h2>How fresh</h2><p>Every sector refreshes from public sources several times a day: news, social, video and search through the day; stores and prices where a sector has them; reviews, apps, filings and research daily.${latest?` The latest refresh landed <b>${ago(latest)} ago</b>.`:""}</p><p>Share prices are daily closes from Yahoo Finance; the tape at the top shows world indices and the biggest movers.</p></div>
+   <div class="card"><h2>How to read it</h2><p><b>Importance</b> ${pill(9)} ${pill(7)} ${pill(5)}: how much a move changes the market for the companies in it.</p><p><b>View as</b>: inside a sector, read it neutrally or pick a company; the pages then read from that company's seat, with its risks, price matches and moves to make.</p><p><b>Estimates</b>: market sizes, shares and ₹ impact figures are models and say so. Filings and share prices are reported figures.</p></div>
+   <div class="card"><h2>Sources</h2><p>Brand web stores, Amazon.in, Flipkart and Blinkit; Google News, Bing News and company newsrooms; Reddit, Bluesky, X, Hacker News, Mastodon, Lemmy and YouTube; App Store and Google Play reviews; SEC EDGAR filings and Yahoo Finance quotes; Wikipedia page views and Google Trends; OpenAlex and arXiv research.</p><p>Links always go to the original source.</p></div>
+   <div class="card" style="grid-column:1/-1"><h2>Sectors</h2><div class="grid gauto">${S.map(s=>`<a class="row" href="/s/${esc(s.key)}" style="gap:10px;padding:6px 0"><span style="font-size:18px">${esc(s.icon)}</span><span><b>${esc(s.label)}</b><div class="muted xs">${fmt(s.brands)} companies · ${esc(s.tagline||"")}</div></span></a>`).join("")}</div></div>
+   <div class="card" style="grid-column:1/-1"><h2>Fine print</h2><p>Nazar reads only what is public. Brand names and logos belong to their owners. Figures marked estimate are model outputs, not measurements. Nothing here is investment advice.</p></div>
+  </div>`;}
+
 /* ---------- command palette ---------- */
 const ov=$("#ov"),palq=$("#palq"),palres=$("#palres"),palans=$("#palans");
-function openPal(){ov.classList.add("on");palq.value="";palres.innerHTML=`<div class="grp">Pages</div>${[["#/","Eye"],["#/pulse","Pulse"],["#/markets","Markets"],["#/universe","Universe"],["#/themes","Themes"],["#/lens","India · World"],["#/sectors","Sectors"]].map(([h,l])=>`<div class="r" data-h="${h}">${l}<span class="k">page</span></div>`).join("")}<div class="grp">Sectors</div>${SECTORS.map(s=>`<div class="r" data-url="/s/${esc(s.key)}">${secChip(s)} ${esc(s.label)}<span class="k">open dashboard</span></div>`).join("")}`;palans.style.display="none";setTimeout(()=>palq.focus(),10);}
+function openPal(){ov.classList.add("on");palq.value="";palres.innerHTML=`<div class="grp">Pages</div>${[["#/","Eye"],["#/pulse","Pulse"],["#/markets","Markets"],["#/universe","Universe"],["#/themes","Themes"],["#/lens","India · World"],["#/sectors","Sectors"],["#/about","About"]].map(([h,l])=>`<div class="r" data-h="${h}">${l}<span class="k">page</span></div>`).join("")}<div class="grp">Sectors</div>${SECTORS.map(s=>`<div class="r" data-url="/s/${esc(s.key)}">${secChip(s)} ${esc(s.label)}<span class="k">open dashboard</span></div>`).join("")}`;palans.style.display="none";setTimeout(()=>palq.focus(),10);}
 function closePal(){ov.classList.remove("on");}
 $("#searchbtn").onclick=openPal;ov.onclick=e=>{if(e.target===ov)closePal();};
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPal();}if(e.key==="Escape")closePal();if(e.key==="/"&&!/input|select|textarea/i.test(e.target.tagName)){e.preventDefault();openPal();}});
@@ -323,7 +344,7 @@ let palT;palq.oninput=()=>{clearTimeout(palT);const q=palq.value.trim();if(!q){o
   h+=`<div class="r" data-ask="1">Ask ${esc(secOf($("#palsec").value).short||"Nazar")}: “${esc(q)}”<span class="k">Enter</span></div>`;palres.innerHTML=h;}catch(e){}},200);};
 palres.onclick=e=>{const r=e.target.closest(".r");if(!r)return;if(r.dataset.h){location.hash=r.dataset.h;closePal();}else if(r.dataset.url){location.href=r.dataset.url;}else if(r.dataset.ask)ask();};
 palq.onkeydown=e=>{if(e.key==="Enter"){const first=palres.querySelector(".r[data-url],.r[data-h]");if(palq.value.trim().split(" ").length<3&&first){first.click();}else ask();}};
-async function ask(){const q=palq.value.trim();if(!q)return;palans.style.display="block";palans.textContent="Thinking…";try{const r=await post("/nazar/api/ask",{question:q,sector:$("#palsec").value});palans.textContent=(r.answer||JSON.stringify(r)).trim()+(r.mode==="fallback"||r.mode==="search"?"\n\n(keyword answer: add an AI key in .env for a reasoned one)":r.mode==="locked"&&r.note?"\n\n(keyword answer: "+r.note+")":"");}catch(e){palans.textContent="Could not ask: "+e.message;}}
+async function ask(){const q=palq.value.trim();if(!q)return;palans.style.display="block";palans.textContent="Thinking…";try{const r=await post("/nazar/api/ask",{question:q,sector:$("#palsec").value});palans.textContent=(r.answer||JSON.stringify(r)).trim()+(PUBLIC?"":r.mode==="fallback"||r.mode==="search"?"\n\n(keyword answer: add an AI key in .env for a reasoned one)":r.mode==="locked"&&r.note?"\n\n(keyword answer: "+r.note+")":"");}catch(e){palans.textContent="Could not ask: "+e.message;}}
 
 /* the Python on disk is newer than this process (a collector or the hub itself was updated): offer a one-click restart */
 async function buildCheck(){try{const h=await api("/nazar/api/health",{});const el=$("#buildbar");if(!h.build||!h.build.stale){el.innerHTML="";return;}
@@ -332,7 +353,7 @@ async function buildCheck(){try{const h=await api("/nazar/api/health",{});const 
     if(!r.ok){toast(r.message||"Not restarted");b.disabled=false;b.textContent="Restart Nazar";return;}toast(r.message);const old=r.pid,t0=Date.now();
     const tick=async()=>{try{const h2=await (await fetch("/nazar/api/health",{cache:"no-store"})).json();if(h2.pid&&h2.pid!==old){toast("Nazar is back on the new build");location.reload();return;}}catch(e){}
       if(Date.now()-t0>120000){toast("Nazar has not come back in 2 minutes: start it by hand (python run.py)");return;}setTimeout(tick,1500);};setTimeout(tick,3000);};}catch(e){}}
-buildCheck();setInterval(buildCheck,120000);
+if(!PUBLIC){buildCheck();setInterval(buildCheck,120000);}
 render();
 </script>
 <script src="/nazar/static/glass.js"></script>

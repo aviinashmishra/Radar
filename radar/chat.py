@@ -234,28 +234,80 @@ def ask(question: str, history: list[dict] | None = None) -> dict:
     return {"answer": text, "mode": "ai"}
 
 
+# what a plain question is about -> the event kinds that answer it (the keyword answer has no model to read intent)
+_INTENTS = (
+    ("price cuts and offers", ("price_drop", "discount_started", "sale_started", "channel_undercut", "watch_price_change"),
+     r"price (drop|cut|war)|cut(ting|s)? (the )?prices?|cheap|discount|offer|deal|sale\b|undercut|lower(ing)? price"),
+    ("price rises", ("price_rise", "discount_ended"), r"price (rise|hike|increase)|rais(e|ing) prices?|dearer|costlier"),
+    ("launches", ("new_product", "new_collection", "hidden_product"), r"launch|new product|released?|unveil|introduc|debut"),
+    ("stock-outs", ("stock_out", "delisted"), r"out of stock|stock-?out|sold out|unavailable"),
+    ("complaints", ("voice_wave", "complaint", "review_surge", "app_rating_change"), r"complain|unhappy|angry|problem|issue|bad review|negative|worst"),
+    ("praise", ("praise_wave",), r"praise|love|best review|positive"),
+    ("money moves", ("financial_result", "financial_fact", "stock_move", "funding"), r"fund|rais(e|ed|ing) money|valuation|ipo|invest|revenue|profit|loss|results|share price|stock"),
+    ("hiring", ("hiring",), r"hir(e|ing)|jobs?\b|recruit"),
+    ("ads and campaigns", ("new_ad", "viral_post", "video", "short_video"), r"\bads?\b|advert|campaign|marketing|influencer|creator|viral"),
+    ("search demand", ("search_trend", "attention_spike", "trending_now"), r"search(es|ing)?|trend|demand|attention|popular"),
+)
+_STOP = set("what which who whom whose when where why how is are was were the a an of to in on for and or with from this that these those "
+            "last past days day week weeks month about have has had they their them it its do does did any some most more "
+            "tell show give me us our latest recent new news happening going up down".split())
+
+
 def _fallback(question: str) -> str:
+    """Answer without a model: read the question's intent, brand and window, then list the matching moves."""
     q = question.lower()
     days = 30
-    m = re.search(r"(\d+)\s*day", q)
-    if m:
-        days = int(m.group(1))
-    brand = next((b.name for b in settings.brands if b.name.lower() in q), "")
-    kind = ""
-    for k, rx in (("new_product", r"launch|new product"), ("price_drop", r"price (drop|cut)|cheaper|discount"),
-                  ("stock_out", r"out of stock|stockout"), ("news", r"news|press"), ("hiring", r"hir|job")):
+    if m := re.search(r"(\d+)\s*(day|week|month)", q):
+        days = int(m.group(1)) * {"day": 1, "week": 7, "month": 30}[m.group(2)]
+    elif re.search(r"today|24 ?h", q):
+        days = 1
+    elif re.search(r"this week|past week|last week", q):
+        days = 7
+    days = max(1, min(days, 365))
+    brand = next((b.name for b in sorted(settings.brands, key=lambda b: -len(b.name)) if re.search(rf"\b{re.escape(b.name.lower())}\b", q)), "")
+    topic, kinds = "", ()
+    for label, ks, rx in _INTENTS:
         if re.search(rx, q):
-            kind = k
+            topic, kinds = label, ks
             break
-    words = " ".join(w for w in re.findall(r"[a-z0-9]+", q) if len(w) > 3 and w not in ("what", "which", "last", "days", "week", "about", "have", "they", "their", "with", "from", "this", "that", brand.lower()))[:60]
-    rows = run_tool("search_events", {"query": words if not kind else "", "brand": brand, "kind": kind, "days": days, "limit": 15})
-    head = "Top matches"
-    if not rows and words:
-        rows = run_tool("search_events", {"query": "", "brand": brand, "kind": kind, "days": days, "limit": 15})
-        head = f"Nothing mentions \"{words}\"; latest {'events for ' + brand if brand else 'events'} instead"
+    words = [w for w in re.findall(r"[a-z0-9]+", q) if len(w) > 2 and w not in _STOP and w not in brand.lower().split()]
+    if topic:   # the intent words are already answered by the kinds; keep only the rest
+        words = [w for w in words if not re.search(dict((l, rx) for l, _, rx in _INTENTS)[topic], w)]
+    rows: list[dict] = []
+    if kinds:
+        for k in kinds:
+            rows += run_tool("search_events", {"query": "", "brand": brand, "kind": k, "days": days, "limit": 20})
+        rows.sort(key=lambda r: (r.get("importance") or 0, r["created_at"]), reverse=True)
+    elif words:
+        rows = run_tool("search_events", {"query": " ".join(words[:4]), "brand": brand, "kind": "", "days": days, "limit": 15})
+        if not rows and len(words) > 1:   # any one word, best match first
+            seen = set()
+            for w in words[:4]:
+                for r in run_tool("search_events", {"query": w, "brand": brand, "kind": "", "days": days, "limit": 8}):
+                    if r["id"] not in seen:
+                        seen.add(r["id"]); rows.append(r)
+    elif brand:
+        rows = run_tool("search_events", {"query": "", "brand": brand, "kind": "", "days": days, "limit": 15})
+    hint = "" if _public() else " (keyword mode; add GEMINI_API_KEY or ANTHROPIC_API_KEY for AI answers)"
+    scope = f"{brand}'s " if brand else ""
+    window = "today" if days == 1 else f"the last {days} days"
     if not rows:
-        return "Nothing matching in the radar yet. (Add GEMINI_API_KEY or ANTHROPIC_API_KEY to .env for full natural-language answers.)"
-    lines = [f"{head} (keyword mode; add GEMINI_API_KEY or ANTHROPIC_API_KEY for AI answers):"]
-    for r in rows:
-        lines.append(f"- {r['created_at'][:10]} [{r['importance'] or '-'}] {r['brand']} {r['kind']}: {r['title'][:110]}")
-    return "\n".join(lines)
+        if brand or kinds or words:
+            latest = run_tool("search_events", {"query": "", "brand": brand, "kind": "", "days": 30, "limit": 8})
+            if latest:
+                return "\n".join([f"No {scope}{topic or 'moves matching that'} in {window}. Latest {'for ' + brand if brand else 'moves'} instead{hint}:"]
+                                 + [_line(r) for r in latest])
+        return "Nothing matching in the radar yet. Try a company name, or words like launches, price cuts, complaints, funding."
+    rows = sorted(rows, key=lambda r: (r.get("importance") or 0), reverse=True)[:12] if kinds else rows[:12]
+    head = f"{scope}{topic}, {window}" if topic else f"Moves mentioning \"{' '.join(words[:4])}\"" if words else f"{brand}: latest moves, {window}"
+    head = head if brand else head[:1].upper() + head[1:]   # a brand keeps its own casing (boAt, pTron)
+    return "\n".join([head + f"{hint}:"] + [_line(r) for r in rows])
+
+
+def _line(r: dict) -> str:
+    return f"- {r['created_at'][:10]} [{r['importance'] or '-'}] {r['brand']} · {str(r['kind']).replace('_', ' ')}: {r['title'][:120]}"
+
+
+def _public() -> bool:
+    from . import cloud
+    return cloud.PUBLIC
