@@ -20,3 +20,22 @@
 .nz-persp:disabled{opacity:.6;cursor:progress}
 @media(max-width:860px){.nz-who-l{display:none} .nz-who{padding-left:2px;background:none;border:0} .nz-eye span{display:none}} @media(max-width:520px){.nz-persp{max-width:110px}}
 .nz-persp.nz-flash{animation:nzflash .5s ease 3} @keyframes nzflash{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--sector,#2a6fe0) 40%,transparent)}}
+/* phone: the sector strip becomes one button (mobile.js opens the sector sheet from it); the bar slides away while
+   reading down and comes back on the way up */
+.nz-cur{display:none}
+@media(max-width:760px){
+  .nz-bar{gap:8px;padding:7px 10px;padding-top:calc(7px + env(safe-area-inset-top));transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  html.mx-away .nz-bar{transform:translateY(-110%)}
+  .nz-sectors{display:none}
+  .nz-cur{display:inline-flex;align-items:center;gap:8px;flex:1;min-width:0;height:38px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c,#2a6fe0) 40%,var(--glass-line));
+    background:var(--glass-strong);color:var(--ink);font:700 14px/1 var(--font);letter-spacing:-.01em;box-shadow:0 6px 16px -12px var(--c,#2a6fe0);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .nz-cur:hover{transform:none}
+  .nz-cur i{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+  .nz-cur span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+  .nz-cur svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+  .nz-cur:active{transform:scale(.97)}
+  .nz-eye{padding:2px}
+  .nz-eye svg{width:28px;height:28px}
+  .nz-who{flex:none}
+  .nz-persp{max-width:min(42vw,170px);height:38px;padding:0 24px 0 11px;font-size:16px;letter-spacing:-.01em}
+}

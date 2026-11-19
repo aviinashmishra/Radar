@@ -2,7 +2,7 @@
 <html lang="en" data-theme="auto">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nazar</title>
 <meta name="description" content="Nazar: one eye on every market. Live competitive intelligence across 10 sectors in India and the world: news, prices, reviews, social, filings and share prices for 228 companies.">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Nazar"><meta property="og:title" content="Nazar · one eye on every market">
@@ -42,7 +42,23 @@ main{position:relative;z-index:1;padding:24px 24px 80px;max-width:1440px;margin:
 .hd{display:flex;align-items:flex-end;gap:16px;margin:4px 0 20px;flex-wrap:wrap} .hd h1{font-size:34px;font-family:var(--serif);font-weight:400;letter-spacing:-.005em} .hd h1 em{font-style:italic;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent} .hd .sub{color:var(--muted);font-size:13px;padding-bottom:7px}
 .hero{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)} .gauto{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))} .g3{grid-template-columns:repeat(3,1fr)}
 @media(max-width:1100px){.hero,.g3{grid-template-columns:1fr 1fr}}
-@media(max-width:800px){.hero,.g2,.g3,main .grid{grid-template-columns:1fr!important} main{padding:14px} .top{padding:8px 12px;flex-wrap:wrap;gap:8px;border-radius:26px;margin:8px 10px 0;top:8px} nav.topnav{order:3;flex-basis:100%} .search{min-width:0;flex:1} .logo .hi,.clock,.theme{display:none} .tape,.buildbar{margin:8px 10px 0}}
+/* small laptop / landscape tablet: the clock goes and the search narrows so all eight pages fit on one row */
+@media(max-width:1320px){.clock{display:none} .search{min-width:0;flex:0 1 230px}}
+/* tablet: the menu gets a row of its own so every page shows */
+@media(max-width:1100px){.top{flex-wrap:wrap;row-gap:6px;border-radius:28px;padding:8px 10px 6px 16px} nav.topnav{order:3;flex-basis:100%;justify-content:center} .search{min-width:0;flex:1 1 auto;max-width:440px;margin-left:auto} .clock{display:none}}
+@media(max-width:800px){.hero,.g2,.g3,main .grid{grid-template-columns:1fr!important} main{padding:14px} .logo .hi{display:none} .tape,.buildbar{margin:8px 10px 0}}
+/* phone: logo + round search on top, the pages in the tab bar at the bottom (mobile.js), the header slides away while reading */
+@media(max-width:760px){
+  .top{flex-wrap:nowrap;padding:7px 7px 7px 14px;margin:8px 10px 0;top:calc(8px + env(safe-area-inset-top));border-radius:999px;transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  html.mx-away body>header.top{transform:translateY(calc(-100% - 20px))}
+  nav.topnav,.theme{display:none}
+  .search{flex:none;width:42px;height:42px;padding:0;justify-content:center;margin-left:auto;color:var(--ink-2)} .search span,.search kbd{display:none} .search svg.i{width:20px;height:20px}
+  main{padding:16px var(--gut,12px) 24px}
+  .hd{margin:2px 0 14px;gap:6px} .hd h1{font-size:32px;line-height:1.05} .hd .sub{padding-bottom:0}
+  footer{padding:24px 18px calc(110px + env(safe-area-inset-bottom))}
+  .newpill{top:70px}
+  .tape{height:32px} .track{height:32px;font-size:12px}
+}
 .kpi .v{font-size:25px}
 th{cursor:pointer;user-select:none}
 td{vertical-align:middle}
@@ -357,5 +373,6 @@ if(!PUBLIC){buildCheck();setInterval(buildCheck,120000);}
 render();
 </script>
 <script src="/nazar/static/glass.js"></script>
+<script src="/nazar/static/mobile.js" defer></script>
 </body>
 </html>
